@@ -1,3 +1,11 @@
+if(IOS)
+    # Prove the static registration path with the native document format first.
+    # Additional profile directories are enabled incrementally in M4.
+    add_subdirectory(impex/libkra)
+    add_subdirectory(impex/kra)
+    return()
+endif()
+
 add_subdirectory( assistants )
 add_subdirectory( color )
 add_subdirectory( dockers )

@@ -16,6 +16,7 @@
 #include "kritaplugin_export.h"
 
 class QPluginLoader;
+class KPluginMetaData;
 
 /**
  * Support class to fetch a list of relevant plugins
@@ -34,6 +35,7 @@ public:
     struct KRITAPLUGIN_EXPORT Plugin {
         Plugin() = default;
         Plugin(QSharedPointer<QPluginLoader> loader, QMutex *mutex);
+        Plugin(const KPluginMetaData &metaData, QMutex *mutex);
         ~Plugin();
 
         QObject *instance() const;
@@ -44,6 +46,7 @@ public:
 
     private:
         QSharedPointer<QPluginLoader> m_loader;
+        QSharedPointer<KPluginMetaData> m_staticMetaData;
         QMutex *m_mutex = 0;
     };
 

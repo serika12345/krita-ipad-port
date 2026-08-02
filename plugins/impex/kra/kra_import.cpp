@@ -13,7 +13,7 @@
 
 #include "kra_converter.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(ImportFactory, "krita_kra_import.json", registerPlugin<KraImport>();)
+K_PLUGIN_CLASS_WITH_JSON(KraImport, "krita_kra_import.json")
 
 KraImport::KraImport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -45,4 +45,3 @@ KisImportExportErrorCode KraImport::convert(KisDocument *document, QIODevice *io
 }
 
 #include <kra_import.moc>
-

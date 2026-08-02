@@ -19,6 +19,9 @@
 #include <QGlobalStatic>
 #include <QMutexLocker>
 
+#include <KPluginFactory>
+#include <KPluginMetaData>
+
 #include <memory>
 
 struct KoJsonTrader::PluginCacheEntry
@@ -27,6 +30,7 @@ struct KoJsonTrader::PluginCacheEntry
     QJsonArray serviceTypes;
     QStringList mimeTypes;
     QSharedPointer<QPluginLoader> loader;
+    QSharedPointer<KPluginMetaData> staticMetaData;
 };
 
 
@@ -180,6 +184,31 @@ void KoJsonTrader::initializePluginLoaderCache()
             }
         }
     }
+
+    const QList<KPluginMetaData> staticPlugins = KPluginMetaData::findPlugins(QStringLiteral("krita"));
+    for (const KPluginMetaData &plugin : staticPlugins) {
+        if (!plugin.isStaticPlugin()) {
+            continue;
+        }
+
+        const QJsonObject json = plugin.rawData();
+        const QJsonArray serviceTypes = json.value(QStringLiteral("X-KDE-ServiceTypes")).toArray();
+        if (serviceTypes.isEmpty()) {
+            qWarning() << plugin.fileName() << "has no X-KDE-ServiceTypes";
+            continue;
+        }
+
+        QStringList mimeTypes = json.value(QStringLiteral("X-KDE-ExtraNativeMimeTypes")).toString().split(',');
+        mimeTypes += json.value(QStringLiteral("MimeType")).toString().split(';');
+        mimeTypes += json.value(QStringLiteral("X-KDE-NativeMimeType")).toString();
+
+        PluginCacheEntry cacheEntry;
+        cacheEntry.filePath = plugin.fileName();
+        cacheEntry.serviceTypes = serviceTypes;
+        cacheEntry.mimeTypes = mimeTypes;
+        cacheEntry.staticMetaData = QSharedPointer<KPluginMetaData>::create(plugin);
+        m_pluginLoaderCache << cacheEntry;
+    }
 }
 
 QList<KoJsonTrader::Plugin> KoJsonTrader::query(const QString &servicetype, const QString &mimetype)
@@ -196,7 +225,11 @@ QList<KoJsonTrader::Plugin> KoJsonTrader::query(const QString &servicetype, cons
             continue;
         }
 
-        list << Plugin(plugin.loader, &m_mutex);
+        if (plugin.staticMetaData) {
+            list << Plugin(*plugin.staticMetaData, &m_mutex);
+        } else {
+            list << Plugin(plugin.loader, &m_mutex);
+        }
     }
 
     return list;
@@ -208,6 +241,12 @@ KoJsonTrader::Plugin::Plugin(QSharedPointer<QPluginLoader> loader, QMutex *mutex
 {
 }
 
+KoJsonTrader::Plugin::Plugin(const KPluginMetaData &metaData, QMutex *mutex)
+    : m_staticMetaData(QSharedPointer<KPluginMetaData>::create(metaData))
+    , m_mutex(mutex)
+{
+}
+
 KoJsonTrader::Plugin::~Plugin()
 {
 }
@@ -215,20 +254,34 @@ KoJsonTrader::Plugin::~Plugin()
 QObject *KoJsonTrader::Plugin::instance() const
 {
     QMutexLocker l(m_mutex);
+    if (m_staticMetaData) {
+        return KPluginFactory::loadFactory(*m_staticMetaData).plugin;
+    }
     return m_loader->instance();
 }
 
 QJsonObject KoJsonTrader::Plugin::metaData() const
 {
+    if (m_staticMetaData) {
+        QJsonObject result;
+        result.insert(QStringLiteral("MetaData"), m_staticMetaData->rawData());
+        return result;
+    }
     return m_loader->metaData();
 }
 
 QString KoJsonTrader::Plugin::fileName() const
 {
+    if (m_staticMetaData) {
+        return m_staticMetaData->fileName();
+    }
     return m_loader->fileName();
 }
 
 QString KoJsonTrader::Plugin::errorString() const
 {
+    if (m_staticMetaData) {
+        return KPluginFactory::loadFactory(*m_staticMetaData).errorString;
+    }
     return m_loader->errorString();
 }

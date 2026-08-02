@@ -171,6 +171,9 @@ target_link_libraries(krita
                       Qt${QT_MAJOR_VERSION}::Xml
                       Qt${QT_MAJOR_VERSION}::Network
                       Qt${QT_MAJOR_VERSION}::Svg)
+if(IOS AND KRITA_IOS_BUILD_PLUGINS)
+    krita_ios_target_static_plugins(krita)
+endif()
 if(NOT IOS)
     target_link_libraries(krita PRIVATE Qt${QT_MAJOR_VERSION}::PrintSupport)
 endif()

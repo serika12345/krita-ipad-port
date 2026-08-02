@@ -148,12 +148,12 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 ### タスク
 
-- [ ] **P0** `kis_add_library(... MODULE ...)`をiOS時に`STATIC`へ変換するCMake基盤を作る。
-- [ ] **P0** KPlugin factoryを衝突なく静的登録する仕組みを作る。
-- [ ] **P0** JSONメタデータをバイナリまたはリソースへ埋め込む。
-- [ ] **P0** `Q_INIT_RESOURCE`相当を自動生成する。
-- [ ] **P0** linker dead strippingからfactoryとリソースを保護する。
-- [ ] **P0** 必要プラグインの一覧から登録コードとリンク対象を生成する。
+- [x] **P0** `kis_add_library(... MODULE ...)`をiOS時に`STATIC`へ変換するCMake基盤を作る。
+- [x] **P0** KPlugin factoryを衝突なく静的登録する仕組みを作る。
+- [x] **P0** JSONメタデータをバイナリまたはリソースへ埋め込む。
+- [x] **P0** `Q_IMPORT_PLUGIN`相当の登録コードを自動生成する。
+- [x] **P0** linker dead strippingからfactoryとメタデータを保護する。
+- [x] **P0** 有効なプラグインターゲット一覧から登録コードとリンク対象を生成する。
 - [ ] **P0** 最小セットとしてKRA、PNG、Pixel Brush、基本Tool、Layer Dockerを有効化する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
 - [ ] **P1** プラグイン単位でON/OFFできるiOS feature profileを作る。
