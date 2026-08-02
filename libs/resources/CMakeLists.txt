@@ -60,6 +60,7 @@ set(kritaresources_LIB_SRCS
 )
 
 qt_add_resources(kritaresources_LIB_SRCS sql.qrc)
+krita_ios_add_static_resource(sql)
 
 kis_add_library(kritaresources SHARED ${kritaresources_LIB_SRCS})
 
@@ -86,4 +87,3 @@ set_target_properties(kritaresources PROPERTIES
     VERSION ${GENERIC_KRITA_LIB_VERSION} SOVERSION ${GENERIC_KRITA_LIB_SOVERSION}
 )
 install(TARGETS kritaresources ${INSTALL_TARGETS_DEFAULT_ARGS} )
-

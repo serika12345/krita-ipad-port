@@ -140,6 +140,10 @@ QString getInstallationPrefix() {
     }
 
     return bundlePath;
+#elif defined(Q_OS_IOS)
+    // iOS applications are self-contained bundles. Runtime data is staged
+    // next to the executable so it remains inside the signed application.
+    return qApp->applicationDirPath() + "/";
 #elif defined(Q_OS_HAIKU)
 	return qApp->applicationDirPath() + "/";
 #elif defined(Q_OS_ANDROID)

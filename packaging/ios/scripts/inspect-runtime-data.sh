@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# != 2 )); then
+    echo "usage: $0 APP_PATH RUNTIME_PREFIX" >&2
+    exit 2
+fi
+
+app_path="$1"
+runtime_prefix="$2"
+expected_share="$runtime_prefix/share"
+bundles_dir="$app_path/share/krita/bundles"
+
+if [[ ! -d "$app_path" ]]; then
+    echo "error: application bundle not found: $app_path" >&2
+    exit 1
+fi
+if [[ ! -d "$expected_share" ]]; then
+    echo "error: staged runtime share directory not found: $expected_share" >&2
+    exit 1
+fi
+
+expected_list="$(mktemp "${TMPDIR:-/tmp}/krita-runtime-expected.XXXXXX")"
+actual_list="$(mktemp "${TMPDIR:-/tmp}/krita-runtime-actual.XXXXXX")"
+cleanup() {
+    rm -f "$expected_list" "$actual_list"
+}
+trap cleanup EXIT
+
+(
+    cd "$runtime_prefix"
+    find share -type f -print | LC_ALL=C sort
+) >"$expected_list"
+(
+    cd "$app_path"
+    find share -type f -print | LC_ALL=C sort
+) >"$actual_list"
+
+if ! diff -u "$expected_list" "$actual_list"; then
+    echo "error: application runtime data does not match the generated install tree" >&2
+    exit 1
+fi
+
+bundle_count="$(find "$bundles_dir" -maxdepth 1 -type f -name '*.bundle' | wc -l | tr -d ' ')"
+profile_count="$(find "$app_path/share/color/icc/krita" -type f -name '*.icc' | wc -l | tr -d ' ')"
+action_count="$(find "$app_path/share/krita/actions" -type f | wc -l | tr -d ' ')"
+
+if (( bundle_count == 0 )); then
+    echo "error: no Krita resource bundles were packaged" >&2
+    exit 1
+fi
+if (( profile_count == 0 )); then
+    echo "error: no ICC color profiles were packaged" >&2
+    exit 1
+fi
+if (( action_count == 0 )); then
+    echo "error: no Krita action definitions were packaged" >&2
+    exit 1
+fi
+
+preset_bundle=""
+while IFS= read -r bundle; do
+    if unzip -Z1 "$bundle" | grep '^paintoppresets/' >/dev/null; then
+        preset_bundle="$(basename "$bundle")"
+        break
+    fi
+done < <(find "$bundles_dir" -maxdepth 1 -type f -name '*.bundle' | LC_ALL=C sort)
+
+if [[ -z "$preset_bundle" ]]; then
+    echo "error: no packaged resource bundle contains brush presets" >&2
+    exit 1
+fi
+
+runtime_file_count="$(wc -l <"$actual_list" | tr -d ' ')"
+echo "iPadOS runtime data retained: $runtime_file_count files"
+echo "  resource bundles: $bundle_count ($preset_bundle contains brush presets)"
+echo "  ICC profiles:     $profile_count"
+echo "  action files:     $action_count"

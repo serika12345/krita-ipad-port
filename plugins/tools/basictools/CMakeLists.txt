@@ -37,6 +37,7 @@ set(kritadefaulttools_SOURCES
 )
 
 qt_add_resources(kritadefaulttools_SOURCES defaulttools.qrc )
+krita_ios_add_static_resource(defaulttools)
 
 kis_add_library(kritadefaulttools MODULE ${kritadefaulttools_SOURCES})
 

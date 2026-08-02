@@ -132,6 +132,23 @@ KisResourceLocator::LocatorError KisResourceLocator::initialize(const QString &i
         }
     }
 
+#ifdef Q_OS_IOS
+    // Development builds are frequently replaced without changing Krita's
+    // version number. Detect newly packaged bundles so an AltStore update can
+    // seed them into the persistent resource location as well.
+    if (initializationStatus == InitializationStatus::Initialized) {
+        const QStringList filters = QStringList() << "*.bundle" << "*.abr" << "*.asl";
+        QDirIterator iter(installationResourcesLocation, filters, QDir::Files, QDirIterator::Subdirectories);
+        while (iter.hasNext()) {
+            iter.next();
+            if (!QFileInfo(d->resourceLocation + '/' + iter.fileName()).exists()) {
+                initializationStatus = InitializationStatus::Updating;
+                break;
+            }
+        }
+    }
+#endif
+
     if (initializationStatus != InitializationStatus::Initialized) {
         KisResourceLocator::LocatorError res = firstTimeInstallation(initializationStatus, installationResourcesLocation);
         if (res != LocatorError::Ok) {
@@ -1076,7 +1093,8 @@ KisResourceLocator::LocatorError KisResourceLocator::firstTimeInstallation(Initi
         Q_EMIT progressMessage(i18n("Installing the resources from bundle %1.", iter.filePath()));
         QFile f(iter.filePath());
         Q_ASSERT(f.exists());
-        if (!f.copy(d->resourceLocation + '/' + iter.fileName())) {
+        const QString destination = d->resourceLocation + '/' + iter.fileName();
+        if (!QFileInfo(destination).exists() && !f.copy(destination)) {
             d->errorMessages << i18n("Could not copy resource %1 to %2", f.fileName(), d->resourceLocation);
         }
     }

@@ -121,6 +121,7 @@ ki18n_wrap_ui(kritawidgetutils_LIB_SRCS
 )
 
 qt_add_resources(kritawidgetutils_LIB_SRCS xmlgui/kxmlgui.qrc)
+krita_ios_add_static_resource(kxmlgui)
 
 kis_add_library(kritawidgetutils SHARED ${kritawidgetutils_LIB_SRCS})
 

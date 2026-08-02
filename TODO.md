@@ -14,8 +14,8 @@
 
 - 最終ターゲットはiPad実機。Simulatorは初期診断用途に限る。
 - Qt 6系を使用する。
-- NixはOSS依存物とホストツールの固定に使い、Xcode/iOS SDK、開発署名、実機インストールはXcodeに任せる。
-- 実機起動にはコード署名が必須なので、Xcodeの自動開発署名のみ許容する。公証は行わない。
+- NixはOSS依存物とホストツールの固定に使い、XcodeはApple ClangとiOS SDKを供給する。ローカル開発署名と実機更新にはAltStore/AltServerも利用できる。
+- 実機起動に必要な開発署名はAltStoreに任せる。署名情報をリポジトリへ保存せず、公証は行わない。
 - 初期版ではPython/PyQt、G'MIC、動画・音声、印刷、自動更新、外部プロセス依存機能を対象外とする。
 - 「プラグインを捨てる」は外部拡張機能を対象とする。ブラシ、ツール、画像入出力、DockerなどKrita本体機能を構成する内部プラグインは必要なものを静的リンクする。
 - App Store、公式代替マーケットプレイス、一般配布、iPhone対応は対象外。
@@ -140,7 +140,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [x] 未署名またはad-hocの中間`.app`がリンクまで完了する。
 - [x] iOS SDKに存在しないAPIやmacOS frameworkへのリンクがない。
-- [ ] 起動前の静的初期化でクラッシュしない（署名して実機起動するM5で検証）。
+- [x] 起動前の静的初期化でクラッシュしない（AltStore署名で実機検証済み）。
 
 ---
 
@@ -159,15 +159,18 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 最小セットのPixel Brushを有効化する。
 - [x] **P0** 最小セットの基本Toolを有効化する。
 - [x] **P0** 最小セットのLayer Dockerを有効化する。
+- [x] **P0** 起動に必須のLittleCMSカラーマネジメントエンジンを有効化する。
+- [x] **P0** 静的Qtリソースと実行時データの欠落を機械検査する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
 - [x] **P1** プラグイン機能群ごとにON/OFFできるiOS feature profileを作る。
 - [ ] **P2** 任意フィルタとDockerを段階的に追加する。
 
 ### 完了条件
 
-- [ ] 起動時に選択したプラグインだけが列挙・ロードされる。
-- [ ] Pixel Brush、基本Tool、Layer Docker、KRA/PNG I/Oが利用可能である。
-- [ ] 新しい静的プラグインを一覧へ追加するだけで組み込める。
+- [x] 起動時に選択したプラグインだけが列挙・ロードされる。
+- [x] Pixel Brush、基本Tool、Layer Dockerが実機で利用可能である。
+- [ ] KRA/PNG I/Oが実機で利用可能である。
+- [x] 新しい静的プラグインを一覧へ追加するだけで組み込める。
 
 ### 技術ゲート G2
 
@@ -179,9 +182,10 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 ### タスク
 
-- [ ] **P0** Xcodeの自動開発署名を設定する。
-- [ ] **P0** 実機インストールとログ取得をスクリプト化する。
-- [ ] **P0** アプリ起動、main window表示、終了までを確認する。
+- [x] **P0** AltStore/AltServerによるローカル開発署名を設定する。
+- [x] **P0** ビルド、検査、IPA生成、実機更新、起動、ログ取得をスクリプト化する。
+- [x] **P0** アプリ起動とmain window表示を確認する。
+- [ ] **P0** 正常終了と再起動を確認する。
 - [ ] **P0** 最小キャンバスを作成し、指でストロークを描く。
 - [ ] **P0** Apple Pencilの位置、筆圧、傾き、方位、接触状態を記録・検証する。
 - [ ] **P0** Pencil描画と指ジェスチャーを分離する。
@@ -291,6 +295,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [ ] **P0** 新規checkoutからのbootstrap手順を自動化する。
 - [ ] **P0** `nix build`で依存物を再生成できるようにする。
+- [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
 - [ ] **P0** configure、build、development sign、install、log取得を個別コマンドにする。
 - [ ] **P0** Xcode/SDK更新時の検証手順を作る。
 - [ ] **P0** upstream追従時のrebase/checklistを作る。

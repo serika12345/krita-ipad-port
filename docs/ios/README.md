@@ -22,8 +22,9 @@ Xcode SDK rather than importing the proprietary SDK into the Nix store.
 ## Build boundary
 
 Nix pins host build tools and open-source target dependencies. Xcode supplies
-Apple Clang, the proprietary SDK, the Xcode generator, development signing,
-and device installation. See `docs/ios/adr/0001-nix-xcode-boundary.md`.
+Apple Clang and the proprietary SDK. AltStore/AltServer can perform local
+development signing and device installation without storing credentials in the
+repository. See `docs/ios/adr/0001-nix-xcode-boundary.md`.
 
 ## Start a development shell
 
@@ -61,10 +62,24 @@ nix develop --command packaging/ios/scripts/configure-krita.sh device --build
 ```
 
 The device result is an unsigned
-`build-ios/krita/device-ninja/bin/krita.app`. M3 deliberately excludes dynamic
-Krita plugins, Python/PyQt, PrintSupport, process-launched FFmpeg features, and
-the updater. See `docs/ios/validation-m3.md` for binary metadata and remaining
-runtime work.
+`build-ios/krita/device-ninja/bin/krita.app`. The iPadOS feature profile links
+the current minimum Krita plugins statically and excludes Python/PyQt,
+PrintSupport, process-launched FFmpeg features, and the updater.
+
+## Install the current build with AltStore
+
+With AltServer running and AltStore installed on a connected iPad, one command
+configures, builds, validates, packages, installs, launches, and collects the
+Krita startup log:
+
+```sh
+packaging/ios/scripts/deploy-altstore.sh
+```
+
+Pass a CoreDevice identifier when more than one device is available. Use
+`--skip-build` to repackage the current successful build. See
+`docs/ios/altstore-deployment.md` for prerequisites, validations, outputs, and
+the physical-device result.
 
 ## Build M2 dependencies
 

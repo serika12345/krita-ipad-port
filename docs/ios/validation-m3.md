@@ -53,10 +53,11 @@ are statically linked.
 - static Fontconfig/Expat and libintl/iconv dependencies are made explicit at
   final link time.
 
-## Deferred validation
+## Physical-device follow-up
 
-This artifact is intentionally unsigned and therefore has not been installed or
-launched on a physical iPad. Static initialization, Qt platform startup, main
-window presentation, and runtime resource lookup remain M5 checks after the M4
-minimum internal-plugin set is linked. The current app has no dynamically loaded
-Krita paint-op, tool, Docker, or import/export plugins; those are the M4 scope.
+The later M4/M5 profile has now been signed by AltStore and launched on a
+physical iPad. Static initialization, Qt platform startup, SQL resource lookup,
+LittleCMS initialization, packaged runtime data, and main-window presentation
+all pass. The bare CMake output remains unsigned; signing and installation are
+performed only in the deployment staging path. See
+`docs/ios/altstore-deployment.md`.
