@@ -188,17 +188,22 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** アプリ起動とmain window表示を確認する。
 - [ ] **P0** 正常終了と再起動を確認する。
 - [ ] **P0** 最小キャンバスを作成し、指でストロークを描く。
-- [ ] **P0** Apple Pencilの位置、筆圧、傾き、方位、接触状態を記録・検証する。
+- [x] **P0** Apple Pencilの位置、筆圧、傾き、方位、接触状態を記録・検証する（iPad8,1実機で`QTabletEvent`のpress/move/release、pressure、xTilt/yTiltを確認済み）。
 - [ ] **P0** Pencil描画と指ジェスチャーを分離する。
 - [ ] **P0** undo/redo、pan、zoom、rotateを実装・確認する。
 - [ ] **P0** 高DPI、Safe Area、画面回転を修正する。
 - [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する。
+- [ ] **P1 Apple Pencilダブルタップ対応**: Qt iOSのviewへ`UIPencilInteraction`を登録し、ダブルタップをKritaのアクションへ橋渡しする。生成済みQtソースの直接編集ではなく、再現可能なpatchとしてビルド手順へ組み込む。
+  - [ ] iPadOSの`preferredTapAction`を読み、少なくとも「消しゴム切り替え」「直前のプリセットへ切り替え」「カラーパレット表示」「何もしない」を対応する。
+  - [ ] 消しゴム切り替えはKritaの`erase_action`、直前プリセットは`previous_preset`へ接続する。既存S-Penアクション設定を再利用する場合は`kritaspensettings`をiOS静的プラグイン構成へ追加する。
+  - [ ] Apple Pencil第2世代の実機で、1回のダブルタップにつきアクションが1回だけ発火し、描画中のストローク、筆圧、傾き、指ジェスチャーへ回帰がないことを確認する。
 - [ ] **P1** hover対応iPadでPencil hoverを検証する。
 - [ ] **P1** キーボードショートカットを確認する。
 
 ### 完了条件
 
 - [ ] 実機で新規キャンバスを作成し、Pencil筆圧付きで描画できる。
+- [ ] Apple PencilダブルタップがiPadOSの選択内容に対応するKritaアクションを実行する。
 - [ ] pan/zoom/rotateと描画が競合しない。
 - [ ] 10分間の連続描画でクラッシュや入力停止がない。
 
