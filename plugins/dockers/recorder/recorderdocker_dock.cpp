@@ -11,7 +11,9 @@
 #include "recorder_const.h"
 #include "ui_recorderdocker.h"
 #include "recorder_snapshots_manager.h"
+#ifndef Q_OS_IOS
 #include "recorder_export.h"
+#endif
 #include "recorder_export_settings.h"
 #include "recorder_export_config.h"
 
@@ -400,6 +402,11 @@ RecorderDockerDock::RecorderDockerDock()
     d->ui->buttonBrowse->setIcon(KisIconUtils::loadIcon("folder"));
     d->ui->buttonRecordToggle->setIcon(KisIconUtils::loadIcon("media-record"));
     d->ui->buttonExport->setIcon(KisIconUtils::loadIcon("document-export-16"));
+#ifdef Q_OS_IOS
+    // iPadOS has no QProcess/FFmpeg backend. Snapshot recording remains
+    // available, but presenting the video export action would be misleading.
+    d->ui->buttonExport->hide();
+#endif
     d->ui->sliderThreads->setTickPosition(QSlider::TickPosition::TicksBelow);
     d->ui->sliderThreads->setMinimum(1);
     d->ui->sliderThreads->setMaximum(ThreadSystemValue::MaxThreadCount);
@@ -423,6 +430,9 @@ RecorderDockerDock::RecorderDockerDock()
     KisActionRegistry *actionRegistry = KisActionRegistry::instance();
     d->recordToggleAction = actionRegistry->makeQAction(keyActionRecordToggle, this);
     d->exportAction = actionRegistry->makeQAction(keyActionExport, this);
+#ifdef Q_OS_IOS
+    d->exportAction->setEnabled(false);
+#endif
 
     connect(d->recordToggleAction, SIGNAL(toggled(bool)), d->ui->buttonRecordToggle, SLOT(setChecked(bool)));
     connect(d->exportAction, SIGNAL(triggered()), d->ui->buttonExport, SIGNAL(clicked()));
@@ -597,6 +607,7 @@ bool RecorderDockerDock::onRecordButtonToggled(bool checked)
 
 void RecorderDockerDock::onExportButtonClicked()
 {
+#ifndef Q_OS_IOS
     if (!d->canvas)
         return;
 
@@ -615,6 +626,7 @@ void RecorderDockerDock::onExportButtonClicked()
 
     if (d->realTimeCaptureMode)
         d->ui->spinRate->setValue(exportSettings->fps);
+#endif
 }
 
 void RecorderDockerDock::onManageRecordingsButtonClicked()

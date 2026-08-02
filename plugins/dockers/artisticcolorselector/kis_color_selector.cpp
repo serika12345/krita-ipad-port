@@ -25,7 +25,7 @@
 
 //#define DEBUG_ARC_SELECTOR
 
-KisColorSelector::KisColorSelector(QWidget* parent, KisColor::Type type)
+KisArtisticColorSelector::KisArtisticColorSelector(QWidget* parent, KisColor::Type type)
     : QWidget(parent)
     , m_colorConverter(KisDisplayColorConverter::dumbConverterInstance())
     , m_colorSpace(type)
@@ -1187,4 +1187,3 @@ void KisColorSelector::setShowValueScaleNumbers(bool value)
     recalculateAreas(quint8(getNumLightPieces()));
     update();
 }
-

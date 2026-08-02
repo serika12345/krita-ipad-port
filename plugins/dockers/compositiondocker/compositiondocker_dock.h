@@ -42,7 +42,9 @@ private Q_SLOTS:
     void deleteClicked();
     void saveClicked();
     void exportImageClicked();
+#ifndef Q_OS_IOS
     void exportAnimationClicked();
+#endif
     void activateCurrentIndex();
     void customContextMenuRequested(QPoint pos);
     void updateComposition();
@@ -59,4 +61,3 @@ private:
 
 
 #endif
-

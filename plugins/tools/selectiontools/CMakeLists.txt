@@ -13,6 +13,7 @@ set(kritaselectiontools_SOURCES
 )
 
 qt_add_resources(kritaselectiontools_SOURCES selectiontools.qrc)
+krita_ios_add_static_resource(selectiontools)
 
 kis_add_library(kritaselectiontools MODULE ${kritaselectiontools_SOURCES})
 

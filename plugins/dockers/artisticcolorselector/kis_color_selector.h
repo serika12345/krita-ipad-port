@@ -23,7 +23,7 @@ class QPainter;
 class KisDisplayColorConverter;
 class QTransform;
 
-class KisColorSelector: public QWidget
+class KisArtisticColorSelector: public QWidget
 {
     Q_OBJECT
 
@@ -44,7 +44,7 @@ class KisColorSelector: public QWidget
     };
 
 public:
-    KisColorSelector(QWidget* parent, KisColor::Type type=KisColor::HSL);
+    KisArtisticColorSelector(QWidget* parent, KisColor::Type type=KisColor::HSL);
 
     void setColorSpace(KisColor::Type type);
     void setColorConverter(KisDisplayColorConverter* colorConverter);
@@ -194,5 +194,9 @@ private:
     typedef KisSignalCompressorWithParam<QPair<KisColor, Acs::ColorRole>> ColorCompressorType;
     QScopedPointer<ColorCompressorType> m_updateColorCompressor;
 };
+
+// Preserve the docker's existing source/UI name while giving its QObject a
+// unique linker-visible class name for the iOS static-plugin executable.
+using KisColorSelector = KisArtisticColorSelector;
 
 #endif // H_KIS_COLOR_SELECTOR_H

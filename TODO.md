@@ -161,6 +161,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 最小セットのLayer Dockerを有効化する。
 - [x] **P0** 起動に必須のLittleCMSカラーマネジメントエンジンを有効化する。
 - [x] **P0** 静的Qtリソースと実行時データの欠落を機械検査する。
+- [x] **P1** 主要Tool/Dockerを46個の静的プラグイン構成へ拡張し、実機メニューとToolboxで確認する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
 - [x] **P1** プラグイン機能群ごとにON/OFFできるiOS feature profileを作る。
 - [ ] **P2** 任意フィルタとDockerを段階的に追加する。
@@ -255,6 +256,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** `Configure Krita`起動時に検索欄へ自動フォーカスせず、ソフトウェアキーボードを抑止する（実機検証済み）。
 - [x] **P0** 全`QAbstractScrollArea`を指のスワイプと慣性スクロールに対応させ、ドラッグ中の項目選択を抑止する（設定画面とブラシ選択を実機検証済み）。
 - [x] **P0** ブラシなど編集可能な一覧項目の選択だけではソフトウェアキーボードを表示せず、明示的な文字編集時だけ有効化する（実機検証済み）。
+- [x] **P0** Android版相当の主要ToolとDockerを静的リンクし、実機のToolboxとDockerメニューで表示を確認する（46プラグイン、ビルド`20260802140547`）。
 - [ ] **P0** 小さすぎるmenu、dialog、slider、spinboxのtouch targetを修正する。
 - [ ] **P0** modal dialogとソフトウェアキーボードの重なりを修正する。
 - [ ] **P1** Split ViewとStage Managerでlayoutを検証する。
@@ -301,6 +303,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** 新規checkoutからのbootstrap手順を自動化する。
 - [ ] **P0** `nix build`で依存物を再生成できるようにする。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
+- [x] **P0** 直近3件を残すIPA整理と、ビルド依存をGC rootで保護した低容量時Nix GCを自動化する。
 - [ ] **P0** configure、build、development sign、install、log取得を個別コマンドにする。
 - [ ] **P0** Xcode/SDK更新時の検証手順を作る。
 - [ ] **P0** upstream追従時のrebase/checklistを作る。

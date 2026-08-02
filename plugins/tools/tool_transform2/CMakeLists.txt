@@ -33,6 +33,7 @@ set(kritatooltransform_SOURCES
 )
 
 qt_add_resources(kritatooltransform_SOURCES tool_transform.qrc)
+krita_ios_add_static_resource(tool_transform)
 kis_add_library(kritatooltransform MODULE ${kritatooltransform_SOURCES})
 
 target_link_libraries(kritatooltransform_static

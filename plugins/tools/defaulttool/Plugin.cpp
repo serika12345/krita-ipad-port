@@ -11,7 +11,7 @@
 
 #include <kpluginfactory.h>
 
-K_PLUGIN_FACTORY_WITH_JSON(PluginFactory, "calligra_tool_defaults.json", registerPlugin<Plugin>();)
+K_PLUGIN_FACTORY_WITH_JSON(DefaultToolPluginFactory, "calligra_tool_defaults.json", registerPlugin<Plugin>();)
 
 Plugin::Plugin(QObject *parent, const QVariantList &)
     : QObject(parent)

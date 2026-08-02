@@ -1,10 +1,5 @@
 add_subdirectory(layerdocker)
 
-if(IOS)
-    # The Layer Docker is the only Docker in the initial iPadOS profile.
-    return()
-endif()
-
 if(HAVE_OPENEXR AND NOT ANDROID)
     add_subdirectory(smallcolorselector)
 endif()
@@ -34,7 +29,11 @@ add_subdirectory(recorder)
 add_subdirectory(touchdocker)
 add_subdirectory(logdocker)
 add_subdirectory(snapshotdocker)
-add_subdirectory(storyboarddocker)
 add_subdirectory(widegamutcolorselector)
 add_subdirectory(brushhud)
-add_subdirectory(textproperties)
+if(NOT IOS)
+    # Storyboard export requires Qt PrintSupport and Text Properties requires
+    # Qt Quick/QML; neither module is part of the current iPadOS Qt profile.
+    add_subdirectory(storyboarddocker)
+    add_subdirectory(textproperties)
+endif()

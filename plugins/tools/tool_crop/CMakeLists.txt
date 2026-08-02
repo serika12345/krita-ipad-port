@@ -5,6 +5,7 @@ set(kritatoolcrop_SOURCES
     kistoolcropconfigwidget.cpp
     )
 qt_add_resources(kritatoolcrop_SOURCES toolcrop.qrc)
+krita_ios_add_static_resource(toolcrop)
 
 ki18n_wrap_ui(kritatoolcrop_SOURCES wdg_tool_crop.ui)
 

@@ -4,6 +4,7 @@ set(kritatoolpolyline_SOURCES
     )
 
 qt_add_resources(kritatoolpolyline_SOURCES polyline.qrc)
+krita_ios_add_static_resource(polyline)
 
 kis_add_library(kritatoolpolyline MODULE ${kritatoolpolyline_SOURCES})
 

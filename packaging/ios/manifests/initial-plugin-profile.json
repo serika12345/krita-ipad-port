@@ -1,24 +1,71 @@
 {
   "schema": 1,
-  "profile": "minimum-drawing",
-  "policy": "Only targets listed here may be linked in the first static-plugin proof of concept.",
+  "profile": "android-equivalent-ui",
+  "policy": "Static internal plugin set built, installed, and verified on an iPad. External extensions and unavailable platform dependencies remain excluded.",
   "targets": [
     "kritakraimport",
     "kritakraexport",
     "kritapngimport",
     "kritapngexport",
-    "kritaoraimport",
-    "kritaoraexport",
-    "kritajpegimport",
-    "kritajpegexport",
     "kritadefaultpaintops",
+    "kritaassistanttool",
     "kritadefaulttools",
+    "krita_flaketools",
     "kritaselectiontools",
-    "kritatooltransform",
     "kritatoolcrop",
+    "kritatoolpolygon",
+    "kritatoolpolyline",
+    "kritatooltransform",
+    "kritatooldyna",
+    "krita_karbontools",
+    "kritatoollazybrush",
+    "kritatoolSmartPatch",
+    "kritatoolencloseandfill",
+    "kritatoolKnife",
     "kritalayerdocker",
-    "kritapresetdocker",
+    "kritaspecificcolorselector",
+    "kritadigitalmixer",
     "kritacolorselectorng",
-    "kritatouchdocker"
+    "kritapresetdocker",
+    "kritahistorydocker",
+    "kritachanneldocker",
+    "kritaartisticcolorselector",
+    "kritatasksetdocker",
+    "kritacompositiondocker",
+    "kritapatterndocker",
+    "kritagriddocker",
+    "kritaarrangedocker",
+    "kritaoverviewdocker",
+    "kritapalettedocker",
+    "kritaanimationdocker",
+    "kritapresethistory",
+    "kritasvgcollectiondocker",
+    "kritahistogramdocker",
+    "kritagamutmask",
+    "kritarecorderdocker",
+    "kritatouchdocker",
+    "kritalogdocker",
+    "kritasnapshotdocker",
+    "kritawgcolorselector",
+    "kritabrushhud",
+    "kritalcmsengine"
+  ],
+  "excluded": [
+    {
+      "feature": "SVG Text tool and Text Properties docker",
+      "reason": "Qt Quick/QML is not part of the current iPadOS Qt profile."
+    },
+    {
+      "feature": "Storyboard docker",
+      "reason": "Qt PrintSupport is unavailable in the current iPadOS Qt profile."
+    },
+    {
+      "feature": "LUT and Small Color Selector dockers",
+      "reason": "OpenColorIO and OpenEXR are not built for the current dependency profile."
+    },
+    {
+      "feature": "Recorder video export and Composition animation export",
+      "reason": "They require QProcess/FFmpeg; snapshot recording and image composition export remain available."
+    }
   ]
 }

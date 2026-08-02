@@ -9,6 +9,7 @@
 #include "tool_transform_args.h"
 #include "kis_transform_utils.h"
 
+#include <QApplication>
 #include <QMessageBox>
 #include <kis_algebra_2d.h>
 

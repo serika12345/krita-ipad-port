@@ -39,8 +39,10 @@
 #include <kis_action_registry.h>
 
 #include <dialogs/KisAsyncAnimationFramesSaveDialog.h>
+#ifndef Q_OS_IOS
 #include <animation/KisAnimationRenderingOptions.h>
 #include <animation/KisAnimationRender.h>
+#endif
 #include <kis_image_animation_interface.h>
 #include <kis_time_span.h>
 #include <KisMimeDatabase.h>
@@ -90,14 +92,18 @@ CompositionDockerDock::CompositionDockerDock( )
     QAction* imageAction = new QAction(KisIconUtils::loadIcon("document-export-16"), i18n("Export Images"), this);
     connect(imageAction, SIGNAL(triggered(bool)), this, SLOT(exportImageClicked()));
 
+#ifndef Q_OS_IOS
     QAction* animationAction = new QAction(KisIconUtils::loadIcon("addblankframe-16"), i18n("Export Animations"), this);
     connect(animationAction, SIGNAL(triggered(bool)), this, SLOT(exportAnimationClicked()));
+#endif
 
     exportCompositions->setDefaultAction(imageAction);
 
     QMenu* exportMenu = new QMenu(this);
     exportMenu->addAction(imageAction);
+#ifndef Q_OS_IOS
     exportMenu->addAction(animationAction);
+#endif
 
     exportCompositions->setMenu(exportMenu);
 
@@ -335,6 +341,7 @@ void CompositionDockerDock::exportImageClicked()
 
 }
 
+#ifndef Q_OS_IOS
 void CompositionDockerDock::exportAnimationClicked()
 {
     KisConfig cfg(true);
@@ -421,6 +428,7 @@ void CompositionDockerDock::exportAnimationClicked()
         image->waitForDone();
     }
 }
+#endif
 
 bool CompositionDockerDock::eventFilter(QObject* obj, QEvent* event)
 {
@@ -482,5 +490,4 @@ void CompositionDockerDock::renameComposition()
         }
     }
 }
-
 
