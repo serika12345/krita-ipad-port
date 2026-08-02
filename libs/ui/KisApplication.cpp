@@ -30,6 +30,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QProcessEnvironment>
+#include <QProxyStyle>
 #include <QStringList>
 #include <QStyle>
 #include <QStyleFactory>
@@ -82,6 +83,38 @@
 #include "kis_document_aware_spin_box_unit_manager.h"
 #include "KisViewManager.h"
 #include <KisUsageLogger.h>
+
+namespace
+{
+#ifdef Q_OS_IOS
+class KisIosWidgetStyle : public QProxyStyle
+{
+public:
+    explicit KisIosWidgetStyle(QStyle *baseStyle)
+        : QProxyStyle(baseStyle)
+    {
+        setObjectName(baseStyle->objectName());
+        setProperty("kritaIosWidgetStyle", true);
+    }
+
+    int styleHint(StyleHint hint,
+                  const QStyleOption *option = nullptr,
+                  const QWidget *widget = nullptr,
+                  QStyleHintReturn *returnData = nullptr) const override
+    {
+        if (hint == SH_ComboBox_UseNativePopup) {
+            // Qt's iOS platform menu presents QComboBox items in a UIPickerView.
+            // Its Done/Cancel toolbar is not reliably exposed when the picker is
+            // used as an input view, leaving the picker impossible to dismiss.
+            // Keep the regular Qt popup, where tapping an item commits and closes.
+            return 0;
+        }
+
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
+#endif
+}
 
 #include <dialogs/KisSessionManagerDialog.h>
 
@@ -247,16 +280,22 @@ KisApplication::KisApplication(const QString &key, int &argc, char **argv)
     QString widgetStyleFromConfig = cfg.widgetStyle();
     QString defaultStyle = style()->objectName().toLower();
     if (!widgetStyleFromConfig.isEmpty()) {
-        qApp->setStyle(widgetStyleFromConfig);
+        setWidgetStyle(widgetStyleFromConfig);
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     } else if (defaultStyle == "macintosh" || defaultStyle == "windowsvista") {
          // default to Fusion instead of styles that use native theming
-        qApp->setStyle("fusion");
+        setWidgetStyle("fusion");
     }
 #else
     } else if (style()->objectName().toLower() == "macos" || defaultStyle == "windowsvista") {
         // default to Fusion instead of styles that use native theming
-        qApp->setStyle("fusion");
+        setWidgetStyle("fusion");
+    }
+#endif
+
+#ifdef Q_OS_IOS
+    if (!style()->property("kritaIosWidgetStyle").toBool()) {
+        qApp->setStyle(new KisIosWidgetStyle(style()));
     }
 #endif
 
@@ -870,6 +909,20 @@ KisApplication::~KisApplication()
         KisResourceCacheDb::deleteTemporaryResources();
         KisResourceCacheDb::performHouseKeepingOnExit();
     }
+}
+
+void KisApplication::setWidgetStyle(const QString &styleName)
+{
+    QStyle *newStyle = QStyleFactory::create(styleName);
+    if (!newStyle) {
+        return;
+    }
+
+#ifdef Q_OS_IOS
+    qApp->setStyle(new KisIosWidgetStyle(newStyle));
+#else
+    qApp->setStyle(newStyle);
+#endif
 }
 
 void KisApplication::setSplashScreen(QWidget *splashScreen)

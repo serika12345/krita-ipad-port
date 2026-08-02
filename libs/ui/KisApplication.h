@@ -95,6 +95,11 @@ public:
 
     static void verifyMetatypeRegistration();
 
+    /**
+     * Apply a widget style while preserving platform-specific Krita fixes.
+     */
+    static void setWidgetStyle(const QString &styleName);
+
     KisExtendedModifiersMapperPluginInterface* extendedModifiersPluginInterface();
 
 #ifdef Q_OS_ANDROID

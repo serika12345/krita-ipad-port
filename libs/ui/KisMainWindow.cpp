@@ -2560,7 +2560,7 @@ void KisMainWindow::slotUpdateWidgetStyle()
          if(d->actionMap.value(key)->isChecked()) {
             cfg.setWidgetStyle(key);
             qApp->setProperty(currentUnderlyingStyleNameProperty, key);
-            qApp->setStyle(key);
+            KisApplication::setWidgetStyle(key);
 
             // When switching to a style that uses system colors, reset the theme
 #ifndef Q_OS_HAIKU

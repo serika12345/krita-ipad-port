@@ -92,3 +92,13 @@ not repeat that import unless the packaged bundle set changes.
 The follow-up physical-device run `20260802123518` validated 496 runtime files
 and restored every Edit-menu label that had been blank when the two core action
 registries were absent. Disabled entries remain visible in gray as expected.
+
+The physical-device run `20260802124350` disabled Qt's UIKit-native combo-box
+picker at the Krita application-style boundary. Qt 6.11 otherwise presents a
+`UIPickerView` whose Done/Cancel input toolbar is not visible in this window
+layout, leaving choices impossible to commit or dismiss. Combo boxes now use
+Qt's inline popup list on iPadOS. `Settings > Configure Krita > General > Tools`
+was used to verify that `Touch Painting` opens all three choices, commits
+`Enabled` with one tap, and closes the list while keeping the dialog's OK and
+Cancel buttons reachable. The override is application-wide and is preserved
+when Krita's widget style changes.
