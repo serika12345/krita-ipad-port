@@ -136,7 +136,7 @@ if (HAVE_DBUS)
    set (KRITA_WIDGET_UTILS_EXTRA_LIBS ${KRITA_WIDGET_UTILS_EXTRA_LIBS} Qt${QT_MAJOR_VERSION}::DBus)
 endif ()
 
-if (APPLE)
+if (APPLE AND NOT IOS)
     find_library(FOUNDATION_LIBRARY Foundation)
     set(KRITA_WIDGET_UTILS_EXTRA_LIBS ${KRITA_WIDGET_UTILS_EXTRA_LIBS} ${FOUNDATION_LIBRARY})
     target_include_directories(kritawidgetutils PRIVATE
@@ -159,7 +159,6 @@ target_link_libraries(kritawidgetutils
         kritaglobal
         kritaresources
     PRIVATE
-        Qt${QT_MAJOR_VERSION}::PrintSupport
         KF${KF_MAJOR}::I18n
         KF${KF_MAJOR}::ConfigCore
         KF${KF_MAJOR}::CoreAddons
@@ -170,6 +169,10 @@ target_link_libraries(kritawidgetutils
         
         ${KRITA_WIDGET_UTILS_EXTRA_LIBS}
 )
+
+if(NOT IOS)
+    target_link_libraries(kritawidgetutils PRIVATE Qt${QT_MAJOR_VERSION}::PrintSupport)
+endif()
 
 if (QT_MAJOR_VERSION STREQUAL "6")
     target_link_libraries(kritawidgetutils PRIVATE KF6::ColorScheme)

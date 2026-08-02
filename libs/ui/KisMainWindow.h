@@ -11,7 +11,6 @@
 #include "kritaui_export.h"
 
 #include <QPointer>
-#include <QPrinter>
 #include <QUuid>
 #include <QUrl>
 

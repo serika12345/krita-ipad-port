@@ -31,6 +31,7 @@
         source-freetype = pkgs.freetype.src;
         source-harfbuzz = pkgs.harfbuzz.src;
         source-fontconfig = pkgs.fontconfig.src;
+        source-fribidi = pkgs.fribidi.src;
         source-gettext = pkgs.gettext.src;
         source-libunibreak = pkgs.libunibreak.src;
         source-qtbase = pkgs.qt6Packages.qtbase.src;

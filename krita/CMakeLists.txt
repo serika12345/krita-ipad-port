@@ -13,8 +13,17 @@ endif()
 
 set(krita_SRCS main.cc)
 
-# Set the application icon on the application
-if (NOT APPLE)
+if (IOS)
+    set(KRITA_IOS_ICON "${CMAKE_CURRENT_SOURCE_DIR}/pics/branding/${BRANDING}/1024-apps-krita.png")
+    set_source_files_properties(${KRITA_IOS_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    list(APPEND krita_SRCS ${KRITA_IOS_ICON})
+endif()
+
+# Set the application icon on the application. The iOS asset catalog is added
+# separately once the port has a final icon set.
+if (IOS)
+    set(ICON_SRCS "")
+elseif (NOT APPLE)
 	file(GLOB ICON_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/pics/branding/${BRANDING}/*-apps-krita.png")
 else()
     # XCode below 26 cannot work with .icon format
@@ -77,13 +86,13 @@ if (WIN32)
             ${CMAKE_CURRENT_BINARY_DIR}/kritafile.ico
         DESTINATION ${CMAKE_INSTALL_PREFIX}/installer
     )
-elseif(APPLE)
+elseif(APPLE AND NOT IOS)
     if(${XCODE_VERSION} VERSION_GREATER_EQUAL "26.0")
       set_source_files_properties(${ASSETS_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     else()
       ecm_add_app_icon(krita_SRCS OUTFILE_BASENAME krita ICONS ${ICON_SRCS})
     endif()
-else()
+elseif(NOT IOS)
     ecm_add_app_icon(krita_SRCS ICONS ${ICON_SRCS})
 endif()
 
@@ -147,6 +156,8 @@ elseif (WIN32)
     # Build the main implementation into a DLL to be called by a stub EXE.
     kis_add_library(krita SHARED ${krita_SRCS})
     set_target_properties(krita PROPERTIES PREFIX "")
+elseif(IOS)
+    qt_add_executable(krita MACOSX_BUNDLE ${krita_SRCS})
 else()
     add_executable(krita ${krita_SRCS})
 endif()
@@ -159,13 +170,15 @@ target_link_libraries(krita
                       Qt${QT_MAJOR_VERSION}::Widgets
                       Qt${QT_MAJOR_VERSION}::Xml
                       Qt${QT_MAJOR_VERSION}::Network
-                      Qt${QT_MAJOR_VERSION}::PrintSupport
                       Qt${QT_MAJOR_VERSION}::Svg)
+if(NOT IOS)
+    target_link_libraries(krita PRIVATE Qt${QT_MAJOR_VERSION}::PrintSupport)
+endif()
 if(HAVE_KCRASH)
     target_link_libraries(krita PRIVATE KF${KF_MAJOR}::Crash)
 endif()
 
-if (APPLE)
+if (APPLE AND NOT IOS)
     set(KRITA_VERSION_NUMBER_STRING "${KRITA_STABLE_VERSION_MAJOR}.${KRITA_STABLE_VERSION_MINOR}.${KRITA_VERSION_RELEASE}")
     set_target_properties(krita PROPERTIES INSTALL_RPATH "@loader_path/../../../../lib;@loader_path/../lib;
         @loader_path/../Frameworks;@executable_path/../../../../lib;@executable_path/../lib;@executable_path/../Frameworks")
@@ -179,7 +192,21 @@ if (APPLE)
     set_target_properties(krita PROPERTIES MACOSX_BUNDLE_COPYRIGHT "GNU Public License, V2 or, at your option, any later version.")
 endif ()
 
-if (NOT ANDROID)
+if(IOS)
+    set(KRITA_VERSION_NUMBER_STRING "${KRITA_STABLE_VERSION_MAJOR}.${KRITA_STABLE_VERSION_MINOR}.${KRITA_VERSION_RELEASE}")
+    set_target_properties(krita PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.ios.plist.in
+        MACOSX_BUNDLE_GUI_IDENTIFIER "org.krita.ipad.port"
+        MACOSX_BUNDLE_BUNDLE_NAME "Krita"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${KRITA_VERSION_NUMBER_STRING}
+        MACOSX_BUNDLE_BUNDLE_VERSION ${KRITA_VERSION_NUMBER_STRING}
+        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO
+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "2"
+    )
+endif()
+
+if (NOT ANDROID AND NOT IOS)
   set(KRITAVERSION_SRCS kritaversion.cpp)
   add_executable(krita_version ${KRITAVERSION_SRCS})
   target_link_libraries(krita_version
@@ -197,7 +224,7 @@ if (NOT ANDROID)
 endif()
 
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     set(KRITA_ASSET_KRZ_ICNS "krita-krz.icns" "krita-kra.icns")
     add_custom_command(
       OUTPUT ${KRITA_ASSET_KRZ_ICNS}
@@ -216,6 +243,8 @@ if(APPLE)
     endif()
     target_sources(krita PRIVATE ${KRITA_ASSET_KRZ_ICNS})
 
+    install(TARGETS krita ${INSTALL_TARGETS_DEFAULT_ARGS} BUNDLE DESTINATION bin)
+elseif(IOS)
     install(TARGETS krita ${INSTALL_TARGETS_DEFAULT_ARGS} BUNDLE DESTINATION bin)
 else()
     install(TARGETS krita ${INSTALL_TARGETS_DEFAULT_ARGS})

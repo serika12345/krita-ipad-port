@@ -16,6 +16,8 @@
 #include <QOpenGLFunctions>
 #include <QAction>
 
+#include "opengl/KisOpenGLIOSCompat.h"
+
 #include <kis_icon.h>
 
 #include "kis_canvas2.h"
@@ -514,4 +516,3 @@ void KisMirrorAxis::Private::recomputeVisibleAxes(QRect viewport)
     verticalAxis = QLineF(samplePt1, samplePt2);
     if (!KisAlgebra2D::intersectLineRect(verticalAxis, viewport, true)) verticalAxis = QLineF();
 }
-

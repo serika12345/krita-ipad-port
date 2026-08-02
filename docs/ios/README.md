@@ -51,12 +51,20 @@ nix develop --command packaging/ios/scripts/build-smoke.sh device
 nix develop --command packaging/ios/scripts/build-smoke.sh simulator
 ```
 
-Full Krita presets are available as `ios-device` and `ios-simulator`. They are
-expected to stop on missing target dependencies until M2 is complete:
+Full Krita presets are available as `ios-device` and `ios-simulator`. Use the
+wrapper so the three target prefixes and pinned host translation tools are
+resolved consistently:
 
 ```sh
-cmake --preset ios-device
+nix develop --command packaging/ios/scripts/configure-krita.sh device
+nix develop --command packaging/ios/scripts/configure-krita.sh device --build
 ```
+
+The device result is an unsigned
+`build-ios/krita/device-ninja/bin/krita.app`. M3 deliberately excludes dynamic
+Krita plugins, Python/PyQt, PrintSupport, process-launched FFmpeg features, and
+the updater. See `docs/ios/validation-m3.md` for binary metadata and remaining
+runtime work.
 
 ## Build M2 dependencies
 

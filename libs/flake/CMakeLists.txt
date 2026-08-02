@@ -15,7 +15,7 @@ add_subdirectory(tests)
 add_subdirectory(resources/tests)
 
 set(DISABLE_CLIP_MASK_PAINTER_ON_MACOS FALSE)
-if (APPLE)
+if (APPLE AND NOT IOS)
     set(DISABLE_CLIP_MASK_PAINTER_ON_MACOS TRUE)
 endif()
 
@@ -296,6 +296,17 @@ target_link_libraries(kritaflake
         libunibreak::libunibreak
 )
 
+if (IOS)
+    # Static Fontconfig does not expose its private Expat dependency through
+    # CMake, and static libintl uses the iconv shim provided by the iOS SDK.
+    find_library(KRITA_IOS_EXPAT_LIBRARY NAMES expat REQUIRED)
+    find_library(KRITA_IOS_ICONV_LIBRARY NAMES iconv REQUIRED)
+    target_link_libraries(kritaflake PRIVATE
+        ${KRITA_IOS_EXPAT_LIBRARY}
+        ${KRITA_IOS_ICONV_LIBRARY}
+    )
+endif()
+
 if (QT_MAJOR_VERSION STREQUAL "6")
 target_link_libraries(kritaflake
     PRIVATE
@@ -308,4 +319,3 @@ set_target_properties(kritaflake PROPERTIES
 )
 
 install(TARGETS kritaflake  ${INSTALL_TARGETS_DEFAULT_ARGS})
-

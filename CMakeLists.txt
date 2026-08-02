@@ -84,7 +84,7 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (APPLE)
+if (APPLE AND NOT IOS)
     add_subdirectory(packaging/macos)
 
     if(NOT CMAKE_GENERATOR MATCHES "Xcode")
@@ -113,7 +113,7 @@ if (APPLE)
 endif()
 
 function(macos_test_fixrpath)
-    if (APPLE AND BUILD_TESTING)
+    if (APPLE AND NOT IOS AND BUILD_TESTING)
     foreach(TEST IN LISTS ARGN)
         set_property(TARGET ${TEST}
                      PROPERTY BUILD_RPATH "@loader_path/../../../../lib;@loader_path/../lib;@loader_path/../Frameworks;${CMAKE_INSTALL_PREFIX}/${KDE_INSTALL_LIBDIR}")
@@ -342,6 +342,11 @@ option(BUILD_KRITA_QT_DESIGNER_PLUGINS "Build Qt Designer plugins for Krita widg
 add_feature_info("Build Qt Designer plugins" BUILD_KRITA_QT_DESIGNER_PLUGINS "Builds Qt Designer plugins for Krita widgets (use -DBUILD_KRITA_QT_DESIGNER_PLUGINS=ON to enable).")
 
 option(ENABLE_UPDATERS "Enable updaters/update notifications" ON)
+
+if(IOS)
+    option(KRITA_IOS_BUILD_QML_MODULES "Build Krita QML modules for iOS" OFF)
+    option(KRITA_IOS_BUILD_PLUGINS "Build Krita plugins for iOS" OFF)
+endif()
 configure_file(config-updaters.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-updaters.h)
 add_feature_info("Enable updaters" ENABLE_UPDATERS "Enable updaters/update notifications.")
 
@@ -409,6 +414,13 @@ include(MacroJPEG)
 ## so we should request the correct version in advance  ##
 #########################################################
 
+if(IOS)
+    # Python extensions are not part of the initial iPadOS build. Keep the
+    # host interpreter available for build-time scripts without looking for
+    # or linking a target Python runtime.
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter)
+    set(PYTHON_EXECUTABLE ${Python_EXECUTABLE})
+else()
 function(TestCompileLinkPythonLibs OUTPUT_VARNAME)
     include(CheckCXXSourceCompiles)
     set(CMAKE_REQUIRED_INCLUDES ${Python_INCLUDE_DIRS})
@@ -456,6 +468,7 @@ if(WIN32)
 else(WIN32)
     find_package(PythonLibrary 3.8)
 endif(WIN32)
+endif()
 
  ########################
 #########################
@@ -555,18 +568,23 @@ find_package(KF${KF_MAJOR} ${MIN_FRAMEWORKS_VERSION} REQUIRED COMPONENTS
         ItemViews
 )
 
-find_package(Qt${QT_MAJOR_VERSION} ${MIN_QT_VERSION}
-        REQUIRED COMPONENTS
+set(KRITA_REQUIRED_QT_COMPONENTS
         Core
         Gui
         Widgets
         Xml
         Network
-        PrintSupport
         Svg
         Test
         Concurrent
         Sql
+)
+if(NOT IOS)
+    list(APPEND KRITA_REQUIRED_QT_COMPONENTS PrintSupport)
+endif()
+find_package(Qt${QT_MAJOR_VERSION} ${MIN_QT_VERSION}
+        REQUIRED COMPONENTS
+        ${KRITA_REQUIRED_QT_COMPONENTS}
 )
 
 if (ANDROID)
@@ -1067,7 +1085,15 @@ macro(kis_add_library)
     # the first run strips only options specific to kis_add_library
     # to create arguments for real add_library call
     cmake_parse_arguments(REAL "" PCH_FILE "" ${ARGV} )
-    add_library(${REAL_UNPARSED_ARGUMENTS})
+    set(_kis_library_args ${REAL_UNPARSED_ARGUMENTS})
+    if(IOS)
+        list(FIND _kis_library_args SHARED _kis_shared_index)
+        if(NOT _kis_shared_index EQUAL -1)
+            list(REMOVE_AT _kis_library_args ${_kis_shared_index})
+            list(INSERT _kis_library_args ${_kis_shared_index} STATIC)
+        endif()
+    endif()
+    add_library(${_kis_library_args})
 
     if (KRITA_ENABLE_PCH)
         # the second run strips out all the option supported by the function
@@ -1243,7 +1269,12 @@ set_package_properties(TIFF PROPERTIES
     URL "http://www.libtiff.org"
     TYPE OPTIONAL
     PURPOSE "Required by the Krita TIFF filter")
-include(CheckLibTIFFPSDSupport)
+if(TIFF_FOUND)
+    include(CheckLibTIFFPSDSupport)
+else()
+    set(TIFF_HAS_PSD_TAGS FALSE)
+    set(TIFF_CAN_WRITE_PSD_TAGS FALSE)
+endif()
 configure_file(config-tiff.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-tiff.h)
 
 find_package(JPEG)
@@ -1318,22 +1349,29 @@ set_package_properties(OpenColorIO PROPERTIES
 macro_bool_to_01(OpenColorIO_FOUND HAVE_OCIO)
 configure_file(config-ocio.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-ocio.h)
 
-set_package_properties(PythonLibrary PROPERTIES
-    DESCRIPTION "Python Library"
-    URL "https://www.python.org"
-    TYPE OPTIONAL
-    PURPOSE "Required by the Krita PyQt plugin")
-macro_bool_to_01(Python_Development_FOUND HAVE_PYTHONLIBS)
+if(IOS)
+    set(HAVE_PYTHONLIBS 0)
+    set(HAVE_SIP 0)
+    set(HAVE_PYQT5 0)
+    set(HAVE_PYQT6 0)
+else()
+    set_package_properties(PythonLibrary PROPERTIES
+        DESCRIPTION "Python Library"
+        URL "https://www.python.org"
+        TYPE OPTIONAL
+        PURPOSE "Required by the Krita PyQt plugin")
+    macro_bool_to_01(Python_Development_FOUND HAVE_PYTHONLIBS)
 
-find_package(SIP "4.19.13")
-set_package_properties(SIP PROPERTIES
-    DESCRIPTION "Support for generating SIP Python bindings"
-    URL "https://github.com/Python-SIP/sip"
-    TYPE OPTIONAL
-    PURPOSE "Required by the Krita PyQt plugin")
-macro_bool_to_01(SIP_FOUND HAVE_SIP)
+    find_package(SIP "4.19.13")
+    set_package_properties(SIP PROPERTIES
+        DESCRIPTION "Support for generating SIP Python bindings"
+        URL "https://github.com/Python-SIP/sip"
+        TYPE OPTIONAL
+        PURPOSE "Required by the Krita PyQt plugin")
+    macro_bool_to_01(SIP_FOUND HAVE_SIP)
+endif()
 
-if (QT_MAJOR_VERSION STREQUAL "5")
+if (QT_MAJOR_VERSION STREQUAL "5" AND NOT IOS)
     find_package(PyQt5 "5.6.0")
     set_package_properties(PyQt5 PROPERTIES
         DESCRIPTION "Python bindings for Qt5."
@@ -1347,7 +1385,7 @@ if (QT_MAJOR_VERSION STREQUAL "5")
     set(PYQT_SIP_TAGS ${PYQT5_SIP_TAGS})
     set(PYQT_SIP_DIR ${PYQT5_SIP_DIR})
 
-elseif (QT_MAJOR_VERSION STREQUAL "6")
+elseif (QT_MAJOR_VERSION STREQUAL "6" AND NOT IOS)
     find_package(PyQt6 "6.7.0")
     set_package_properties(PyQt6 PROPERTIES
         DESCRIPTION "Python bindings for Qt6."
@@ -1678,8 +1716,12 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
 add_subdirectory(sdk/tests)
 
 add_subdirectory(libs)
-add_subdirectory(qmlmodules)
-add_subdirectory(plugins)
+if(NOT IOS OR KRITA_IOS_BUILD_QML_MODULES)
+    add_subdirectory(qmlmodules)
+endif()
+if(NOT IOS OR KRITA_IOS_BUILD_PLUGINS)
+    add_subdirectory(plugins)
+endif()
 if (BUILD_TESTING)
     add_subdirectory(benchmarks)
 endif()
@@ -1702,7 +1744,7 @@ foreach(tst ${KRITA_BROKEN_TESTS})
     message("    * ${tst}")
 endforeach()
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     # fix macos test rpath
     macos_test_fixrpath(${KRITA_TESTS_TARGET})
 endif()

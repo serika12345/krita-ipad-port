@@ -18,8 +18,10 @@
 #include <QDebug>
 #include <QTextTable>
 #include <QTextDocument>
+#ifndef Q_OS_IOS
 #include <QPrinter>
 #include <QPrintDialog>
+#endif
 #include <ksharedconfig.h>
 #include <KConfigGroup>
 #include "kis_action_registry.h"
@@ -231,6 +233,9 @@ more important things):
 */
 void KisShortcutsEditorPrivate::printShortcuts() const
 {
+#ifdef Q_OS_IOS
+    return;
+#else
     QTreeWidgetItem *root = ui.list->invisibleRootItem();
     QTextDocument doc;
 
@@ -338,4 +343,5 @@ void KisShortcutsEditorPrivate::printShortcuts() const
         doc.print(&printer);
     }
     delete dlg;
+#endif
 }

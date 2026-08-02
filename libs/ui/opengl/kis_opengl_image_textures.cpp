@@ -15,6 +15,8 @@
 #endif
 #include <QOpenGLContext>
 
+#include "KisOpenGLIOSCompat.h"
+
 #include <QMessageBox>
 #include <QApplication>
 #include <QScreen>
@@ -849,4 +851,3 @@ void KisOpenGLImageTextures::updateTextureFormat()
                           m_renderingIntent,
                           m_conversionFlags));
 }
-

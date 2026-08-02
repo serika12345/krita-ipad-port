@@ -101,7 +101,6 @@ target_link_libraries(kritawidgets
     kritawidgetutils
     kritaresources
     kritaresourcewidgets
-    Qt${QT_MAJOR_VERSION}::PrintSupport
     KF${KF_MAJOR}::CoreAddons
     KF${KF_MAJOR}::ConfigGui
     KF${KF_MAJOR}::GuiAddons
@@ -109,6 +108,10 @@ target_link_libraries(kritawidgets
     KF${KF_MAJOR}::ConfigCore
     KF${KF_MAJOR}::Completion
 )
+
+if(NOT IOS)
+    target_link_libraries(kritawidgets PRIVATE Qt${QT_MAJOR_VERSION}::PrintSupport)
+endif()
 
 set_target_properties(kritawidgets PROPERTIES
     VERSION ${GENERIC_KRITA_LIB_VERSION} SOVERSION ${GENERIC_KRITA_LIB_SOVERSION}

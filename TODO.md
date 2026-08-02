@@ -125,22 +125,22 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 ### タスク
 
-- [ ] **P0** `APPLE`分岐を`IOS`と`APPLE AND NOT IOS`へ分離する。
-- [ ] **P0** macOSパッケージング、RPATH、`.icns`、`-mmacosx-version-min`をiOSから除外する。
-- [ ] **P0** `qt_add_executable()`または同等のiOS bundle生成へ切り替える。
-- [ ] **P0** iOS用Info.plist、Bundle ID、向き、デバイス要件、アイコンを追加する。
-- [ ] **P0** `krita_version`等の補助実行ファイルをiOSビルドから外す。
-- [ ] **P0** PrintSupport、QProcess、Python、アップデータ、外部実行機能を条件付き無効化する。
-- [ ] **P0** `libs/macosutils`とmacOS Objective-C++コードをiOSから分離する。
-- [ ] **P0** 共有ライブラリを静的ライブラリまたはiOS対応frameworkへ変換する。
-- [ ] **P0** 最小main windowとリソースを含む`.app`を生成する。
+- [x] **P0** `APPLE`分岐を`IOS`と`APPLE AND NOT IOS`へ分離する。
+- [x] **P0** macOSパッケージング、RPATH、`.icns`、`-mmacosx-version-min`をiOSから除外する。
+- [x] **P0** `qt_add_executable()`または同等のiOS bundle生成へ切り替える。
+- [x] **P0** iOS用Info.plist、Bundle ID、向き、デバイス要件、アイコンを追加する。
+- [x] **P0** `krita_version`等の補助実行ファイルをiOSビルドから外す。
+- [x] **P0** PrintSupport、QProcess、Python、アップデータ、外部実行機能を条件付き無効化する。
+- [x] **P0** `libs/macosutils`とmacOS Objective-C++コードをiOSから分離する。
+- [x] **P0** 共有ライブラリを静的ライブラリまたはiOS対応frameworkへ変換する。
+- [x] **P0** 最小main windowとリソースを含む`.app`を生成する。
 - [ ] **P1** 起動ログをOSLogまたは標準的な実機ログへ転送する。
 
 ### 完了条件
 
-- [ ] 未署名またはad-hocの中間`.app`がリンクまで完了する。
-- [ ] iOS SDKに存在しないAPIやmacOS frameworkへのリンクがない。
-- [ ] 起動前の静的初期化でクラッシュしない。
+- [x] 未署名またはad-hocの中間`.app`がリンクまで完了する。
+- [x] iOS SDKに存在しないAPIやmacOS frameworkへのリンクがない。
+- [ ] 起動前の静的初期化でクラッシュしない（署名して実機起動するM5で検証）。
 
 ---
 

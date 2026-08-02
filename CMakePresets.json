@@ -4,21 +4,27 @@
     {
       "name": "ios-common",
       "hidden": true,
-      "generator": "Xcode",
+      "generator": "Ninja",
       "toolchainFile": "${sourceDir}/packaging/ios/cmake/KritaIOSPlatform.cmake",
       "cacheVariables": {
         "BUILD_TESTING": "OFF",
         "BUILD_WITH_QT6": "ON",
         "ALLOW_UNSTABLE": "QT6",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_PREFIX_PATH": "$env{KRITA_IOS_PREFIX_PATH}",
+        "CMAKE_FIND_ROOT_PATH": "$env{KRITA_IOS_PREFIX_PATH}",
+        "CMAKE_IGNORE_PREFIX_PATH": "/usr/local;/opt/homebrew",
+        "KF6_HOST_TOOLING": "$env{KRITA_IOS_KF6_HOST_TOOLING}",
+        "Qt6LinguistTools_DIR": "$env{KRITA_IOS_LINGUIST_TOOLS_DIR}",
+        "ENABLE_UPDATERS": "OFF"
       }
     },
     {
       "name": "ios-device",
       "displayName": "Krita iPadOS device",
       "inherits": "ios-common",
-      "binaryDir": "${sourceDir}/build-ios/krita/device",
+      "binaryDir": "${sourceDir}/build-ios/krita/device-ninja",
       "cacheVariables": {
         "KRITA_IOS_PLATFORM": "DEVICE"
       }
@@ -27,7 +33,7 @@
       "name": "ios-simulator",
       "displayName": "Krita iPadOS simulator",
       "inherits": "ios-common",
-      "binaryDir": "${sourceDir}/build-ios/krita/simulator",
+      "binaryDir": "${sourceDir}/build-ios/krita/simulator-ninja",
       "cacheVariables": {
         "KRITA_IOS_PLATFORM": "SIMULATOR"
       }
@@ -37,12 +43,12 @@
     {
       "name": "ios-device",
       "configurePreset": "ios-device",
-      "configuration": "RelWithDebInfo"
+      "targets": ["krita"]
     },
     {
       "name": "ios-simulator",
       "configurePreset": "ios-simulator",
-      "configuration": "RelWithDebInfo"
+      "targets": ["krita"]
     }
   ]
 }

@@ -24,8 +24,6 @@
 #include <QMessageBox>
 #include <QOperatingSystemVersion>
 #include <QPixmap>
-#include <QProcess>
-#include <QProcessEnvironment>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QString>

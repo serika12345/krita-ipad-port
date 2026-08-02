@@ -30,7 +30,6 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QList>
-#include <QPrintDialog>
 #include <QToolBar>
 #include <QStatusBar>
 #include <QMoveEvent>

@@ -7,7 +7,6 @@
 #include "KisTemplateTree.h"
 
 #include <QDir>
-#include <QPrinter>
 #include <QUrl>
 
 #include <kdesktopfile.h>

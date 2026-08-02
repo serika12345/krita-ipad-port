@@ -119,8 +119,10 @@
 #include "kis_config.h"
 #include "kis_config_notifier.h"
 #include "kis_custom_image_widget.h"
+#ifndef Q_OS_IOS
 #include "animation/KisAnimationRender.h"
 #include "animation/KisDlgAnimationRenderer.h"
+#endif
 #include <KisDocument.h>
 #include "kis_group_layer.h"
 #include "kis_image_from_clipboard_widget.h"
@@ -141,7 +143,9 @@
 #include "thememanager.h"
 #include "kis_animation_importer.h"
 #include "dialogs/kis_dlg_import_image_sequence.h"
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 #include "animation/KisDlgImportVideoAnimation.h"
+#endif
 #include <KisImageConfigNotifier.h>
 #include "KisWindowLayoutManager.h"
 #include <KisUndoActionsUpdateManager.h>
@@ -441,7 +445,7 @@ KisMainWindow::KisMainWindow(QUuid uuid)
     d->styleActions = new QActionGroup(this);
     QAction * action;
 
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 
     Q_FOREACH (QString styleName, QStyleFactory::keys()) {
 
@@ -2235,8 +2239,8 @@ void KisMainWindow::importAnimation()
 
 void KisMainWindow::importVideoAnimation()
 {
-    // Importing video requires ffmpeg, which is not available on Android.
-#ifndef Q_OS_ANDROID
+    // Importing video requires ffmpeg and external processes.
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
     KisDocument *document;
     KisDlgImportVideoAnimation dlg(this, activeView());
 
@@ -2320,6 +2324,7 @@ void KisMainWindow::importVideoAnimation()
 
 void KisMainWindow::renderAnimation()
 {
+#ifndef Q_OS_IOS
     if (!activeView()) return;
 
     KisImageSP image = viewManager()->image();
@@ -2335,10 +2340,12 @@ void KisMainWindow::renderAnimation()
         KisAnimationRenderingOptions encoderOptions = dlgAnimationRenderer.getEncoderOptions();
         KisAnimationRender::render(doc, viewManager(), encoderOptions);
     }
+#endif
 }
 
 void KisMainWindow::renderAnimationAgain()
 {
+#ifndef Q_OS_IOS
     if (!activeView()) return;
 
     KisImageSP image = viewManager()->image();
@@ -2356,6 +2363,7 @@ void KisMainWindow::renderAnimationAgain()
     encoderOptions.fromProperties(settings);
 
     KisAnimationRender::render(doc, viewManager(), encoderOptions);
+#endif
 }
 
 void KisMainWindow::slotConfigureToolbars()
@@ -3071,11 +3079,12 @@ void KisMainWindow::createActions()
     connect(d->importAnimation, SIGNAL(triggered()), this, SLOT(importAnimation()));
 
     // Importing video requires ffmpeg, which is not available on Android.
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
     d->importVideoAnimation = actionManager->createAction("file_import_video_animation");
     connect(d->importVideoAnimation, SIGNAL(triggered()), this, SLOT(importVideoAnimation()));
 #endif
 
+#ifndef Q_OS_IOS
     d->renderAnimation = actionManager->createAction("render_animation");
     d->renderAnimation->setActivationFlags(KisAction::IMAGE_HAS_ANIMATION);
     connect( d->renderAnimation, SIGNAL(triggered()), this, SLOT(renderAnimation()));
@@ -3083,6 +3092,7 @@ void KisMainWindow::createActions()
     d->renderAnimationAgain = actionManager->createAction("render_animation_again");
     d->renderAnimationAgain->setActivationFlags(KisAction::IMAGE_HAS_ANIMATION);
     connect( d->renderAnimationAgain, SIGNAL(triggered()), this, SLOT(renderAnimationAgain()));
+#endif
 
     d->closeAll = actionManager->createAction("file_close_all");
     connect(d->closeAll, SIGNAL(triggered()), this, SLOT(slotFileCloseAll()));

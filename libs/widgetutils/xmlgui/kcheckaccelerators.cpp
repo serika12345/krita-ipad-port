@@ -22,7 +22,9 @@
 #include <QComboBox>
 #include <QGroupBox>
 #include <QClipboard>
+#ifndef Q_OS_IOS
 #include <QProcess>
+#endif
 #include <QDialogButtonBox>
 #include <QFile>
 
@@ -171,9 +173,14 @@ bool KisKCheckAccelerators::eventFilter(QObject *obj, QEvent *e)
                 QClipboard *clipboard = QApplication::clipboard();
                 clipboard->setText(text);
             } else {
+#ifdef Q_OS_IOS
+                QClipboard *clipboard = QApplication::clipboard();
+                clipboard->setText(text);
+#else
                 QProcess *script = new QProcess(this);
                 script->start(copyWidgetTextCommand.arg(text, QFile::decodeName(KLocalizedString::applicationDomain())), QStringList());
                 connect(script, SIGNAL(finished(int,QProcess::ExitStatus)), script, SLOT(deleteLater()));
+#endif
             }
             e->accept();
             return true;

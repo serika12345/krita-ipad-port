@@ -38,6 +38,7 @@ the boundary in ADR 0001.
 | FreeType | 2.14.3 | static arm64/IOS archive |
 | HarfBuzz | 13.2.1 | static arm64/IOS archive |
 | Fontconfig | 2.18.2 | static arm64/IOS archive |
+| FriBidi | 1.0.16 | static arm64/IOS archive |
 | libunibreak | 7.0 | static arm64/IOS archive |
 | GNU libintl | 1.0 | static arm64/IOS archive |
 | Qt | 6.11.1 | 39 static arm64/IOS archives |

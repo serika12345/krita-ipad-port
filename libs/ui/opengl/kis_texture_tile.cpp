@@ -8,6 +8,7 @@
 #include "kis_texture_tile.h"
 #include "kis_texture_tile_update_info.h"
 #include "KisOpenGLBufferCircularStorage.h"
+#include "KisOpenGLIOSCompat.h"
 
 #include <kis_debug.h>
 #if !defined(QT_OPENGL_ES)

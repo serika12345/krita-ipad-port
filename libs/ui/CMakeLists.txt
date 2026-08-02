@@ -12,7 +12,7 @@ endif()
 
 add_subdirectory( tests )
 
-if (APPLE)
+if (APPLE AND NOT IOS)
     find_library(FOUNDATION_LIBRARY Foundation)
     find_library(APPKIT_LIBRARY AppKit)
 endif ()
@@ -380,15 +380,6 @@ set(kritaui_LIB_SRCS
     actions/kis_selection_action_factories.cpp
     actions/KisPasteActionFactories.cpp
     actions/KisTransformToolActivationCommand.cpp
-    animation/KisFFMpegWrapper.cpp
-    animation/KisVideoSaver.cpp
-    animation/KisAnimationRenderingOptions.cpp
-    animation/KisAnimationRender.cpp
-    animation/KisDlgAnimationRenderer.cpp
-    animation/VideoExportOptionsDialog.cpp
-    animation/VideoHDRMetadataOptionsDialog.cpp
-    animation/KisHDRMetadataOptions.cpp
-    animation/KisDlgImportVideoAnimation.cpp
     animation/KisFrameDisplayProxy.cpp
     input/kis_touch_shortcut.cpp
     kis_document_undo_store.cpp
@@ -489,6 +480,22 @@ set(kritaui_LIB_SRCS
     KisAndroidFileProxy.cpp
 )
 
+# iOS does not provide QProcess. Keep animation playback/editing support, but
+# omit the FFmpeg-based import and rendering UI that launches host processes.
+if (NOT IOS)
+    list(APPEND kritaui_LIB_SRCS
+        animation/KisFFMpegWrapper.cpp
+        animation/KisVideoSaver.cpp
+        animation/KisAnimationRenderingOptions.cpp
+        animation/KisAnimationRender.cpp
+        animation/KisDlgAnimationRenderer.cpp
+        animation/VideoExportOptionsDialog.cpp
+        animation/VideoHDRMetadataOptionsDialog.cpp
+        animation/KisHDRMetadataOptions.cpp
+        animation/KisDlgImportVideoAnimation.cpp
+    )
+endif()
+
 if (KSeExpr_FOUND)
     set(kritaui_LIB_SRCS ${kritaui_LIB_SRCS}
         widgets/kis_seexpr_script_chooser.cpp
@@ -558,7 +565,7 @@ if (ENABLE_UPDATERS)
 endif()
 
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     set(kritaui_LIB_SRCS
         ${kritaui_LIB_SRCS}
         input/kis_extended_modifiers_mapper_osx.mm
@@ -799,7 +806,7 @@ if (HAIKU)
   target_link_libraries(kritaui PRIVATE network expat iconv intl)
 endif()
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     target_link_libraries(kritaui
         PUBLIC
         kritamacosutils
@@ -832,7 +839,7 @@ set_target_properties(kritaui
 install(TARGETS kritaui  ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 
-if (APPLE)
+if (APPLE AND NOT IOS)
     install(FILES osx.stylesheet DESTINATION ${KDE_INSTALL_DATADIR}/krita)
 endif ()
 

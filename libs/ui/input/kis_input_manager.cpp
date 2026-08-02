@@ -690,7 +690,7 @@ bool KisInputManager::eventFilterImpl(QEvent * event)
         break;
     }
     case QEvent::TabletRelease: {
-#if defined(Q_OS_MAC) || defined(Q_OS_ANDROID)
+#if defined(Q_OS_MACOS) || defined(Q_OS_ANDROID)
         d->allowMouseEvents();
 #endif
         d->stopBlockingTouch();
@@ -767,7 +767,7 @@ bool KisInputManager::eventFilterImpl(QEvent * event)
             d->touchStrokeBlocked = d->lastPointCount > 1;
         }
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         int count = 0;
         Q_FOREACH (const QTouchEvent::TouchPoint &point, touchEvent->touchPoints()) {
             if (point.state() != Qt::TouchPointReleased) {

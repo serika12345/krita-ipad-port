@@ -110,7 +110,7 @@ if (ANDROID)
     endif()
 endif()
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     target_link_libraries(kritaglobal PRIVATE
         kritamacosutils
     )
@@ -121,4 +121,3 @@ set_target_properties(kritaglobal PROPERTIES
 )
 
 install(TARGETS kritaglobal  ${INSTALL_TARGETS_DEFAULT_ARGS})
-

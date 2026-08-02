@@ -15,7 +15,6 @@
 
 
 #include "KisViewManager.h"
-#include <QPrinter>
 
 #include <QAction>
 #include <QApplication>
@@ -32,7 +31,6 @@
 #include <QMessageBox>
 #include <QObject>
 #include <QPoint>
-#include <QPrintDialog>
 #include <QPushButton>
 #include <QScreen>
 #include <QScrollBar>

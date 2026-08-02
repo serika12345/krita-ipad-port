@@ -358,6 +358,26 @@
       ]
     },
     {
+      "name": "fribidi",
+      "version": "1.0.16",
+      "source_flake_attr": "source-fribidi",
+      "build_system": "meson",
+      "dependencies": [],
+      "cmake_args": [],
+      "meson_args": [
+        "-Ddocs=false",
+        "-Dbin=false",
+        "-Dtests=false"
+      ],
+      "artifacts": [
+        "lib/libfribidi.a"
+      ],
+      "required_paths": [
+        "include/fribidi/fribidi.h",
+        "lib/pkgconfig/fribidi.pc"
+      ]
+    },
+    {
       "name": "quazip",
       "version": "1.5",
       "source_flake_attr": "source-quazip",

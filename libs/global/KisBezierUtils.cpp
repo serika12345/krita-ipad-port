@@ -722,6 +722,7 @@ public:
 
 };
 
+#ifdef HAVE_GSL
 template <class PatchMethod>
 double my_f(const gsl_vector * x, void *paramsPtr)
 {
@@ -774,6 +775,7 @@ void my_df (const gsl_vector *x, void *paramsPtr,
                    2 * (S.x() - params->dstPoint.x()) * dV.x() +
                    2 * (S.y() - params->dstPoint.y()) * dV.y());
 }
+#endif
 }
 
 template <class PatchMethod>

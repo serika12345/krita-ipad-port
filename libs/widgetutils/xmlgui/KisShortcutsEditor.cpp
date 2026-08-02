@@ -27,7 +27,6 @@
 #include <QTextTable>
 #include <QTextCursor>
 #include <QTextTableFormat>
-#include <QPrinter>
 #include <QDebug>
 
 #include <kconfig.h>
