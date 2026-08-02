@@ -98,11 +98,11 @@
 - [ ] **P0** iOSで利用できないQt PrintSupportを必須依存から外す。
 - [ ] **P0** ECMと必須KDE Frameworksを静的ビルドする。
 - [ ] **P0** KF Config、WidgetsAddons、Completion、CoreAddons、GuiAddons、I18n、ItemViewsを個別検証する。
-- [ ] **P0** PNG、zlib、Boost、Immer、Zug、Lagerを構築する。
+- [x] **P0** PNG、zlib、Boost、Immer、Zug、Lagerを構築する。
 - [ ] **P0** Eigen、Exiv2、LCMS2、xsimd、QuaZipを構築する。
-- [ ] **P0** FreeType、HarfBuzz、Fontconfig、libunibreakを構築する。
+- [x] **P0** FreeType、HarfBuzz、Fontconfig、libunibreakを構築する。
 - [ ] **P0** `try_run()`、ホスト実行コード生成器、pkg-config誤検出を修正する。
-- [ ] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
+- [x] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
 - [ ] **P1** JPEGを追加する。
 - [ ] **P1** 初期版に必要ならWebP/TIFFを追加する。
 - [ ] **P2** OpenEXR/HEIF/JPEG XL/RAW/Popplerを個別に再評価する。

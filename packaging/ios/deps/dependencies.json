@@ -1,0 +1,316 @@
+{
+  "schema": 1,
+  "packages": [
+    {
+      "name": "zlib",
+      "version": "1.3.2",
+      "source_flake_attr": "source-zlib",
+      "dependencies": [],
+      "cmake_args": [
+        "-DZLIB_BUILD_TESTING=OFF",
+        "-DZLIB_BUILD_SHARED=OFF",
+        "-DZLIB_BUILD_STATIC=ON"
+      ],
+      "artifacts": [
+        "lib/libz.a"
+      ]
+    },
+    {
+      "name": "expat",
+      "version": "2.8.2",
+      "source_flake_attr": "source-expat",
+      "dependencies": [],
+      "cmake_args": [
+        "-DEXPAT_SHARED_LIBS=OFF",
+        "-DEXPAT_BUILD_TOOLS=OFF",
+        "-DEXPAT_BUILD_EXAMPLES=OFF",
+        "-DEXPAT_BUILD_TESTS=OFF",
+        "-DEXPAT_BUILD_DOCS=OFF"
+      ],
+      "artifacts": [
+        "lib/libexpat.a"
+      ],
+      "required_paths": [
+        "include/expat.h"
+      ]
+    },
+    {
+      "name": "libpng",
+      "version": "1.6.58",
+      "source_flake_attr": "source-libpng",
+      "dependencies": [
+        "zlib"
+      ],
+      "cmake_args": [
+        "-DPNG_SHARED=OFF",
+        "-DPNG_STATIC=ON",
+        "-DPNG_FRAMEWORK=OFF",
+        "-DPNG_TESTS=OFF",
+        "-DPNG_TOOLS=OFF",
+        "-DPNG_EXECUTABLES=OFF"
+      ],
+      "artifacts": [
+        "lib/libpng.a"
+      ]
+    },
+    {
+      "name": "boost",
+      "version": "1.89.0",
+      "source_flake_attr": "source-boost",
+      "build_system": "boost_headers",
+      "dependencies": [],
+      "cmake_args": [],
+      "required_paths": [
+        "include/boost/version.hpp",
+        "lib/cmake/Boost-1.89.0/BoostConfig.cmake"
+      ]
+    },
+    {
+      "name": "immer",
+      "version": "0.9.1",
+      "source_flake_attr": "source-immer",
+      "dependencies": [],
+      "cmake_args": [
+        "-Dimmer_BUILD_TESTS=OFF",
+        "-Dimmer_BUILD_EXAMPLES=OFF",
+        "-Dimmer_BUILD_DOCS=OFF",
+        "-Dimmer_BUILD_EXTRAS=OFF"
+      ],
+      "required_paths": [
+        "include/immer/vector.hpp",
+        "lib/cmake/Immer/ImmerConfig.cmake"
+      ]
+    },
+    {
+      "name": "zug",
+      "version": "0.1.2",
+      "source_flake_attr": "source-zug",
+      "dependencies": [],
+      "cmake_args": [
+        "-Dzug_BUILD_TESTS=OFF",
+        "-Dzug_BUILD_EXAMPLES=OFF",
+        "-Dzug_BUILD_DOCS=OFF"
+      ],
+      "required_paths": [
+        "include/zug/transduce.hpp",
+        "lib/cmake/Zug/ZugConfig.cmake"
+      ]
+    },
+    {
+      "name": "lager",
+      "version": "0.1.3",
+      "source_flake_attr": "source-lager",
+      "dependencies": [
+        "immer",
+        "zug"
+      ],
+      "cmake_args": [
+        "-Dlager_BUILD_TESTS=OFF",
+        "-Dlager_BUILD_FAILURE_TESTS=OFF",
+        "-Dlager_BUILD_EXAMPLES=OFF",
+        "-Dlager_BUILD_DEBUGGER_EXAMPLES=OFF",
+        "-Dlager_BUILD_DOCS=OFF",
+        "-Dlager_EMBED_RESOURCES_PATH=OFF"
+      ],
+      "required_paths": [
+        "include/lager/store.hpp",
+        "lib/cmake/Lager/LagerConfig.cmake"
+      ]
+    },
+    {
+      "name": "eigen",
+      "version": "3.4.1",
+      "source_flake_attr": "source-eigen",
+      "dependencies": [],
+      "cmake_args": [
+        "-DEIGEN_BUILD_TESTING=OFF",
+        "-DEIGEN_BUILD_BLAS=OFF",
+        "-DEIGEN_BUILD_LAPACK=OFF",
+        "-DEIGEN_BUILD_DOC=OFF",
+        "-DEIGEN_BUILD_DEMOS=OFF"
+      ],
+      "required_paths": [
+        "include/eigen3/Eigen/Core",
+        "share/eigen3/cmake/Eigen3Config.cmake"
+      ]
+    },
+    {
+      "name": "xsimd",
+      "version": "14.3.0",
+      "source_flake_attr": "source-xsimd",
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_TESTS=OFF",
+        "-DBUILD_EXAMPLES=OFF"
+      ],
+      "required_paths": [
+        "include/xsimd/xsimd.hpp",
+        "share/cmake/xsimd/xsimdConfig.cmake"
+      ]
+    },
+    {
+      "name": "lcms2",
+      "version": "2.19.1",
+      "source_flake_attr": "source-lcms2",
+      "dependencies": [],
+      "cmake_args": [
+        "-DLCMS2_BUILD_SHARED=OFF",
+        "-DLCMS2_BUILD_STATIC=ON",
+        "-DLCMS2_BUILD_TOOLS=OFF",
+        "-DLCMS2_BUILD_TESTS=OFF",
+        "-DLCMS2_WITH_FASTFLOAT=OFF",
+        "-DLCMS2_WITH_THREADED_PLUGIN=OFF"
+      ],
+      "artifacts": [
+        "lib/liblcms2.a"
+      ],
+      "required_paths": [
+        "include/lcms2.h"
+      ]
+    },
+    {
+      "name": "exiv2",
+      "version": "0.28.8",
+      "source_flake_attr": "source-exiv2",
+      "dependencies": [
+        "zlib"
+      ],
+      "cmake_args": [
+        "-DEXIV2_BUILD_EXIV2_COMMAND=OFF",
+        "-DEXIV2_BUILD_SAMPLES=OFF",
+        "-DEXIV2_BUILD_UNIT_TESTS=OFF",
+        "-DEXIV2_BUILD_FUZZ_TESTS=OFF",
+        "-DEXIV2_BUILD_DOC=OFF",
+        "-DEXIV2_ENABLE_XMP=OFF",
+        "-DEXIV2_ENABLE_INIH=OFF",
+        "-DEXIV2_ENABLE_BROTLI=OFF",
+        "-DEXIV2_ENABLE_VIDEO=OFF",
+        "-DEXIV2_ENABLE_NLS=OFF",
+        "-DBUILD_WITH_STACK_PROTECTOR=OFF"
+      ],
+      "artifacts": [
+        "lib/libexiv2.a"
+      ],
+      "required_paths": [
+        "include/exiv2/exiv2.hpp",
+        "lib/cmake/exiv2/exiv2Config.cmake"
+      ]
+    },
+    {
+      "name": "freetype",
+      "version": "2.14.3",
+      "source_flake_attr": "source-freetype",
+      "dependencies": [
+        "zlib",
+        "libpng"
+      ],
+      "cmake_args": [
+        "-DFT_REQUIRE_ZLIB=TRUE",
+        "-DFT_REQUIRE_PNG=TRUE",
+        "-DFT_DISABLE_BZIP2=TRUE",
+        "-DFT_DISABLE_HARFBUZZ=TRUE",
+        "-DFT_DISABLE_BROTLI=TRUE"
+      ],
+      "artifacts": [
+        "lib/libfreetype.a"
+      ],
+      "required_paths": [
+        "include/freetype2/ft2build.h",
+        "lib/cmake/freetype/freetype-config.cmake"
+      ]
+    },
+    {
+      "name": "harfbuzz",
+      "version": "13.2.1",
+      "source_flake_attr": "source-harfbuzz",
+      "dependencies": [
+        "freetype"
+      ],
+      "cmake_args": [
+        "-DHB_HAVE_FREETYPE=ON",
+        "-DHB_HAVE_CORETEXT=ON",
+        "-DHB_HAVE_GLIB=OFF",
+        "-DHB_HAVE_ICU=OFF",
+        "-DHB_HAVE_GRAPHITE2=OFF",
+        "-DHB_BUILD_UTILS=OFF",
+        "-DHB_BUILD_SUBSET=OFF",
+        "-DHB_BUILD_RASTER=OFF",
+        "-DHB_BUILD_VECTOR=OFF",
+        "-DBUILD_FRAMEWORK=OFF"
+      ],
+      "artifacts": [
+        "lib/libharfbuzz.a"
+      ],
+      "required_paths": [
+        "include/harfbuzz/hb.h",
+        "lib/cmake/harfbuzz/harfbuzzConfig.cmake"
+      ],
+      "relocate_cmake": [
+        "lib/cmake/harfbuzz/harfbuzzConfig.cmake"
+      ]
+    },
+    {
+      "name": "libunibreak",
+      "version": "7.0",
+      "source_flake_attr": "source-libunibreak",
+      "cmake_source_dir": "packaging/ios/deps/libunibreak",
+      "fingerprint_files": [
+        "packaging/ios/deps/libunibreak/CMakeLists.txt"
+      ],
+      "dependencies": [],
+      "cmake_args": [
+        "-DLIBUNIBREAK_SOURCE_DIR={source_dir}"
+      ],
+      "artifacts": [
+        "lib/libunibreak.a"
+      ],
+      "required_paths": [
+        "include/unibreakbase.h",
+        "lib/pkgconfig/libunibreak.pc"
+      ]
+    },
+    {
+      "name": "fontconfig",
+      "version": "2.18.2",
+      "source_flake_attr": "source-fontconfig",
+      "build_system": "autotools",
+      "dependencies": [
+        "expat",
+        "freetype"
+      ],
+      "cmake_args": [],
+      "configure_cache": {
+        "ac_cv_va_copy": "C99"
+      },
+      "configure_args": [
+        "--disable-docs",
+        "--disable-docbook",
+        "--disable-nls",
+        "--disable-cache-build",
+        "--disable-iconv",
+        "--with-expat=yes",
+        "--with-expat-includes={prefix}/include",
+        "--with-expat-lib={prefix}/lib",
+        "--with-default-fonts=/System/Library/Fonts",
+        "--with-add-fonts=/System/Library/Fonts"
+      ],
+      "make_targets": [
+        ["-C", "fc-const", "all"],
+        ["-C", "fc-genericfamily", "all"],
+        ["-C", "src", "all"]
+      ],
+      "make_install_targets": [
+        ["-C", "src", "install"],
+        ["-C", "fontconfig", "install"],
+        ["install-pkgconfigDATA"]
+      ],
+      "artifacts": [
+        "lib/libfontconfig.a"
+      ],
+      "required_paths": [
+        "include/fontconfig/fontconfig.h",
+        "lib/pkgconfig/fontconfig.pc"
+      ]
+    }
+  ]
+}

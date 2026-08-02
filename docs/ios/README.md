@@ -15,7 +15,9 @@
 | Device architecture | arm64 |
 
 The exact executable host and SDK checks live in `packaging/ios/versions.env`.
-Dependency source hashes will be added as each M2 derivation is implemented.
+Dependency sources are selected by the locked nixpkgs revision and exposed as
+flake package outputs. Target artifacts are built locally against the validated
+Xcode SDK rather than importing the proprietary SDK into the Nix store.
 
 ## Build boundary
 
@@ -55,6 +57,30 @@ expected to stop on missing target dependencies until M2 is complete:
 ```sh
 cmake --preset ios-device
 ```
+
+## Build M2 dependencies
+
+Build one dependency and its transitive prerequisites, or omit the package name
+to build every dependency currently present in the manifest:
+
+```sh
+nix develop --command packaging/ios/scripts/build-dependencies.sh device harfbuzz
+nix develop --command packaging/ios/scripts/build-dependencies.sh device
+```
+
+Device and Simulator use separate source-independent prefixes. Every installed
+static archive is checked member-by-member for architecture and Apple platform
+metadata. A stale or host archive is rejected before its build stamp is written.
+
+Link the completed core subset into a single unsigned iOS application:
+
+```sh
+nix develop --command packaging/ios/scripts/probe-dependencies.sh device
+```
+
+The dependency graph and package-specific options are defined in
+`packaging/ios/deps/dependencies.json`. See `docs/ios/validation-m2.md` for the
+current validated subset and known limitations.
 
 ## Build output and logs
 
