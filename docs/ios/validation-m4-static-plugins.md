@@ -72,10 +72,33 @@ Static linking exposed two non-inline function definitions in
 resolves the ODR violation for every static paint-op without adding an iOS-only
 code path.
 
+## Feature profile
+
+The device and Simulator presets explicitly enable the P0 minimum profile. Each
+functional group can also be disabled independently at configure time:
+
+| CMake option | Static targets |
+|---|---|
+| `KRITA_IOS_PLUGIN_KRA` | KRA import and export |
+| `KRITA_IOS_PLUGIN_PNG` | PNG import and export |
+| `KRITA_IOS_PLUGIN_DEFAULT_PAINTOPS` | Pixel Brush, eraser, and clone paint-ops |
+| `KRITA_IOS_PLUGIN_BASIC_TOOLS` | Basic canvas tools, including Freehand Brush |
+| `KRITA_IOS_PLUGIN_LAYER_DOCKER` | Layer Docker |
+
+For example, the following diagnostic configuration omits the Layer Docker:
+
+```sh
+cmake -S . -B build-ios/krita/device-ninja \
+  -DKRITA_IOS_PLUGIN_LAYER_DOCKER=OFF
+```
+
+This was verified to remove `kritalayerdocker` from the generated registration
+source while retaining the other six factory registrations. Reapplying the
+`ios-device` preset restores the complete seven-plugin profile.
+
 ## Deferred validation
 
 Runtime enumeration and factory instantiation require launching the application
-and remain part of M5. M4 is not complete: the user-facing iOS feature profile
-and P1 plugin set still need to be added and validated. Each older plugin factory
-macro must be changed to
+and remain part of M5. M4 is not complete: the P1 plugin set still needs to be
+added and validated. Each older plugin factory macro must be changed to
 `K_PLUGIN_CLASS_WITH_JSON` as that plugin enters the iOS profile.
