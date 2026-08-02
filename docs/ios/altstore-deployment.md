@@ -108,3 +108,12 @@ landscape. UIKit can publish the initial portrait screen geometry before the
 application scene settles into its requested orientation. Krita now recenters
 the splash after its native view is attached and whenever Qt reports updated
 screen geometry. The centered result was confirmed on the connected iPad.
+
+The physical-device run `20260802125811` changed the initial focus of
+`Settings > Configure Krita` on iPadOS. KDE's `KPageView` normally proxies
+dialog focus to its search line, which immediately summons the iOS software
+keyboard. Krita now focuses the settings category list when the dialog opens;
+the search field remains available for explicit tap and keyboard navigation.
+QuickTime verification confirmed the complete dialog opens with no text cursor
+in Search and no software keyboard covering its controls. Explicitly tapping
+Search then focused the field and presented the software keyboard normally.

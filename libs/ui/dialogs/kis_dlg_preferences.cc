@@ -12,6 +12,7 @@
 #include <config-hdr.h>
 #include <opengl/kis_opengl.h>
 
+#include <QAbstractItemView>
 #include <QBitmap>
 #include <QCheckBox>
 #include <QComboBox>
@@ -2863,6 +2864,17 @@ void KisDlgPreferences::showEvent(QShowEvent *event){
     button(QDialogButtonBox::Cancel)->setDefault(false);
     button(QDialogButtonBox::Ok)->setDefault(false);
     button(QDialogButtonBox::RestoreDefaults)->setDefault(false);
+
+#ifdef Q_OS_IOS
+    // KPageView uses its search line as the focus proxy. On iOS that opens the
+    // software keyboard as soon as the preferences dialog is shown. Start on
+    // the category list instead; the search line remains focusable by tap or
+    // keyboard navigation.
+    if (QAbstractItemView *categoryView =
+            pageWidget()->findChild<QAbstractItemView *>(QString(), Qt::FindDirectChildrenOnly)) {
+        categoryView->setFocus(Qt::OtherFocusReason);
+    }
+#endif
 }
 
 void KisDlgPreferences::slotButtonClicked(QAbstractButton *button)
