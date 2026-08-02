@@ -41,6 +41,10 @@
 #include <QSurfaceFormat>
 #include <QColorSpace>
 #include <QTextBrowser>
+#ifdef Q_OS_IOS
+#include <QStackedWidget>
+#include <QTimer>
+#endif
 
 #include <KisApplication.h>
 #include <KisDocument.h>
@@ -2825,6 +2829,25 @@ KisDlgPreferences::KisDlgPreferences(QWidget* parent, const char* name)
 
     connect(restoreDefaultsButton, SIGNAL(clicked(bool)), this, SLOT(slotDefault()));
 
+#ifdef Q_OS_IOS
+    // KPageStackedWidget caches the widest minimumSizeHint of all pages. The
+    // desktop-oriented width must not prevent the contents from reflowing to a
+    // portrait iPad scene.
+    if (QStackedWidget *pageStack = pageWidget()->findChild<QStackedWidget *>(
+            QString(), Qt::FindDirectChildrenOnly)) {
+        QSizePolicy policy = pageStack->sizePolicy();
+        policy.setHorizontalPolicy(QSizePolicy::Ignored);
+        pageStack->setSizePolicy(policy);
+    }
+
+    if (QScreen *screen = QGuiApplication::primaryScreen()) {
+        connect(screen, &QScreen::geometryChanged,
+                this, &KisDlgPreferences::fitToIOSScreen);
+        connect(screen, &QScreen::availableGeometryChanged,
+                this, &KisDlgPreferences::fitToIOSScreen);
+    }
+#endif
+
     KisConfig cfg(true);
     QString currentPageName = cfg.readEntry<QString>("KisDlgPreferences/CurrentPage");
     Q_FOREACH(KPageWidgetItem *page, m_pages) {
@@ -2866,6 +2889,8 @@ void KisDlgPreferences::showEvent(QShowEvent *event){
     button(QDialogButtonBox::RestoreDefaults)->setDefault(false);
 
 #ifdef Q_OS_IOS
+    fitToIOSScreen();
+
     // KPageView uses its search line as the focus proxy. On iOS that opens the
     // software keyboard as soon as the preferences dialog is shown. Start on
     // the category list instead; the search line remains focusable by tap or
@@ -2876,6 +2901,41 @@ void KisDlgPreferences::showEvent(QShowEvent *event){
     }
 #endif
 }
+
+#ifdef Q_OS_IOS
+void KisDlgPreferences::fitToIOSScreen()
+{
+    // QScreen can still report the launch orientation when the dialog first
+    // opens. Apply the already-visible main window's scene geometry after the
+    // current screen/resize event has completed.
+    QTimer::singleShot(0, this, [this]() {
+        if (!isVisible()) {
+            return;
+        }
+
+        QRect targetGeometry;
+        if (QWidget *hostWindow = parentWidget() ? parentWidget()->window() : nullptr) {
+            if (hostWindow != this && hostWindow->isVisible()) {
+                targetGeometry = hostWindow->geometry();
+            }
+        }
+
+        if (!targetGeometry.isValid()) {
+            QScreen *targetScreen = screen();
+            if (!targetScreen) {
+                targetScreen = QGuiApplication::primaryScreen();
+            }
+            if (targetScreen) {
+                targetGeometry = targetScreen->availableGeometry();
+            }
+        }
+
+        if (targetGeometry.isValid() && geometry() != targetGeometry) {
+            setGeometry(targetGeometry);
+        }
+    });
+}
+#endif
 
 void KisDlgPreferences::slotButtonClicked(QAbstractButton *button)
 {

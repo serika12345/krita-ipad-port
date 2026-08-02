@@ -459,6 +459,10 @@ public:
     void showEvent(QShowEvent *event) override;
 
 private:
+#ifdef Q_OS_IOS
+    void fitToIOSScreen();
+#endif
+
     KPageWidgetItem* getPage(Page page_enum);
     void switchTab (PageDesc tab);
 

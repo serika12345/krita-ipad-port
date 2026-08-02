@@ -102,18 +102,37 @@ void KisSplashScreen::updateSplashImage()
     } else {
         splashHeight = SPLASH_HEIGHT_LOADING;
     }
-    const int bannerHeight = splashHeight * 0.16875;
-    const int marginTop = splashHeight * 0.05;
-    const int marginRight = splashHeight * 0.1;
-
     Source source = getImageSource();
     QPixmap img(source.resourcePath);
 
     if (img.isNull() || img.height() == 0) return;
 
     // Preserve aspect ratio of splash.
-    const int height = splashHeight;
-    const int width = height * img.width() / img.height();
+    int height = splashHeight;
+    int width = height * img.width() / img.height();
+
+#ifdef Q_OS_IOS
+    // The first QScreen geometry can still describe the launch orientation.
+    // Its short edge is nevertheless valid for either orientation, so fitting
+    // inside it prevents a landscape-sized splash from being clipped when the
+    // application starts in portrait (and also covers narrow Split View).
+    if (QScreen *splashScreen = screen()) {
+        constexpr int SCREEN_MARGIN = 24;
+        const QSize availableSize = splashScreen->availableGeometry().size();
+        const int shortEdge = qMin(availableSize.width(), availableSize.height());
+        if (shortEdge > 2 * SCREEN_MARGIN) {
+            const int maximumEdge = shortEdge - 2 * SCREEN_MARGIN;
+            const QSize fittedSize = QSize(width, height).scaled(
+                QSize(maximumEdge, maximumEdge), Qt::KeepAspectRatio);
+            width = fittedSize.width();
+            height = fittedSize.height();
+        }
+    }
+#endif
+
+    const int bannerHeight = height * 0.16875;
+    const int marginTop = height * 0.05;
+    const int marginRight = height * 0.1;
 
     setFixedWidth(width);
     setFixedHeight(height);
