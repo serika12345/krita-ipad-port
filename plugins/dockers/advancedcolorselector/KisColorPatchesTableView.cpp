@@ -119,14 +119,17 @@ void KisColorPatchesTableView::reloadWidgetConfig()
     }
     m_d->patchCount = cfg.readEntry(m_d->configPrefix + "Count", 15);
     const bool allowScrolling = cfg.readEntry(m_d->configPrefix + "Scrolling", true);
+    QObject *scrollerTarget = this;
+#ifdef Q_OS_IOS
+    scrollerTarget = viewport();
+#endif
     if (!allowScrolling) {
-        QScroller::scroller(this)->ungrabGesture(this);
+        QScroller::ungrabGesture(scrollerTarget);
         horizontalScrollBar()->setEnabled(false);
         verticalScrollBar()->setEnabled(false);
         m_d->wasScrollingDisabled = true;
     } else if (m_d->wasScrollingDisabled) {
-        QScroller *scroller = QScroller::scroller(this);
-        scroller->grabGesture(this, KisKineticScroller::getConfiguredGestureType());
+        QScroller::grabGesture(scrollerTarget, KisKineticScroller::getConfiguredGestureType());
         horizontalScrollBar()->setEnabled(true);
         verticalScrollBar()->setEnabled(true);
         m_d->wasScrollingDisabled = false;

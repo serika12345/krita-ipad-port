@@ -117,3 +117,12 @@ the search field remains available for explicit tap and keyboard navigation.
 QuickTime verification confirmed the complete dialog opens with no text cursor
 in Search and no software keyboard covering its controls. Explicitly tapping
 Search then focused the field and presented the software keyboard normally.
+
+The physical-device run `20260802131216` enabled touch-first kinetic scrolling
+for every non-canvas `QAbstractScrollArea`, including controls created by
+plugins. iPadOS uses the left-mouse flick-recognizer path on each viewport so
+Qt delays the initial press and discards it when a swipe becomes a scroll; this
+prevents item selections from moving under the finger. An ordinary tap still
+selects its item. The Configure Krita category list and brush selection were
+verified with swipe scrolling, inertia, stable selection during a drag, and
+normal tap selection.

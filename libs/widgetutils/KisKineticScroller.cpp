@@ -77,23 +77,45 @@ QScroller* KisKineticScroller::createPreconfiguredScroller(QAbstractScrollArea *
     float overshootScrollTime = config.readEntry("KineticScrollingOvershootScrollTime", 0.4f);
     QScroller::ScrollerGestureType gestureType = getConfiguredGestureType();
 
+#ifdef Q_OS_IOS
+    // Touch scrolling is a baseline interaction on iPadOS, not an optional
+    // desktop convenience. iPadOS touch input is also exposed to widgets as
+    // synthesized left-mouse events. Using the mouse gesture path makes Qt
+    // delay the initial press and discard it once a drag starts, preventing a
+    // swipe from changing the selected item in QAbstractItemView.
+    enabled = true;
+    gestureType = QScroller::LeftMouseButtonGesture;
+#endif
+
     if (enabled && scrollArea) {
+        QObject *gestureTarget = scrollArea;
+#ifdef Q_OS_IOS
+        gestureTarget = scrollArea->viewport();
+        if (gestureTarget->property("kritaTouchScrollingConfigured").toBool()) {
+            return QScroller::scroller(gestureTarget);
+        }
+#endif
+
         if (hideScrollBars) {
             scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
             scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        } else if (gestureType != QScroller::TouchGesture) {
+        }
+#ifndef Q_OS_IOS
+        else if (gestureType != QScroller::TouchGesture) {
             auto *filter = new KisKineticScrollerEventFilter(gestureType, scrollArea);
             scrollArea->horizontalScrollBar()->installEventFilter(filter);
             scrollArea->verticalScrollBar()->installEventFilter(filter);
         }
+#endif
 
         QAbstractItemView *itemView = qobject_cast<QAbstractItemView *>(scrollArea);
         if (itemView) {
+            itemView->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
             itemView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
         }
 
-        QScroller *scroller = QScroller::scroller(scrollArea);
-        QScroller::grabGesture(scrollArea, gestureType);
+        QScroller *scroller = QScroller::scroller(gestureTarget);
+        QScroller::grabGesture(gestureTarget, gestureType);
 
         QScrollerProperties properties;
 
@@ -134,6 +156,10 @@ QScroller* KisKineticScroller::createPreconfiguredScroller(QAbstractScrollArea *
 
         scroller->setScrollerProperties(properties);
 
+#ifdef Q_OS_IOS
+        gestureTarget->setProperty("kritaTouchScrollingConfigured", true);
+#endif
+
         return scroller;
     }
 
@@ -141,8 +167,14 @@ QScroller* KisKineticScroller::createPreconfiguredScroller(QAbstractScrollArea *
 }
 
 QScroller::ScrollerGestureType KisKineticScroller::getConfiguredGestureType() {
+#if defined(Q_OS_IOS)
+    // Match the gesture path used by the "On Click Drag" setting. Qt's flick
+    // recognizer then suppresses item activation when the press becomes a
+    // scroll, while an ordinary tap is still delivered after the press delay.
+    return QScroller::LeftMouseButtonGesture;
+#else
     KConfigGroup config = KSharedConfig::openConfig()->group("");
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID)
     // Use a different default. Shouldn't we use KisConfig::kineticScrollingGesture?
     int gesture = config.readEntry("KineticScrollingGesture", 1);
 #else
@@ -165,6 +197,7 @@ QScroller::ScrollerGestureType KisKineticScroller::getConfiguredGestureType() {
     default:
         return QScroller::MiddleMouseButtonGesture;
     }
+#endif
 }
 
 void KisKineticScroller::updateCursor(QWidget *source, QScroller::State state) {

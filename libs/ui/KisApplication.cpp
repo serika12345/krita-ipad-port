@@ -23,6 +23,7 @@
 #include "KisAndroidDonations.h"
 #endif
 
+#include <QAbstractScrollArea>
 #include <QStandardPaths>
 #include <QScreen>
 #include <QDir>
@@ -83,6 +84,7 @@
 #include "kis_document_aware_spin_box_unit_manager.h"
 #include "KisViewManager.h"
 #include <KisUsageLogger.h>
+#include <KisKineticScroller.h>
 
 namespace
 {
@@ -982,6 +984,20 @@ bool KisApplication::notify(QObject *receiver, QEvent *event)
             } else {
                 result = QApplication::notify(receiver, event);
             }
+
+#ifdef Q_OS_IOS
+            if (event->type() == QEvent::Polish) {
+                if (QAbstractScrollArea *scrollArea = qobject_cast<QAbstractScrollArea *>(receiver)) {
+                    // The canvas consumes touch input for painting and its own
+                    // pan gestures. All other Qt scroll areas should behave as
+                    // touch-first controls, including ones created by plugins.
+                    if (!scrollArea->inherits("KoCanvasControllerWidget")
+                        && !scrollArea->property("kritaDisableTouchScrolling").toBool()) {
+                        KisKineticScroller::createPreconfiguredScroller(scrollArea);
+                    }
+                }
+            }
+#endif
         }
 
         if (!info.eventRecursionCount) {
