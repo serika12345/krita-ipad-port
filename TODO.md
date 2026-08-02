@@ -154,7 +154,11 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** `Q_IMPORT_PLUGIN`相当の登録コードを自動生成する。
 - [x] **P0** linker dead strippingからfactoryとメタデータを保護する。
 - [x] **P0** 有効なプラグインターゲット一覧から登録コードとリンク対象を生成する。
-- [ ] **P0** 最小セットとしてKRA、PNG、Pixel Brush、基本Tool、Layer Dockerを有効化する。
+- [x] **P0** 最小セットのKRA import/exportを有効化する。
+- [x] **P0** 最小セットのPNG import/exportを有効化する。
+- [x] **P0** 最小セットのPixel Brushを有効化する。
+- [ ] **P0** 最小セットの基本Toolを有効化する。
+- [ ] **P0** 最小セットのLayer Dockerを有効化する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
 - [ ] **P1** プラグイン単位でON/OFFできるiOS feature profileを作る。
 - [ ] **P2** 任意フィルタとDockerを段階的に追加する。

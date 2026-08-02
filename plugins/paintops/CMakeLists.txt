@@ -2,6 +2,13 @@ include_directories(libpaintop)
 
 add_subdirectory( libpaintop )
 add_subdirectory( defaultpaintops )
+
+if(IOS)
+    # The initial iPadOS profile contains only the Pixel Brush/eraser/clone
+    # engine. Add the remaining paint-op families incrementally.
+    return()
+endif()
+
 add_subdirectory( hairy )
 add_subdirectory( deform )
 add_subdirectory( curvebrush )

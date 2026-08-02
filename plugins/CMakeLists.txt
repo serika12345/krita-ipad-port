@@ -3,6 +3,8 @@ if(IOS)
     # Additional profile directories are enabled incrementally in M4.
     add_subdirectory(impex/libkra)
     add_subdirectory(impex/kra)
+    add_subdirectory(impex/png)
+    add_subdirectory(paintops)
     return()
 endif()
 

@@ -17,7 +17,7 @@
 
 #include "kis_png_converter.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(PNGImportFactory, "krita_png_import.json", registerPlugin<KisPNGImport>();)
+K_PLUGIN_CLASS_WITH_JSON(KisPNGImport, "krita_png_import.json")
 
 KisPNGImport::KisPNGImport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -39,4 +39,3 @@ KisImportExportErrorCode KisPNGImport::convert(KisDocument *document, QIODevice 
 }
 
 #include <kis_png_import.moc>
-

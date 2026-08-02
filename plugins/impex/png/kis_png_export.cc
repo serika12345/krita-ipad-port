@@ -34,7 +34,7 @@
 #include "kis_png_converter.h"
 #include <kis_iterator_ng.h>
 
-K_PLUGIN_FACTORY_WITH_JSON(KisPNGExportFactory, "krita_png_export.json", registerPlugin<KisPNGExport>();)
+K_PLUGIN_CLASS_WITH_JSON(KisPNGExport, "krita_png_export.json")
 
 KisPNGExport::KisPNGExport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -235,4 +235,3 @@ void KisWdgOptionsPNG::slotUseHDRChanged(bool value)
 }
 
 #include "kis_png_export.moc"
-
