@@ -233,7 +233,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** JPEG保存後のサムネイル生成でQt同梱版と外部版の静的libjpegが衝突するクラッシュを、iOSではQt同梱版へ統一して修正する。JPEGの保存・再読み込み、USB回収後の外部デコード、クラッシュレポート非生成を確認する（ビルド`20260802150920`、`NativeSaveTest2.jpg`）。
 - [ ] **P0** background移行前の保存・journal処理を実装する。
 - [ ] **P0** foreground復帰時にcanvas/GPU/resourceを復元する。
-- [ ] **P0** memory warningを受けて安全にcacheを解放する。
+- [x] **P0** `UIApplicationDidReceiveMemoryWarningNotification`を受け、使用中でないtileをswapへ退避してtile allocatorとQt pixmapのcacheを解放する。
 - [ ] **P0** 強制終了後のautosave recoveryを検証する。
 - [ ] **P1** Filesから「共有/開く」でKritaへ渡すDocument Typeを設定する。
 - [ ] **P1** iCloud Drive上のファイルで競合・遅延を検証する。
@@ -292,7 +292,10 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Instrumentsでmemory、CPU、GPU、hangを計測する。
 - [ ] **P0** 2K/4K/8Kキャンバスと複数レイヤーの上限を記録する。
 - [ ] **P0** tile/cache/thread数をデバイスメモリに合わせて調整する。
+  - [x] iOSで物理RAMを取得し、tile予算の既定値を25%・最大1 GiB、手動上限を37.5%・最大1.5 GiBへ制限する。旧設定の過大値は起動時にclampして保存する。
+  - [ ] `os_proc_available_memory()`と実測値を使ったデバイス別の動的調整を評価する。
 - [ ] **P0** memory pressure時の段階的cache削減を実装する。
+- [ ] **P0** 実機でmemory pressureを発生させ、警告受信後のtile退避、描画の一時停止時間と復帰、未保存データの保持、Jetsam終了の有無を検証する。
 - [ ] **P0** 起動時間、初回brush表示、KRA保存時間の基準値を作る。
 - [ ] **P0** 1時間連続描画テストを実行する。
 - [ ] **P0** suspend/resume、回転、Split View、低ストレージの回帰テストを作る。

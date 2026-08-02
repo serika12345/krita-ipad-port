@@ -16,7 +16,10 @@ set(krita_SRCS main.cc)
 if (IOS)
     set(KRITA_IOS_ICON "${CMAKE_CURRENT_SOURCE_DIR}/pics/branding/${BRANDING}/1024-apps-krita.png")
     set_source_files_properties(${KRITA_IOS_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    list(APPEND krita_SRCS ${KRITA_IOS_ICON})
+    list(APPEND krita_SRCS
+        ${KRITA_IOS_ICON}
+        KisIOSMemoryWarningHandler.mm
+    )
 endif()
 
 # Set the application icon on the application. The iOS asset catalog is added

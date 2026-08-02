@@ -53,6 +53,10 @@
 #include "kis_splash_screen.h"
 #include "config-qt-patches-present.h"
 
+#ifdef Q_OS_IOS
+#include "KisIOSMemoryWarningHandler.h"
+#endif
+
 #ifdef Q_OS_ANDROID
 #include <QtAndroid>
 #include <KisAndroidCrashHandler.h>
@@ -661,6 +665,10 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     if (documentsPath.isEmpty() || !QDir().mkpath(documentsPath)) {
         qWarning() << "Could not initialize the iOS Documents directory:" << documentsPath;
     }
+
+    // Persist the safe iPad ceiling if an older build stored a larger value.
+    KisImageConfig memoryConfig(false);
+    memoryConfig.setMemoryHardLimitPercent(memoryConfig.memoryHardLimitPercent());
 #endif
 
 #if defined Q_OS_WIN && QT_VERSION > QT_VERSION_CHECK(6, 0, 0)
@@ -877,6 +885,10 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
         KisUsageLogger::log("Could not start Krita Application");
         return 1;
     }
+
+#ifdef Q_OS_IOS
+    installKisIOSMemoryWarningHandler();
+#endif
 
     int state = KisApplication::exec();
 

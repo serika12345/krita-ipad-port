@@ -347,6 +347,12 @@ void KisTileDataStore::debugSwapAll()
 //    m_swappedStore.debugStatistics();
 }
 
+void KisTileDataStore::purgeMemory()
+{
+    debugSwapAll();
+    KisTileData::releaseInternalPools();
+}
+
 void KisTileDataStore::debugClear()
 {
     QWriteLocker l(&m_iteratorLock);

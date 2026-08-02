@@ -48,6 +48,13 @@ public:
     void tryForceUpdateMemoryStatisticsWhileIdle();
 
     /**
+     * Swap out every tile that is not currently in use and release the
+     * allocator's unused tile pools. Intended for platform memory-pressure
+     * notifications.
+     */
+    void purgeMemory();
+
+    /**
      * Returns total number of tiles present: in memory
      * or in a swap file
      */
@@ -179,4 +186,3 @@ inline T MiB_TO_METRIC(T value)
 }
 
 #endif /* KIS_TILE_DATA_STORE_H_ */
-

@@ -194,13 +194,17 @@ int KisImageConfig::poolLimit() const
 
 qreal KisImageConfig::memoryHardLimitPercent(bool requestDefault) const
 {
-    return !requestDefault ?
-        m_config.readEntry("memoryHardLimitPercent", 50.) : 50.;
+    const qreal defaultValue = defaultMemoryHardLimitPercent();
+    const qreal value = !requestDefault ?
+        m_config.readEntry("memoryHardLimitPercent", defaultValue) : defaultValue;
+
+    return qBound(1.0, value, maximumMemoryHardLimitPercent());
 }
 
 void KisImageConfig::setMemoryHardLimitPercent(qreal value)
 {
-    m_config.writeEntry("memoryHardLimitPercent", value);
+    m_config.writeEntry("memoryHardLimitPercent",
+                        qBound(1.0, value, maximumMemoryHardLimitPercent()));
 }
 
 qreal KisImageConfig::memorySoftLimitPercent(bool requestDefault) const
@@ -417,7 +421,7 @@ void KisImageConfig::setAutoKeyModeDuplicate(bool value)
 #include <sys/sysctl.h>
 #elif defined Q_OS_WIN
 #include <windows.h>
-#elif defined Q_OS_MACOS
+#elif defined Q_OS_MACOS || defined Q_OS_IOS
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -468,7 +472,7 @@ int KisImageConfig::totalRAM()
 #   if defined ENV32BIT
     totalMemory = qMin(totalMemory, 2000);
 #   endif
-#elif defined Q_OS_MACOS
+#elif defined Q_OS_MACOS || defined Q_OS_IOS
     int mib[2] = { CTL_HW, HW_MEMSIZE };
     u_int namelen = sizeof(mib) / sizeof(mib[0]);
     uint64_t size;
@@ -489,6 +493,28 @@ int KisImageConfig::totalRAM()
     }
 
     return totalMemory;
+}
+
+qreal KisImageConfig::defaultMemoryHardLimitPercent()
+{
+#ifdef Q_OS_IOS
+    const qreal totalMemory = totalRAM();
+    const qreal defaultLimitMiB = qMin(totalMemory * 0.25, 1024.0);
+    return qBound(1.0, defaultLimitMiB * 100.0 / totalMemory, 100.0);
+#else
+    return 50.0;
+#endif
+}
+
+qreal KisImageConfig::maximumMemoryHardLimitPercent()
+{
+#ifdef Q_OS_IOS
+    const qreal totalMemory = totalRAM();
+    const qreal maximumLimitMiB = qMin(totalMemory * 0.375, 1536.0);
+    return qBound(1.0, maximumLimitMiB * 100.0 / totalMemory, 100.0);
+#else
+    return 100.0;
+#endif
 }
 
 bool KisImageConfig::showAdditionalOnionSkinsSettings(bool requestDefault) const

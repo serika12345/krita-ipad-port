@@ -1923,7 +1923,7 @@ PerformanceTab::PerformanceTab(QWidget *parent, const char *name)
     lblTotalMemory->setText(KFormat().formatByteSize(totalRAM * 1024 * 1024, 0, KFormat::IECBinaryDialect, KFormat::UnitMegaByte));
 
     KisSpinBoxI18nHelper::setText(sliderMemoryLimit, i18nc("{n} is the number value, % is the percent sign", "{n}%"));
-    sliderMemoryLimit->setRange(1, 100, 2);
+    sliderMemoryLimit->setRange(1, KisImageConfig::maximumMemoryHardLimitPercent(), 2);
     sliderMemoryLimit->setSingleStep(0.01);
 
     KisSpinBoxI18nHelper::setText(sliderPoolLimit, i18nc("{n} is the number value, % is the percent sign", "{n}%"));

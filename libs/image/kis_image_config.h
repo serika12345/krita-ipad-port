@@ -58,6 +58,8 @@ public:
     void setMemoryPoolLimitPercent(qreal value);
 
     static int totalRAM(); // MiB
+    static qreal defaultMemoryHardLimitPercent();
+    static qreal maximumMemoryHardLimitPercent();
 
     /**
      * @return a specific directory for the swapfile, if set. If not set, return an
