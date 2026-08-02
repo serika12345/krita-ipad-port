@@ -96,26 +96,28 @@
 - [x] **P0** Qt 6 for iOSを取得またはソースビルドし、revisionと構成を固定する。
 - [x] **P0** Qt Core/Gui/Widgets/Xml/Network/Svg/Concurrent/Sql/OpenGL系を検証する。
 - [x] **P0** iOSで利用できないQt PrintSupportを必須依存から外す。
-- [ ] **P0** ECMと必須KDE Frameworksを静的ビルドする。
-- [ ] **P0** KF Config、WidgetsAddons、Completion、CoreAddons、GuiAddons、I18n、ItemViewsを個別検証する。
+- [x] **P0** ECMと必須KDE Frameworksを静的ビルドする。
+- [x] **P0** KF Config、WidgetsAddons、Codecs、Completion、CoreAddons、GuiAddons、I18n、ItemViews、ColorSchemeを個別検証する。
 - [x] **P0** PNG、zlib、Boost、Immer、Zug、Lagerを構築する。
 - [x] **P0** Eigen、Exiv2、LCMS2、xsimd、QuaZipを構築する。
 - [x] **P0** FreeType、HarfBuzz、Fontconfig、libunibreakを構築する。
-- [ ] **P0** `try_run()`、ホスト実行コード生成器、pkg-config誤検出を修正する。
+- [x] **P0** `try_run()`、ホスト実行コード生成器、pkg-config誤検出を修正する。
 - [x] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
-- [ ] **P1** JPEGを追加する。
+- [x] **P1** JPEGを追加する。
 - [ ] **P1** 初期版に必要ならWebP/TIFFを追加する。
 - [ ] **P2** OpenEXR/HEIF/JPEG XL/RAW/Popplerを個別に再評価する。
 
 ### 完了条件
 
-- [ ] 必須依存がすべてiOS arm64向けにリンク可能である。
-- [ ] Homebrewやホスト側`/usr/local`への暗黙依存がない。
-- [ ] 同じlock fileから依存物を再生成できる。
+- [x] 必須依存がすべてiOS arm64向けにリンク可能である。
+- [x] Homebrewやホスト側`/usr/local`への暗黙依存がない。
+- [x] 同じlock fileから依存物を再生成できる。
 
 ### 技術ゲート G1
 
 KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krita全体の作業を進めず、代替構成または対象機能縮小を判断する。
+
+判定: **通過**。Qt Widgets/OpenGL、ECM、必須KF6、KConfigホストコード生成器を1本のiOS arm64アプリへ静的リンクできた。
 
 ---
 

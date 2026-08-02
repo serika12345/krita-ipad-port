@@ -403,6 +403,7 @@ def main() -> int:
             record_meson_install(build_dir, prefix)
         elif build_system == "autotools":
             build_dir.mkdir(parents=True)
+            configure_source_dir = source_dir / package.get("source_subdir", "")
             sdk_path = capture(["xcrun", "--sdk", sdk, "--show-sdk-path"])
             minimum_flag = "-miphoneos-version-min=17.0" if args.mode == "device" else "-mios-simulator-version-min=17.0"
             target_flags = f"-arch arm64 -isysroot {sdk_path} {minimum_flag}"
@@ -426,7 +427,7 @@ def main() -> int:
             configure_args = [argument.format(source_dir=source_dir, prefix=prefix) for argument in package["configure_args"]]
             run(
                 [
-                    str(source_dir / "configure"),
+                    str(configure_source_dir / "configure"),
                     "--host=arm-apple-darwin",
                     f"--prefix={prefix}",
                     f"--libdir={prefix}/lib",

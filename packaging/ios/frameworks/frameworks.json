@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "packages": [
+    {
+      "name": "ecm",
+      "version": "6.28.0",
+      "source_flake_attr": "source-ecm",
+      "host_only": true,
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_HTML_DOCS=OFF",
+        "-DBUILD_MAN_DOCS=OFF",
+        "-DBUILD_QTHELP_DOCS=OFF"
+      ],
+      "required_paths": [
+        "share/ECM/cmake/ECMConfig.cmake"
+      ]
+    },
+    {
+      "name": "kconfig",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kconfig",
+      "patches": [
+        "packaging/ios/frameworks/patches/kconfig-ios-no-tools.patch"
+      ],
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [
+        "-DKCONFIG_USE_GUI=ON",
+        "-DKCONFIG_USE_QML=OFF",
+        "-DUSE_DBUS=OFF"
+      ],
+      "artifacts": [
+        "lib/libKF6ConfigCore.a",
+        "lib/libKF6ConfigGui.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6Config/KF6ConfigConfig.cmake"
+      ]
+    },
+    {
+      "name": "kwidgetsaddons",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kwidgetsaddons",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [],
+      "artifacts": [
+        "lib/libKF6WidgetsAddons.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6WidgetsAddons/KF6WidgetsAddonsConfig.cmake"
+      ]
+    },
+    {
+      "name": "kcodecs",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kcodecs",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [],
+      "artifacts": [
+        "lib/libKF6Codecs.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6Codecs/KF6CodecsConfig.cmake"
+      ]
+    },
+    {
+      "name": "kcompletion",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kcompletion",
+      "dependencies": [
+        "kcodecs",
+        "kconfig",
+        "kwidgetsaddons"
+      ],
+      "cmake_args": [],
+      "artifacts": [
+        "lib/libKF6Completion.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6Completion/KF6CompletionConfig.cmake"
+      ]
+    },
+    {
+      "name": "kcoreaddons",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kcoreaddons",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [
+        "-DENABLE_INOTIFY=OFF",
+        "-DENABLE_PCH=OFF",
+        "-DKCOREADDONS_USE_QML=OFF",
+        "-DUSE_DBUS=OFF"
+      ],
+      "artifacts": [
+        "lib/libKF6CoreAddons.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake"
+      ]
+    },
+    {
+      "name": "kguiaddons",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kguiaddons",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [
+        "-DBUILD_GEO_SCHEME_HANDLER=OFF",
+        "-DUSE_DBUS=OFF"
+      ],
+      "artifacts": [
+        "lib/libKF6GuiAddons.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6GuiAddons/KF6GuiAddonsConfig.cmake"
+      ]
+    },
+    {
+      "name": "ki18n",
+      "version": "6.28.0",
+      "source_flake_attr": "source-ki18n",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [
+        "-DBUILD_WITH_QML=OFF"
+      ],
+      "artifacts": [
+        "lib/libKF6I18n.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6I18n/KF6I18nConfig.cmake"
+      ]
+    },
+    {
+      "name": "kitemviews",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kitemviews",
+      "dependencies": [
+        "ecm"
+      ],
+      "cmake_args": [],
+      "artifacts": [
+        "lib/libKF6ItemViews.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6ItemViews/KF6ItemViewsConfig.cmake"
+      ]
+    },
+    {
+      "name": "kcolorscheme",
+      "version": "6.28.0",
+      "source_flake_attr": "source-kcolorscheme",
+      "dependencies": [
+        "kconfig",
+        "kguiaddons",
+        "ki18n"
+      ],
+      "cmake_args": [],
+      "artifacts": [
+        "lib/libKF6ColorScheme.a"
+      ],
+      "required_paths": [
+        "lib/cmake/KF6ColorScheme/KF6ColorSchemeConfig.cmake"
+      ]
+    }
+  ]
+}

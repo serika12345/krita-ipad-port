@@ -5,6 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${KRITA_SOURCE_DIR}/cmake/modules")
 
 find_package(ZLIB REQUIRED)
 find_package(PNG 1.2.6 REQUIRED)
+find_package(libjpeg-turbo CONFIG REQUIRED)
 find_package(Boost 1.69 CONFIG REQUIRED)
 find_package(Immer CONFIG REQUIRED)
 find_package(Zug CONFIG REQUIRED)
@@ -32,6 +33,7 @@ target_link_libraries(
     PRIVATE
         ZLIB::ZLIB
         PNG::PNG
+        libjpeg-turbo::jpeg-static
         Boost::boost
         Boost::disable_autolinking
         immer

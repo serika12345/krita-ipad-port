@@ -108,6 +108,23 @@ OpenGL, OpenGLWidgets, Core5Compat, the iOS platform plugin, static support
 plugins, and QuaZip into one unsigned iOS application. PrintSupport is
 explicitly disabled and is rejected as a required Krita dependency.
 
+## Build KDE Frameworks
+
+Build the locked ECM/KF6 subset after the target dependencies and Qt. The
+builder also creates the macOS `kconfig_compiler_kf6` needed while cross
+compiling; target-side command-line tools are not built for iOS.
+
+```sh
+nix develop --command packaging/ios/scripts/build-frameworks.sh device
+nix develop --command packaging/ios/scripts/probe-frameworks.sh device
+```
+
+The framework probe runs the host KConfig generator and links Config,
+WidgetsAddons, Codecs, Completion, CoreAddons, GuiAddons, I18n, ItemViews, and
+ColorScheme with Qt into one unsigned iOS application. Framework sources,
+build options, patches, and dependencies are declared in
+`packaging/ios/frameworks/frameworks.json`.
+
 ## Build output and logs
 
 - Device and Simulator output: `build-ios/`

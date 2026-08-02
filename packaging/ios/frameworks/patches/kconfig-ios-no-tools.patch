@@ -1,0 +1,40 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -99,2 +99,4 @@
+-install(EXPORT KF6ConfigCompilerTargets DESTINATION "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Config"
+-        FILE KF6ConfigCompilerTargets.cmake NAMESPACE KF6:: COMPONENT Devel)
++if(NOT IOS)
++    install(EXPORT KF6ConfigCompilerTargets DESTINATION "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Config"
++            FILE KF6ConfigCompilerTargets.cmake NAMESPACE KF6:: COMPONENT Devel)
++endif()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -8,3 +8,5 @@
+-add_subdirectory(kconfig_compiler)
+-add_subdirectory(kconf_update)
+-add_subdirectory(kreadconfig)
++if(NOT IOS)
++    add_subdirectory(kconfig_compiler)
++    add_subdirectory(kconf_update)
++    add_subdirectory(kreadconfig)
++endif()
+diff --git a/src/core/CMakeLists.txt b/src/core/CMakeLists.txt
+--- a/src/core/CMakeLists.txt
++++ b/src/core/CMakeLists.txt
+@@ -58,4 +58,10 @@
+-target_compile_definitions(KF6ConfigCore
+-    PRIVATE
+-        KCONF_UPDATE_INSTALL_LOCATION="${KDE_INSTALL_FULL_LIBEXECDIR_KF}/$<TARGET_FILE_NAME:KF6::kconf_update>"
+-)
++if(IOS)
++    target_compile_definitions(KF6ConfigCore
++        PRIVATE KCONF_UPDATE_INSTALL_LOCATION=""
++    )
++else()
++    target_compile_definitions(KF6ConfigCore
++        PRIVATE
++            KCONF_UPDATE_INSTALL_LOCATION="${KDE_INSTALL_FULL_LIBEXECDIR_KF}/$<TARGET_FILE_NAME:KF6::kconf_update>"
++    )
++endif()

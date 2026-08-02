@@ -31,12 +31,14 @@
         source-freetype = pkgs.freetype.src;
         source-harfbuzz = pkgs.harfbuzz.src;
         source-fontconfig = pkgs.fontconfig.src;
+        source-gettext = pkgs.gettext.src;
         source-libunibreak = pkgs.libunibreak.src;
         source-qtbase = pkgs.qt6Packages.qtbase.src;
         source-qtsvg = pkgs.qt6Packages.qtsvg.src;
         source-qt5compat = pkgs.qt6Packages.qt5compat.src;
         source-ecm = pkgs.kdePackages.extra-cmake-modules.src;
         source-kconfig = pkgs.kdePackages.kconfig.src;
+        source-kcodecs = pkgs.kdePackages.kcodecs.src;
         source-kwidgetsaddons = pkgs.kdePackages.kwidgetsaddons.src;
         source-kcompletion = pkgs.kdePackages.kcompletion.src;
         source-kcoreaddons = pkgs.kdePackages.kcoreaddons.src;
@@ -46,6 +48,7 @@
         source-kcolorscheme = pkgs.kdePackages.kcolorscheme.src;
 
         host-qtbase = pkgs.qt6Packages.qtbase;
+        host-qttools = pkgs.qt6Packages.qttools;
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
       };
 
@@ -60,6 +63,7 @@
           gnused
           gnumake
           gperf
+          gettext
           jq
           meson
           ninja

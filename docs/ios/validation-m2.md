@@ -2,8 +2,9 @@
 
 Date: 2026-08-02
 
-M2 is in progress. The core dependency set, Qt, and QuaZip are validated;
-ECM and KDE Frameworks remain to be built and validated.
+M2 is complete for the selected initial feature set. The core dependency set,
+Qt, QuaZip, ECM, and the required KDE Frameworks have been compiled and linked
+into unsigned iOS/arm64 probe applications.
 
 ## Build boundary
 
@@ -24,6 +25,7 @@ the boundary in ADR 0001.
 |---|---:|---|
 | zlib | 1.3.2 | static arm64/IOS archive |
 | libpng | 1.6.58 | static arm64/IOS archive |
+| libjpeg-turbo | 3.1.4.1 | two static arm64/IOS archives |
 | Expat | 2.8.2 | static arm64/IOS archive |
 | Boost | 1.89.0 | headers installed |
 | Immer | 0.9.1 | headers installed |
@@ -37,10 +39,22 @@ the boundary in ADR 0001.
 | HarfBuzz | 13.2.1 | static arm64/IOS archive |
 | Fontconfig | 2.18.2 | static arm64/IOS archive |
 | libunibreak | 7.0 | static arm64/IOS archive |
+| GNU libintl | 1.0 | static arm64/IOS archive |
 | Qt | 6.11.1 | 39 static arm64/IOS archives |
 | QuaZip | 1.5 | static arm64/IOS archive |
+| ECM | 6.28.0 | host-executed CMake modules installed in target prefix |
+| KF6 Config | 6.28.0 | two static arm64/IOS archives |
+| KF6 WidgetsAddons | 6.28.0 | static arm64/IOS archive |
+| KF6 Codecs | 6.28.0 | static arm64/IOS archive |
+| KF6 Completion | 6.28.0 | static arm64/IOS archive |
+| KF6 CoreAddons | 6.28.0 | static arm64/IOS archive |
+| KF6 GuiAddons | 6.28.0 | static arm64/IOS archive |
+| KF6 I18n | 6.28.0 | static arm64/IOS archive |
+| KF6 ItemViews | 6.28.0 | static arm64/IOS archive |
+| KF6 ColorScheme | 6.28.0 | static arm64/IOS archive |
 
-JPEG has a pinned flake source output but remains a P1 validation task.
+WebP and TIFF remain conditional P1 additions. OpenEXR, HEIF, JPEG XL, RAW,
+and Poppler remain explicitly deferred P2 dependencies.
 
 ## Commands and results
 
@@ -50,10 +64,12 @@ nix develop --command packaging/ios/scripts/build-qt.sh device
 nix develop --command packaging/ios/scripts/build-dependencies.sh device
 nix develop --command packaging/ios/scripts/probe-dependencies.sh device
 nix develop --command packaging/ios/scripts/probe-qt.sh device
+nix develop --command packaging/ios/scripts/build-frameworks.sh device
+nix develop --command packaging/ios/scripts/probe-frameworks.sh device
 ```
 
-The dependency probe compiled and linked all libraries listed above into one
-Mach-O application with these properties:
+The dependency probe compiled and linked the non-Qt C/C++ target libraries into
+one Mach-O application with these properties:
 
 - architecture: arm64
 - platform: IOS
@@ -66,6 +82,13 @@ Svg, Concurrent, Sql, OpenGL, OpenGLWidgets, Core5Compat, QuaZip, and the static
 iOS platform and support plugins. Its executable has the same arm64/IOS/minimum
 OS/SDK metadata. Qt's configuration summary reports `Qt PrintSupport ... no`,
 and no PrintSupport archive is installed.
+
+The framework probe used the macOS `kconfig_compiler_kf6` to generate target
+C++ sources from a `.kcfg` file, then linked every selected KF6 target and its
+static resources into one application. The resulting executable is arm64,
+platform IOS, minimum iOS 17.0, SDK 26.5, with no unresolved symbols. A second
+framework build with unchanged inputs reused every package after matching its
+source/build/toolchain fingerprints.
 
 A separate zlib/libpng Simulator build produced `platform IOSSIMULATOR` archives.
 The archive inspector's negative test correctly rejected a Simulator archive
@@ -90,9 +113,20 @@ when it was presented as a device artifact.
 - Qt 6.11.1 emits iOS API deprecation warnings under the Xcode 26.5 SDK, chiefly
   around older permission APIs. They do not prevent compilation or linking and
   remain an M5 runtime review item.
+- KConfig's command-line programs are excluded from the iOS target build. A
+  separate macOS `kconfig_compiler_kf6`, built from the identical locked source,
+  is exposed through `KF6_HOST_TOOLING` for cross-build code generation.
+- Host Qt Linguist tools generate `.qm` files while the generated translations
+  and libraries are installed only into the target prefix.
+- Target lookup roots include only the isolated dependency, Qt, and KF6
+  prefixes. `/usr/local` and `/opt/homebrew` are ignored; pkg-config is limited
+  to target `.pc` files.
+- Static GNU libintl requires the iOS SDK's iconv library at final link time.
+  The framework probe records that requirement explicitly.
 
-## Remaining M2 gate
+## M2 gate result
 
-M2 is not complete until ECM 6.28.0 and the selected KDE Frameworks build for
-iOS and pass a combined link test. Cross-compilation probes such as `try_run()`
-must also be resolved there.
+Technical gate G1 passes. Qt Widgets/OpenGL, ECM 6.28.0, the selected KF6 set,
+host-side code generation, and all required target libraries can be linked as
+one iOS arm64 application. M3 can proceed to the first reduced Krita configure,
+compile, and link attempt.

@@ -54,6 +54,28 @@
       ]
     },
     {
+      "name": "libjpeg-turbo",
+      "version": "3.1.4.1",
+      "source_flake_attr": "source-libjpeg-turbo",
+      "dependencies": [],
+      "cmake_args": [
+        "-DCMAKE_SYSTEM_PROCESSOR=arm64",
+        "-DENABLE_SHARED=OFF",
+        "-DENABLE_STATIC=ON",
+        "-DWITH_TOOLS=OFF",
+        "-DWITH_TESTS=OFF",
+        "-DWITH_JAVA=OFF"
+      ],
+      "artifacts": [
+        "lib/libjpeg.a",
+        "lib/libturbojpeg.a"
+      ],
+      "required_paths": [
+        "include/jpeglib.h",
+        "lib/cmake/libjpeg-turbo/libjpeg-turboConfig.cmake"
+      ]
+    },
+    {
       "name": "boost",
       "version": "1.89.0",
       "source_flake_attr": "source-boost",
@@ -310,6 +332,29 @@
       "required_paths": [
         "include/fontconfig/fontconfig.h",
         "lib/pkgconfig/fontconfig.pc"
+      ]
+    },
+    {
+      "name": "libintl",
+      "version": "1.0",
+      "source_flake_attr": "source-gettext",
+      "build_system": "autotools",
+      "source_subdir": "gettext-runtime",
+      "dependencies": [],
+      "cmake_args": [],
+      "configure_args": [
+        "--disable-java",
+        "--disable-csharp",
+        "--disable-openmp",
+        "--without-emacs",
+        "--without-libiconv-prefix",
+        "--without-libncurses-prefix"
+      ],
+      "artifacts": [
+        "lib/libintl.a"
+      ],
+      "required_paths": [
+        "include/libintl.h"
       ]
     },
     {
