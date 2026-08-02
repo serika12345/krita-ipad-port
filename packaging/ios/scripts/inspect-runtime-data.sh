@@ -10,6 +10,7 @@ app_path="$1"
 runtime_prefix="$2"
 expected_share="$runtime_prefix/share"
 bundles_dir="$app_path/share/krita/bundles"
+actions_dir="$app_path/share/krita/actions"
 
 if [[ ! -d "$app_path" ]]; then
     echo "error: application bundle not found: $app_path" >&2
@@ -43,7 +44,7 @@ fi
 
 bundle_count="$(find "$bundles_dir" -maxdepth 1 -type f -name '*.bundle' | wc -l | tr -d ' ')"
 profile_count="$(find "$app_path/share/color/icc/krita" -type f -name '*.icc' | wc -l | tr -d ' ')"
-action_count="$(find "$app_path/share/krita/actions" -type f | wc -l | tr -d ' ')"
+action_count="$(find "$actions_dir" -type f -name '*.action' | wc -l | tr -d ' ')"
 
 if (( bundle_count == 0 )); then
     echo "error: no Krita resource bundles were packaged" >&2
@@ -55,6 +56,17 @@ if (( profile_count == 0 )); then
 fi
 if (( action_count == 0 )); then
     echo "error: no Krita action definitions were packaged" >&2
+    exit 1
+fi
+for core_action in krita.action kritamenu.action; do
+    if [[ ! -s "$actions_dir/$core_action" ]]; then
+        echo "error: core Krita action registry was not packaged: $core_action" >&2
+        exit 1
+    fi
+done
+
+if ! grep -q '<Action name="copy_merged">' "$actions_dir/kritamenu.action"; then
+    echo "error: packaged Krita menu registry is incomplete" >&2
     exit 1
 fi
 
@@ -75,4 +87,4 @@ runtime_file_count="$(wc -l <"$actual_list" | tr -d ' ')"
 echo "iPadOS runtime data retained: $runtime_file_count files"
 echo "  resource bundles: $bundle_count ($preset_bundle contains brush presets)"
 echo "  ICC profiles:     $profile_count"
-echo "  action files:     $action_count"
+echo "  action files:     $action_count (core menu registries present)"

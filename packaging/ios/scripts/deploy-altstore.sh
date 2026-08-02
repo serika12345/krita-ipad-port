@@ -95,6 +95,17 @@ if ! "$cmake_command" -DCMAKE_INSTALL_PREFIX="$runtime_prefix" \
     cat "$runtime_install_log" >&2
     exit 1
 fi
+
+# These core action registries are installed by krita/CMakeLists.txt rather
+# than the krita/data subtree. Stage them without running the complete Krita
+# install script, which would also duplicate and mutate the application bundle.
+core_actions_dir="$runtime_prefix/share/krita/actions"
+"$cmake_command" -E make_directory "$core_actions_dir"
+"$cmake_command" -E copy_if_different \
+    "$repo_root/krita/krita.action" \
+    "$repo_root/krita/kritamenu.action" \
+    "$core_actions_dir"
+
 if [[ ! -d "$runtime_prefix/share" ]]; then
     echo "error: the iPadOS runtime data install produced no share directory" >&2
     exit 1

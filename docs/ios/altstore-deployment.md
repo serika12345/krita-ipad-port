@@ -58,8 +58,10 @@ Optional environment variables are `KRITA_IOS_DEVICE`,
 
 On iOS, Krita resolves its installation prefix from the application bundle.
 The deployment stage includes the exact CMake-installed `share` tree inside the
-signed app. Current validation covers 494 files, including four resource
-bundles, 32 ICC profiles, and five action definitions.
+signed app. Current validation covers 496 files, including four resource
+bundles, 32 ICC profiles, and seven action definitions. The action set includes
+the core `krita.action` and `kritamenu.action` registries; packaging fails if
+either file or a representative core menu action is missing.
 
 AltStore updates preserve the application data container. Development builds
 can add packaged bundles without changing Krita's semantic version, so the iOS
@@ -86,3 +88,7 @@ Pencil input, so pressure and native input-event validation remain M5 work.
 The first synchronization of approximately 36 MiB of bundled resources showed
 the splash screen for about 20 seconds on the tested device. Later launches do
 not repeat that import unless the packaged bundle set changes.
+
+The follow-up physical-device run `20260802123518` validated 496 runtime files
+and restored every Edit-menu label that had been blank when the two core action
+registries were absent. Disabled entries remain visible in gray as expected.
