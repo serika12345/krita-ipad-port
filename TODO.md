@@ -251,6 +251,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [ ] **P0** Android版のタッチ用設定をiOS profileとして再利用する。
 - [x] **P0** `QComboBox`の選択をタップで確定・閉鎖できるようにする（UIKit pickerをiOSで無効化し、実機検証済み）。
+- [x] **P0** 起動時の画面向き確定後もスプラッシュを中央へ再配置する（横向き実機で検証済み）。
 - [ ] **P0** 小さすぎるmenu、dialog、slider、spinboxのtouch targetを修正する。
 - [ ] **P0** modal dialogとソフトウェアキーボードの重なりを修正する。
 - [ ] **P1** Split ViewとStage Managerでlayoutを検証する。

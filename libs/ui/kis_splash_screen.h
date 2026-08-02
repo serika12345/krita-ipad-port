@@ -47,6 +47,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
+    void centerOnScreen();
     void updateText();
     QString colorString() const;
     void updateSplashImage();

@@ -314,6 +314,21 @@ void KisSplashScreen::repaint()
     qApp->sendPostedEvents();
 }
 
+void KisSplashScreen::centerOnScreen()
+{
+    QWindow *windowHandle = this->windowHandle();
+    QScreen *screen = windowHandle ? windowHandle->screen() : nullptr;
+    if (!screen) {
+        screen = QApplication::primaryScreen();
+    }
+    if (!screen) {
+        return;
+    }
+
+    const QRect splashRect(QPoint(), size());
+    move(screen->availableGeometry().center() - splashRect.center());
+}
+
 void KisSplashScreen::show()
 {
     if (!this->parentWidget()) {
@@ -335,8 +350,18 @@ void KisSplashScreen::show()
         // Reinitialize the splash image as the screen may have a different
         // devicePixelRatio.
         updateSplashImage();
-        QRect r(QPoint(), size());
-        move(screen->availableGeometry().center() - r.center());
+        centerOnScreen();
+
+#ifdef Q_OS_IOS
+        // UIKit reports the initial screen geometry before the application
+        // scene has settled into its requested orientation. Recenter when Qt
+        // receives the final landscape/split-view geometry instead of leaving
+        // the splash at coordinates calculated for the portrait screen.
+        connect(screen, &QScreen::geometryChanged,
+                this, &KisSplashScreen::centerOnScreen, Qt::UniqueConnection);
+        connect(screen, &QScreen::availableGeometryChanged,
+                this, &KisSplashScreen::centerOnScreen, Qt::UniqueConnection);
+#endif
     }
     if (isVisible()) {
         repaint();
@@ -344,6 +369,12 @@ void KisSplashScreen::show()
     m_timer.setSingleShot(true);
     m_timer.start(1);
     QWidget::show();
+
+#ifdef Q_OS_IOS
+    // The native view is attached by QWidget::show(). Recenter once more on
+    // the next event-loop turn so the first visible frame uses that geometry.
+    QTimer::singleShot(0, this, &KisSplashScreen::centerOnScreen);
+#endif
 }
 
 void KisSplashScreen::toggleShowAtStartup(bool toggle)

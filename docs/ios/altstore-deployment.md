@@ -102,3 +102,9 @@ was used to verify that `Touch Painting` opens all three choices, commits
 `Enabled` with one tap, and closes the list while keeping the dialog's OK and
 Cancel buttons reachable. The override is application-wide and is preserved
 when Krita's widget style changes.
+
+The physical-device run `20260802125200` fixed the startup splash position in
+landscape. UIKit can publish the initial portrait screen geometry before the
+application scene settles into its requested orientation. Krita now recenters
+the splash after its native view is attached and whenever Qt reports updated
+screen geometry. The centered result was confirmed on the connected iPad.
