@@ -23,6 +23,7 @@
 #include "KisAndroidDonations.h"
 #endif
 
+#include <QAbstractItemView>
 #include <QAbstractScrollArea>
 #include <QStandardPaths>
 #include <QScreen>
@@ -31,6 +32,7 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QProcessEnvironment>
+#include <QPointer>
 #include <QProxyStyle>
 #include <QStringList>
 #include <QStyle>
@@ -40,6 +42,7 @@
 #include <QWidget>
 #include <QImageReader>
 #include <QImageWriter>
+#include <QItemSelectionModel>
 #include <QThread>
 
 #include <klocalizedstring.h>
@@ -89,6 +92,31 @@
 namespace
 {
 #ifdef Q_OS_IOS
+void suppressAutomaticItemViewInputMethod(QAbstractItemView *itemView)
+{
+    // QAbstractItemView enables input methods whenever the current model item
+    // has Qt::ItemIsEditable. On iPadOS that alone presents the software
+    // keyboard, even though the user only tapped an item to select it. A real
+    // delegate editor is a separate child widget and still enables its own
+    // input method when editing is explicitly started.
+    itemView->setAttribute(Qt::WA_InputMethodEnabled, false);
+
+    QItemSelectionModel *selectionModel = itemView->selectionModel();
+    QObject *guardedSelectionModel =
+        itemView->property("kritaIosInputMethodSelectionModel").value<QObject *>();
+
+    if (selectionModel && guardedSelectionModel != selectionModel) {
+        QObject::connect(selectionModel,
+                         &QItemSelectionModel::currentChanged,
+                         itemView,
+                         [itemView]() {
+                             itemView->setAttribute(Qt::WA_InputMethodEnabled, false);
+                         });
+        itemView->setProperty("kritaIosInputMethodSelectionModel",
+                              QVariant::fromValue<QObject *>(selectionModel));
+    }
+}
+
 class KisIosWidgetStyle : public QProxyStyle
 {
 public:
@@ -971,6 +999,12 @@ bool KisApplication::notify(QObject *receiver, QEvent *event)
             // QApplication::notify() can throw, so use RAII for counters
             AppRecursionGuard guard(&info);
 
+#ifdef Q_OS_IOS
+            // Event delivery is allowed to delete its receiver. Keep the iOS
+            // widget post-processing below from inspecting a stale pointer.
+            QPointer<QObject> guardedReceiver(receiver);
+#endif
+
             if (event->type() == KisSynchronizedConnectionBase::eventType()) {
 
                 if (info.eventRecursionCount > 1) {
@@ -986,8 +1020,9 @@ bool KisApplication::notify(QObject *receiver, QEvent *event)
             }
 
 #ifdef Q_OS_IOS
-            if (event->type() == QEvent::Polish) {
-                if (QAbstractScrollArea *scrollArea = qobject_cast<QAbstractScrollArea *>(receiver)) {
+            if (guardedReceiver && event->type() == QEvent::Polish) {
+                if (QAbstractScrollArea *scrollArea =
+                        qobject_cast<QAbstractScrollArea *>(guardedReceiver.data())) {
                     // The canvas consumes touch input for painting and its own
                     // pan gestures. All other Qt scroll areas should behave as
                     // touch-first controls, including ones created by plugins.
@@ -995,6 +1030,13 @@ bool KisApplication::notify(QObject *receiver, QEvent *event)
                         && !scrollArea->property("kritaDisableTouchScrolling").toBool()) {
                         KisKineticScroller::createPreconfiguredScroller(scrollArea);
                     }
+                }
+            }
+
+            if (QAbstractItemView *itemView =
+                    qobject_cast<QAbstractItemView *>(guardedReceiver.data())) {
+                if (event->type() == QEvent::Polish || event->type() == QEvent::FocusIn) {
+                    suppressAutomaticItemViewInputMethod(itemView);
                 }
             }
 #endif

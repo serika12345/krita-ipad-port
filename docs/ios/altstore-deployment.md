@@ -126,3 +126,15 @@ prevents item selections from moving under the finger. An ordinary tap still
 selects its item. The Configure Krita category list and brush selection were
 verified with swipe scrolling, inertia, stable selection during a drag, and
 normal tap selection.
+
+The physical-device run `20260802132451` stopped editable item selections from
+opening the iOS software keyboard. Qt marks a `QAbstractItemView` as an input
+method target whenever its current model item has `Qt::ItemIsEditable`; on
+iPadOS that presents the keyboard even when a brush or layer was only selected.
+Krita now disables that implicit item-view input method while leaving explicit
+delegate editors and text fields unchanged. Brush selection was verified on
+the connected iPad. The post-event iOS widget hooks also retain receivers with
+`QPointer`, because event delivery may destroy transient widgets. This fixes
+the `KisApplication::notify` invalid-pointer crash found in the superseded
+`20260802132041` run; the final build reached the main window and remained
+running before the input behavior was retested.

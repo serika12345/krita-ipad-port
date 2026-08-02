@@ -254,6 +254,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 起動時の画面向き確定後もスプラッシュを中央へ再配置する（横向き実機で検証済み）。
 - [x] **P0** `Configure Krita`起動時に検索欄へ自動フォーカスせず、ソフトウェアキーボードを抑止する（実機検証済み）。
 - [x] **P0** 全`QAbstractScrollArea`を指のスワイプと慣性スクロールに対応させ、ドラッグ中の項目選択を抑止する（設定画面とブラシ選択を実機検証済み）。
+- [x] **P0** ブラシなど編集可能な一覧項目の選択だけではソフトウェアキーボードを表示せず、明示的な文字編集時だけ有効化する（実機検証済み）。
 - [ ] **P0** 小さすぎるmenu、dialog、slider、spinboxのtouch targetを修正する。
 - [ ] **P0** modal dialogとソフトウェアキーボードの重なりを修正する。
 - [ ] **P1** Split ViewとStage Managerでlayoutを検証する。
