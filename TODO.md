@@ -163,6 +163,9 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 静的Qtリソースと実行時データの欠落を機械検査する。
 - [x] **P1** 主要Tool/Dockerを46個の静的プラグイン構成へ拡張し、実機メニューとToolboxで確認する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
+  - [x] JPEG/ORAのimport/export 4プラグインをiOS向け共通変換ライブラリとともに静的リンクする（50プラグイン、ビルド`20260802145518`）。
+  - [x] JPEGをネイティブFiles経由で保存・再読み込みし、USB回収した2480×3508、8-bit RGB画像を外部デコード・目視確認する（ビルド`20260802150920`、`NativeSaveTest2.jpg`）。
+  - [x] ORAをネイティブFiles経由で保存・再読み込みし、USB回収後に`mimetype`、`stack.xml`、2レイヤーPNG、サムネイル、統合画像を含む全6エントリを検証する（ビルド`20260802150920`、`NativeSaveTest.ora`）。
 - [x] **P1** プラグイン機能群ごとにON/OFFできるiOS feature profileを作る。
 - [ ] **P2** 任意フィルタとDockerを段階的に追加する。
 
@@ -170,7 +173,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [x] 起動時に選択したプラグインだけが列挙・ロードされる。
 - [x] Pixel Brush、基本Tool、Layer Dockerが実機で利用可能である。
-- [ ] KRA/PNG I/Oが実機で利用可能である。
+- [x] KRA/PNG I/Oが実機で利用可能である（ビルド`20260802143848`でネイティブFiles経由の保存・再読み込みを確認済み）。
 - [x] 新しい静的プラグインを一覧へ追加するだけで組み込める。
 
 ### 技術ゲート G2
@@ -217,11 +220,17 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 ### タスク
 
-- [ ] **P0** UIDocumentPicker/FilesアプリをQt/C++から利用するbridgeを作る。
+- [x] **P0** Qt iOSの`UIDocumentPicker`をKritaのopen/saveダイアログとして有効化し、実機でopen/saveの両方を確認する（ビルド`20260802143848`でFilesから`Untitled.kra`を開き、`NativeSaveTest.kra`をFilesへ保存して確認済み）。
 - [ ] **P0** open/import/export/save/save-asの動線をiPadOS向けに整理する。
 - [ ] **P0** security-scoped URLの開始、終了、bookmark保持を実装する。
-- [ ] **P0** inbox、temporary、Documents、cacheの用途を分離する。
-- [ ] **P0** KRA/PNG/JPEG/ORAの読み書きを実機で検証する。
+- [x] **P0** ユーザーファイルの既定位置を現在のアプリコンテナの`Documents`へ固定し、AltStore再インストール後の古い絶対パスから自動回復する。
+- [x] **P0** `UIFileSharingEnabled`と`LSSupportsOpeningDocumentsInPlace`を有効化し、デプロイ時に両設定を機械検査する。
+- [ ] **P0** inbox、temporary、Documents、cacheの用途を完全に分離する。
+- [x] **P0** KRA/PNG/JPEG/ORAの読み書きを実機で検証する（ネイティブFiles経由の保存・再読み込み、USB回収後の外部検証、クラッシュレポート非生成を確認済み）。
+- [x] **P0** 新規KRAを実機の`Documents`へ保存し、USBで回収したKRAのZIP構造と主要エントリを検証する（ビルド`20260802143408`）。
+- [x] **P0** ネイティブSaveで保存したKRAをUSBで回収し、全ZIPエントリが破損していないことを検証する（ビルド`20260802143848`、`NativeSaveTest.kra`、13エントリ）。
+- [x] **P0** PNGをネイティブSaveで`Documents`へ保存し、USBで回収後に2480×3508、8-bit RGBAとしてデコード・目視確認し、FilesからKritaへ再読み込みする（ビルド`20260802143848`、`NativeSaveTest.png`）。
+- [x] **P0** JPEG保存後のサムネイル生成でQt同梱版と外部版の静的libjpegが衝突するクラッシュを、iOSではQt同梱版へ統一して修正する。JPEGの保存・再読み込み、USB回収後の外部デコード、クラッシュレポート非生成を確認する（ビルド`20260802150920`、`NativeSaveTest2.jpg`）。
 - [ ] **P0** background移行前の保存・journal処理を実装する。
 - [ ] **P0** foreground復帰時にcanvas/GPU/resourceを復元する。
 - [ ] **P0** memory warningを受けて安全にcacheを解放する。
@@ -244,7 +253,8 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Pixel Brush、Eraser、基本Brush Presets。
 - [ ] **P0** Layer追加・削除・並べ替え・可視性・opacity・blend mode。
 - [ ] **P0** Undo/Redo、selection、move、transform、crop、fill、gradient、textの基本動作。
-- [ ] **P0** KRA/ORA/PNG/JPEG import/export。
+- [x] **P0** KRA/ORA/PNG/JPEG import/export（基本的な保存・再読み込みをビルド`20260802150920`で実機確認済み。KRA内の任意フィルター互換性は次項で継続する）。
+- [ ] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（`invert`を含むテストKRAは、現行の静的プラグイン構成ではファイルへ到達後にレイヤー読込エラーとなる）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
 - [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール。

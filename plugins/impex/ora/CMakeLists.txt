@@ -8,25 +8,34 @@ set(libkritaconverter_LIB_SRCS
     kis_open_raster_stack_save_visitor.cpp
     )
 
+if(IOS)
+    kis_add_library(kritaoracommon STATIC ${libkritaconverter_LIB_SRCS})
+    target_link_libraries(kritaoracommon PUBLIC kritaui)
+    set(kritaoracommon_TARGET kritaoracommon)
+    set(libkritaconverter_PLUGIN_SRCS)
+else()
+    set(libkritaconverter_PLUGIN_SRCS ${libkritaconverter_LIB_SRCS})
+endif()
+
 set(kritaoraimport_SOURCES
     ora_import.cc
-    ${libkritaconverter_LIB_SRCS}
+    ${libkritaconverter_PLUGIN_SRCS}
     )
 
 kis_add_library(kritaoraimport MODULE ${kritaoraimport_SOURCES})
 
-target_link_libraries(kritaoraimport kritaui )
+target_link_libraries(kritaoraimport kritaui ${kritaoracommon_TARGET})
 
 install(TARGETS kritaoraimport  DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})
 
 set(kritaoraexport_SOURCES
     ora_export.cc
-    ${libkritaconverter_LIB_SRCS}
+    ${libkritaconverter_PLUGIN_SRCS}
     )
 
 kis_add_library(kritaoraexport MODULE ${kritaoraexport_SOURCES})
 
-target_link_libraries(kritaoraexport kritaui kritaimpex)
+target_link_libraries(kritaoraexport kritaui kritaimpex ${kritaoracommon_TARGET})
 
 install(TARGETS kritaoraexport  DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})
 

@@ -50,6 +50,12 @@ fi
 "$scripts_dir/inspect-apple-binary.sh" device "$binary"
 "$scripts_dir/inspect-static-resources.sh" "$binary" "$archive_dir"
 plutil -lint "$app_path/Info.plist"
+for document_key in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace; do
+    if [[ "$(plutil -extract "$document_key" raw -o - "$app_path/Info.plist" 2>/dev/null || true)" != "true" ]]; then
+        echo "error: iPadOS document access is not enabled in Info.plist: $document_key" >&2
+        exit 1
+    fi
+done
 
 if ! pgrep -x AltServer >/dev/null; then
     echo "error: AltServer is not running" >&2

@@ -6,7 +6,9 @@
 
 #include "KoFileDialog.h"
 #include <QDebug>
+#include <QDir>
 #include <QFileDialog>
+#include <QStandardPaths>
 #include <KisPreviewFileDialog.h>
 #include <QApplication>
 #include <QImageReader>
@@ -137,6 +139,28 @@ QString KoFileDialog::selectedMimeType() const
 
 void KoFileDialog::createFileDialog()
 {
+#ifdef Q_OS_IOS
+    // UIDocumentPicker exports a temporary file whose name becomes the
+    // suggested destination name. Always give it a useful extension, since
+    // access to the returned security-scoped URL cannot safely be transferred
+    // to a sibling path after the picker has closed.
+    if (d->type == SaveFile && d->proposedFileName.isEmpty()) {
+        QString suffix = d->suffixes.value(d->defaultFilter);
+        if (suffix.isEmpty()) {
+            for (auto it = d->suffixes.cbegin(); it != d->suffixes.cend(); ++it) {
+                if (!it.value().isEmpty()) {
+                    suffix = it.value();
+                    break;
+                }
+            }
+        }
+        d->proposedFileName = QStringLiteral("Untitled");
+        if (!suffix.isEmpty()) {
+            d->proposedFileName += QLatin1Char('.') + suffix;
+        }
+    }
+#endif
+
     d->fileDialog.reset(new KisPreviewFileDialog(d->parent, d->caption, d->defaultDirectory + "/" + d->proposedFileName));
     if (!d->defaultUri.isEmpty()) {
         d->fileDialog->setDirectoryUrl(d->defaultUri);
@@ -156,6 +180,11 @@ void KoFileDialog::createFileDialog()
 #ifdef Q_OS_ANDROID
     dontUseNative = false;
 #endif
+#ifdef Q_OS_IOS
+    // Qt's iOS platform plugin implements QFileDialog with
+    // UIDocumentPickerViewController, including security-scoped URLs.
+    dontUseNative = false;
+#endif
 #ifdef Q_OS_UNIX
     if (qgetenv("XDG_CURRENT_DESKTOP") == "KDE") {
         dontUseNative = false;
@@ -168,13 +197,20 @@ void KoFileDialog::createFileDialog()
     dontUseNative = false;
 #endif
 
-    bool optionDontUseNative;
+    bool optionDontUseNative = false;
+#ifdef Q_OS_IOS
+    // Do not inherit a desktop/non-native preference copied from an older app
+    // container. iOS file-provider access depends on UIDocumentPicker granting
+    // a security-scoped URL for the selected destination.
+    optionDontUseNative = false;
+#else
     if (!qEnvironmentVariable("APPIMAGE").isEmpty()) {
         // AppImages don't have access to platform plugins. BUG: 447805
         optionDontUseNative = false;
     } else {
         optionDontUseNative = group.readEntry("DontUseNativeFileDialog", dontUseNative);
     }
+#endif
 
     d->fileDialog->setOption(QFileDialog::DontUseNativeDialog, optionDontUseNative);
     d->fileDialog->setOption(QFileDialog::DontConfirmOverwrite, false);
@@ -261,6 +297,39 @@ void KoFileDialog::createFileDialog()
 QString KoFileDialog::filename()
 {
     QString url;
+
+#ifdef Q_OS_IOS
+    if (d->type == SaveFile) {
+        QInputDialog mimeSelector(d->parent);
+        mimeSelector.setWindowTitle(i18n("Select File Format"));
+        mimeSelector.setLabelText(i18n("Save As:"));
+        mimeSelector.setComboBoxItems(d->filterList);
+        mimeSelector.setComboBoxEditable(false);
+        mimeSelector.setOkButtonText(KStandardGuiItem::ok().text());
+        mimeSelector.setCancelButtonText(KStandardGuiItem::cancel().text());
+        mimeSelector.setOption(QInputDialog::UseListViewForComboBoxItems);
+        if (!d->defaultFilter.isEmpty()) {
+            mimeSelector.setTextValue(d->defaultFilter);
+        }
+
+        if (mimeSelector.exec() != QDialog::Accepted) {
+            return url;
+        }
+
+        const QString selectedFilter = mimeSelector.textValue();
+        const QString selectedSuffix = d->suffixes.value(selectedFilter);
+        d->defaultFilter = selectedFilter;
+
+        if (!selectedSuffix.isEmpty()) {
+            QString proposedFileBaseName = QFileInfo(d->proposedFileName).completeBaseName();
+            if (proposedFileBaseName.isEmpty()) {
+                proposedFileBaseName = QStringLiteral("Untitled");
+            }
+            d->proposedFileName = proposedFileBaseName + QLatin1Char('.') + selectedSuffix;
+        }
+    }
+#endif
+
     createFileDialog();
 
 #ifdef Q_OS_ANDROID
@@ -355,7 +424,7 @@ QString KoFileDialog::filename()
             retryNeeded = true;
 
 // We can only write to the Uri that was returned, we don't have permission to change the Uri.
-#if !(defined(Q_OS_MACOS) || defined(Q_OS_ANDROID))
+#if !(defined(Q_OS_MACOS) || defined(Q_OS_ANDROID) || defined(Q_OS_IOS))
             url = url + extension;
 #endif
         }
@@ -566,10 +635,24 @@ void KoFileDialog::setMimeTypeFilters(const QStringList &mimeTypeList, QString d
 
 QString KoFileDialog::getUsedDir(const QString &dialogName)
 {
-    if (dialogName.isEmpty()) return "";
+    if (dialogName.isEmpty()) {
+#ifdef Q_OS_IOS
+        return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#else
+        return "";
+#endif
+    }
 
     KConfigGroup group =  KSharedConfig::openConfig()->group("File Dialogs");
     QString dir = group.readEntry(dialogName, "");
+#ifdef Q_OS_IOS
+    // AltStore may reinstall the app into a new container while preserving
+    // settings. Absolute paths saved from the previous container then become
+    // stale, so fall back to the current Documents directory.
+    if (dir.isEmpty() || !QFileInfo(dir).isDir()) {
+        dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    }
+#endif
     return dir;
 }
 

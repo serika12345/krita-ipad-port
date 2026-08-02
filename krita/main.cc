@@ -654,6 +654,15 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     // first create the application so we can create a pixmap
     KisApplication app(key, argc, argv);
 
+#ifdef Q_OS_IOS
+    // Keep user documents outside Library/Application Support so they survive
+    // normal cache maintenance and are exposed by iOS File Sharing.
+    const QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    if (documentsPath.isEmpty() || !QDir().mkpath(documentsPath)) {
+        qWarning() << "Could not initialize the iOS Documents directory:" << documentsPath;
+    }
+#endif
+
 #if defined Q_OS_WIN && QT_VERSION > QT_VERSION_CHECK(6, 0, 0)
     const bool forceWinTab = !KisConfig::useWin8PointerInputNoApp(&kritarc);
     using QWindowsApplication = QNativeInterface::Private::QWindowsApplication;
