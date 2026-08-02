@@ -14,7 +14,7 @@ import subprocess
 import sys
 from typing import Any
 
-BUILDER_SCHEMA = 3
+BUILDER_SCHEMA = 4
 
 
 def run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> None:
@@ -26,7 +26,14 @@ def capture(command: list[str], *, cwd: Path | None = None) -> str:
     return subprocess.check_output(command, cwd=cwd, text=True).strip()
 
 
-def fingerprint(package: dict[str, Any], source: Path, toolchain: Path, mode: str, repo: Path) -> str:
+def fingerprint(
+    package: dict[str, Any],
+    source: Path,
+    toolchain: Path,
+    mode: str,
+    repo: Path,
+    qt_stamp: Path,
+) -> str:
     digest = hashlib.sha256()
     digest.update(json.dumps(package, sort_keys=True).encode())
     digest.update(str(source.resolve()).encode())
@@ -34,6 +41,12 @@ def fingerprint(package: dict[str, Any], source: Path, toolchain: Path, mode: st
     digest.update(str(BUILDER_SCHEMA).encode())
     for relative_path in package.get("fingerprint_files", []):
         digest.update((repo / relative_path).read_bytes())
+    if package.get("requires_qt"):
+        if not qt_stamp.is_file():
+            raise SystemExit(
+                f"{package['name']} requires target Qt; run build-qt.sh {mode} first"
+            )
+        digest.update(qt_stamp.read_bytes())
     digest.update(mode.encode())
     digest.update(capture(["xcodebuild", "-version"]).encode())
     digest.update(capture(["xcrun", "--sdk", "iphoneos" if mode == "device" else "iphonesimulator", "--show-sdk-version"]).encode())
@@ -256,12 +269,26 @@ def main() -> int:
     manifest_path = ios / "deps/dependencies.json"
     manifest = json.loads(manifest_path.read_text())
     packages_by_name = {package["name"]: package for package in manifest["packages"]}
-    requested = args.packages or list(packages_by_name)
+    qt_stamp = repo / "build-ios/qt" / args.mode / "build-input.sha256"
+    requested = args.packages or [
+        name
+        for name, package in packages_by_name.items()
+        if qt_stamp.is_file() or not package.get("requires_qt")
+    ]
+    if not args.packages and not qt_stamp.is_file():
+        deferred = [
+            name
+            for name, package in packages_by_name.items()
+            if package.get("requires_qt")
+        ]
+        if deferred:
+            print(f"defer until target Qt exists: {', '.join(deferred)}")
     packages = resolve_packages(packages_by_name, requested)
 
     run([str(ios / "scripts/check-host.sh")])
 
     target_root = repo / "build-ios/deps" / args.mode
+    qt_prefix = repo / "build-ios/qt" / args.mode / "prefix"
     source_root = repo / "build-ios/deps/sources"
     prefix = target_root / "prefix"
     build_root = target_root / "build"
@@ -288,7 +315,9 @@ def main() -> int:
         ).splitlines()[-1]
         source = Path(source_output)
         stamp = stamp_root / f"{name}.json"
-        package_fingerprint = fingerprint(package, source, toolchain, args.mode, repo)
+        package_fingerprint = fingerprint(
+            package, source, toolchain, args.mode, repo, qt_stamp
+        )
         artifacts = [prefix / artifact for artifact in package.get("artifacts", [])]
         required_paths = artifacts + [prefix / path for path in package.get("required_paths", [])]
 
@@ -306,6 +335,14 @@ def main() -> int:
 
         build_system = package.get("build_system", "cmake")
         if build_system == "cmake":
+            cmake_prefix_path = str(prefix)
+            if package.get("requires_qt"):
+                qt_config = qt_prefix / "lib/cmake/Qt6/Qt6Config.cmake"
+                if not qt_config.is_file():
+                    raise SystemExit(
+                        f"{name} requires target Qt; run build-qt.sh {args.mode} first"
+                    )
+                cmake_prefix_path = f"{qt_prefix};{prefix}"
             cmake_source = repo / package["cmake_source_dir"] if "cmake_source_dir" in package else source_dir
             cmake_args = [argument.format(source_dir=source_dir) for argument in package["cmake_args"]]
             configure = [
@@ -319,8 +356,8 @@ def main() -> int:
                 f"-DCMAKE_TOOLCHAIN_FILE={toolchain}",
                 f"-DKRITA_IOS_PLATFORM={platform}",
                 f"-DCMAKE_INSTALL_PREFIX={prefix}",
-                f"-DCMAKE_PREFIX_PATH={prefix}",
-                f"-DCMAKE_FIND_ROOT_PATH={prefix}",
+                f"-DCMAKE_PREFIX_PATH={cmake_prefix_path}",
+                f"-DCMAKE_FIND_ROOT_PATH={cmake_prefix_path}",
                 "-DCMAKE_IGNORE_PREFIX_PATH=/usr/local;/opt/homebrew",
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DCMAKE_INSTALL_LIBDIR=lib",

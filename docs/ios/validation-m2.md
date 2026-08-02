@@ -2,8 +2,8 @@
 
 Date: 2026-08-02
 
-M2 is in progress. This record covers the core non-Qt dependency checkpoint;
-Qt, QuaZip, ECM, and KDE Frameworks remain to be built and validated.
+M2 is in progress. The core dependency set, Qt, and QuaZip are validated;
+ECM and KDE Frameworks remain to be built and validated.
 
 ## Build boundary
 
@@ -37,15 +37,19 @@ the boundary in ADR 0001.
 | HarfBuzz | 13.2.1 | static arm64/IOS archive |
 | Fontconfig | 2.18.2 | static arm64/IOS archive |
 | libunibreak | 7.0 | static arm64/IOS archive |
+| Qt | 6.11.1 | 39 static arm64/IOS archives |
+| QuaZip | 1.5 | static arm64/IOS archive |
 
 JPEG has a pinned flake source output but remains a P1 validation task.
-QuaZip is deferred until the target Qt build exists.
 
 ## Commands and results
 
 ```sh
 nix develop --command packaging/ios/scripts/build-dependencies.sh device
+nix develop --command packaging/ios/scripts/build-qt.sh device
+nix develop --command packaging/ios/scripts/build-dependencies.sh device
 nix develop --command packaging/ios/scripts/probe-dependencies.sh device
+nix develop --command packaging/ios/scripts/probe-qt.sh device
 ```
 
 The dependency probe compiled and linked all libraries listed above into one
@@ -56,6 +60,12 @@ Mach-O application with these properties:
 - minimum OS: 17.0
 - SDK: 26.5
 - unresolved symbols: none
+
+The Qt/QuaZip probe additionally linked Qt Core, Gui, Widgets, Xml, Network,
+Svg, Concurrent, Sql, OpenGL, OpenGLWidgets, Core5Compat, QuaZip, and the static
+iOS platform and support plugins. Its executable has the same arm64/IOS/minimum
+OS/SDK metadata. Qt's configuration summary reports `Qt PrintSupport ... no`,
+and no PrintSupport archive is installed.
 
 A separate zlib/libpng Simulator build produced `platform IOSSIMULATOR` archives.
 The archive inspector's negative test correctly rejected a Simulator archive
@@ -74,9 +84,15 @@ when it was presented as a device artifact.
   library and generated data needed by the install.
 - Build fingerprints include the source path, build recipe, platform matrix,
   toolchain file, and builder schema. Changed inputs invalidate their stamps.
+- Qt is built from the locked Qt 6.11.1 source outputs with the Nix-provided
+  host Qt tools. Its target prefix is isolated from the non-Qt dependency
+  prefix, and QuaZip fingerprints the exact target Qt build input.
+- Qt 6.11.1 emits iOS API deprecation warnings under the Xcode 26.5 SDK, chiefly
+  around older permission APIs. They do not prevent compilation or linking and
+  remain an M5 runtime review item.
 
 ## Remaining M2 gate
 
-M2 is not complete until Qt 6.11.1, QuaZip, ECM 6.28.0, and the selected KDE
-Frameworks build for iOS and pass a combined link test. PrintSupport removal and
-cross-compilation probes such as `try_run()` must also be resolved there.
+M2 is not complete until ECM 6.28.0 and the selected KDE Frameworks build for
+iOS and pass a combined link test. Cross-compilation probes such as `try_run()`
+must also be resolved there.

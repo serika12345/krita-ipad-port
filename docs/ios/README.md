@@ -82,6 +82,32 @@ The dependency graph and package-specific options are defined in
 `packaging/ios/deps/dependencies.json`. See `docs/ios/validation-m2.md` for the
 current validated subset and known limitations.
 
+## Build Qt and Qt-dependent libraries
+
+Qt is built statically from the locked Qt 6.11.1 sources. Build the core
+dependencies first, then Qt, then rerun the dependency builder so it can add
+Qt-dependent packages such as QuaZip:
+
+```sh
+nix develop --command packaging/ios/scripts/build-dependencies.sh device
+nix develop --command packaging/ios/scripts/build-qt.sh device
+nix develop --command packaging/ios/scripts/build-dependencies.sh device
+nix develop --command packaging/ios/scripts/probe-qt.sh device
+```
+
+`build-qt.sh` fingerprints the locked source outputs, Xcode/SDK matrix, and
+build recipe. A matching build is reused and all installed archives are still
+revalidated. If an input changes, rebuild the isolated Qt target directory:
+
+```sh
+nix develop --command packaging/ios/scripts/build-qt.sh device --clean
+```
+
+The Qt probe links Core, Gui, Widgets, Xml, Network, Svg, Concurrent, Sql,
+OpenGL, OpenGLWidgets, Core5Compat, the iOS platform plugin, static support
+plugins, and QuaZip into one unsigned iOS application. PrintSupport is
+explicitly disabled and is rejected as a required Krita dependency.
+
 ## Build output and logs
 
 - Device and Simulator output: `build-ios/`

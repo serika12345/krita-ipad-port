@@ -311,6 +311,28 @@
         "include/fontconfig/fontconfig.h",
         "lib/pkgconfig/fontconfig.pc"
       ]
+    },
+    {
+      "name": "quazip",
+      "version": "1.5",
+      "source_flake_attr": "source-quazip",
+      "requires_qt": true,
+      "dependencies": [
+        "zlib"
+      ],
+      "cmake_args": [
+        "-DQUAZIP_QT_MAJOR_VERSION=6",
+        "-DQUAZIP_BZIP2=OFF",
+        "-DQUAZIP_ENABLE_TESTS=OFF",
+        "-DQUAZIP_FETCH_LIBS=OFF"
+      ],
+      "artifacts": [
+        "lib/libquazip1-qt6.a"
+      ],
+      "required_paths": [
+        "include/QuaZip-Qt6-1.5/quazip/quazip.h",
+        "lib/cmake/QuaZip-Qt6-1.5/QuaZip-Qt6Config.cmake"
+      ]
     }
   ]
 }
