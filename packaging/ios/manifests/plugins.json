@@ -1,0 +1,1039 @@
+{
+  "schema": 1,
+  "generated_by": "packaging/ios/scripts/inventory-plugins.py",
+  "count": 172,
+  "plugins": [
+    {
+      "target": "kritaassistanttool",
+      "category": "assistants",
+      "cmake_file": "plugins/assistants/Assistants/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_colorspaces_extensions",
+      "category": "color",
+      "cmake_file": "plugins/color/colorspaceextensions/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalcmsengine",
+      "category": "color",
+      "cmake_file": "plugins/color/lcms2engine/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaanimationdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/animation/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaarrangedocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/arrangedocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaartisticcolorselector",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/artisticcolorselector/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritabrushhud",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/brushhud/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritachanneldocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/channeldocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorselectorng",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/advancedcolorselector/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacompositiondocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/compositiondocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadigitalmixer",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/digitalmixer/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagamutmask",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/gamutmask/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagriddocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/griddocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritahistogramdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/histogram/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritahistorydocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/historydocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalayerdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/layerdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalogdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/logdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalutdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/lut/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaoverviewdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/overview/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapalettedocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/palettedocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapatterndocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/patterndocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapresetdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/presetdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapresethistory",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/presethistory/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritarecorderdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/recorder/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasmallcolorselector",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/smallcolorselector/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasnapshotdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/snapshotdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaspecificcolorselector",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/specificcolorselector/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritastoryboarddocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/storyboarddocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasvgcollectiondocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/svgcollectiondocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatasksetdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/tasksetdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatextproperties",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/textproperties/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatouchdocker",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/touchdocker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritawgcolorselector",
+      "category": "dockers",
+      "cmake_file": "plugins/dockers/widegamutcolorselector/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritabuginfo",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/buginfo/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaclonesarray",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/clonesarray/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorrange",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/colorrange/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorspaceconversion",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/colorspaceconversion/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadbexplorer",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/dbexplorer/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaimagesplit",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/imagesplit/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalayergroupswitcher",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/layergroupswitcher/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalayersplit",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/layersplit/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritametadataeditor",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/metadataeditor/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritamodifyselection",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/modify_selection/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaoffsetimage",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/offsetimage/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapykrita",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/pykrita/plugin/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaqmic",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/qmic/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaresourcemanager",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/resourcemanager/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritarotateimage",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/rotateimage/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasamplescreencolor",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/samplescreencolor/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaseparatechannels",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/separate_channels/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritashearimage",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/shearimage/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaspensettings",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/spensettings/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritawaveletdecompose",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/waveletdecompose/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaasccdl",
+      "category": "filters",
+      "cmake_file": "plugins/filters/asccdl/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritablurfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/blur/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorsfilters",
+      "category": "filters",
+      "cmake_file": "plugins/filters/colorsfilters/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaconvertheighttonormalmap",
+      "category": "filters",
+      "cmake_file": "plugins/filters/convertheightnormalmap/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaconvolutionfilters",
+      "category": "filters",
+      "cmake_file": "plugins/filters/convolutionfilters/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadodgeburn",
+      "category": "filters",
+      "cmake_file": "plugins/filters/dodgeburn/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaedgedetection",
+      "category": "filters",
+      "cmake_file": "plugins/filters/edgedetection/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaembossfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/embossfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaexample",
+      "category": "filters",
+      "cmake_file": "plugins/filters/example/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaextensioncolorsfilters",
+      "category": "filters",
+      "cmake_file": "plugins/filters/colors/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritafastcolortransferfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/fastcolortransfer/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagaussianhighpassfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/gaussianhighpass/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagradientmap",
+      "category": "filters",
+      "cmake_file": "plugins/filters/gradientmap/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritahalftone",
+      "category": "filters",
+      "cmake_file": "plugins/filters/halftone/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaimageenhancement",
+      "category": "filters",
+      "cmake_file": "plugins/filters/imageenhancement/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaindexcolors",
+      "category": "filters",
+      "cmake_file": "plugins/filters/indexcolors/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritalevelfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/levelfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritanoisefilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/noisefilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritanormalize",
+      "category": "filters",
+      "cmake_file": "plugins/filters/normalize/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaoilpaintfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/oilpaintfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapalettize",
+      "category": "filters",
+      "cmake_file": "plugins/filters/palettize/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaphongbumpmap",
+      "category": "filters",
+      "cmake_file": "plugins/filters/phongbumpmap/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapixelizefilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/pixelizefilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaposterize",
+      "category": "filters",
+      "cmake_file": "plugins/filters/posterize/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapropagatecolors",
+      "category": "filters",
+      "cmake_file": "plugins/filters/propagatecolors/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaraindropsfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/raindropsfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritarandompickfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/randompickfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaresettransparent",
+      "category": "filters",
+      "cmake_file": "plugins/filters/resettransparent/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaroundcornersfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/roundcorners/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasmalltilesfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/smalltilesfilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritathreshold",
+      "category": "filters",
+      "cmake_file": "plugins/filters/threshold/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaunsharpfilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/unsharp/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritawavefilter",
+      "category": "filters",
+      "cmake_file": "plugins/filters/wavefilter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_shape_image",
+      "category": "flake",
+      "cmake_file": "plugins/flake/imageshape/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_shape_paths",
+      "category": "flake",
+      "cmake_file": "plugins/flake/pathshapes/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorgenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/solid/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagradientgenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/gradient/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritamultigridpatterngenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/multigridpattern/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapatterngenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/pattern/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritascreentonegenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/screentone/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaseexprgenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/seexpr/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasimplexnoisegenerator",
+      "category": "generators",
+      "cmake_file": "plugins/generators/simplexnoise/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_raw_import",
+      "category": "impex",
+      "cmake_file": "plugins/impex/raw/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritabrushexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/brush/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritabrushimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/brush/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacsvexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/csv/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacsvimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/csv/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaexrexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/exr/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaexrimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/exr/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagifexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/gif/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagifimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/gif/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaheifexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/heif/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaheifimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/heif/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaheightmapexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/heightmap/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaheightmapimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/heightmap/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritajp2import",
+      "category": "impex",
+      "cmake_file": "plugins/impex/jp2/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritajpegexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/jpeg/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritajpegimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/jpeg/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritajxlexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/jxl/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritajxlimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/jxl/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritakraexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/kra/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritakraimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/kra/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritakrzexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/krz/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaoraexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/ora/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaoraimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/ora/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapdfimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/pdf/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapngexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/png/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapngimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/png/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapsdexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/psd/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritapsdimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/psd/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaqimageioexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/qimageio/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaqimageioimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/qimageio/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaqmlexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/qml/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritargbeexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/rgbe/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritargbeimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/rgbe/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaspriterexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/spriter/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasvgimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/svg/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatgaexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/tga/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatgaimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/tga/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatiffexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/tiff/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatiffimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/tiff/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritawebpexport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/webp/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritawebpimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/webp/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaxcfimport",
+      "category": "impex",
+      "cmake_file": "plugins/impex/xcf/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaexif",
+      "category": "metadata",
+      "cmake_file": "plugins/metadata/exif/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaiptc",
+      "category": "metadata",
+      "cmake_file": "plugins/metadata/iptc/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaxmp",
+      "category": "metadata",
+      "cmake_file": "plugins/metadata/xmp/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacolorsmudgepaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/colorsmudge/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritacurvepaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/curvebrush/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadefaultpaintops",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/defaultpaintops/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadeformpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/deform/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaexperimentpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/experiment/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritafilterop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/filterop/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritagridpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/gridbrush/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritahairypaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/hairy/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritahatchingpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/hatching/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritamypaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/mypaint/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaparticlepaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/particle/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaroundmarkerpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/roundmarker/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritasketchpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/sketch/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaspraypaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/spray/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatangentnormalpaintop",
+      "category": "paintops",
+      "cmake_file": "plugins/paintops/tangentnormal/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaplatformpluginwayland",
+      "category": "platforms",
+      "cmake_file": "plugins/platforms/wayland/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaplatformpluginxcb",
+      "category": "platforms",
+      "cmake_file": "plugins/platforms/xcb/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadesignerplugin",
+      "category": "qt",
+      "cmake_file": "plugins/qt/designer/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_flaketools",
+      "category": "tools",
+      "cmake_file": "plugins/tools/defaulttool/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_karbontools",
+      "category": "tools",
+      "cmake_file": "plugins/tools/karbonplugins/tools/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "krita_tool_svgtext",
+      "category": "tools",
+      "cmake_file": "plugins/tools/svgtexttool/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritadefaulttools",
+      "category": "tools",
+      "cmake_file": "plugins/tools/basictools/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaselectiontools",
+      "category": "tools",
+      "cmake_file": "plugins/tools/selectiontools/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolKnife",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_knife/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolSmartPatch",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_smart_patch/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolcrop",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_crop/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatooldyna",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_dyna/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolencloseandfill",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_enclose_and_fill/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoollazybrush",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_lazybrush/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolpolygon",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_polygon/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatoolpolyline",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_polyline/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritatooltransform",
+      "category": "tools",
+      "cmake_file": "plugins/tools/tool_transform2/CMakeLists.txt",
+      "initial_profile": "review"
+    }
+  ]
+}

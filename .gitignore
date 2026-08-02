@@ -48,6 +48,8 @@ _build
 _install
 _staging
 _packaging
+build-ios/
+logs/ios/
 env
 env_deactivate
 krita-deps-management/

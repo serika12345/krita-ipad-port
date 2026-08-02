@@ -1,0 +1,48 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "ios-common",
+      "hidden": true,
+      "generator": "Xcode",
+      "toolchainFile": "${sourceDir}/packaging/ios/cmake/KritaIOSPlatform.cmake",
+      "cacheVariables": {
+        "BUILD_TESTING": "OFF",
+        "BUILD_WITH_QT6": "ON",
+        "ALLOW_UNSTABLE": "QT6",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "ios-device",
+      "displayName": "Krita iPadOS device",
+      "inherits": "ios-common",
+      "binaryDir": "${sourceDir}/build-ios/krita/device",
+      "cacheVariables": {
+        "KRITA_IOS_PLATFORM": "DEVICE"
+      }
+    },
+    {
+      "name": "ios-simulator",
+      "displayName": "Krita iPadOS simulator",
+      "inherits": "ios-common",
+      "binaryDir": "${sourceDir}/build-ios/krita/simulator",
+      "cacheVariables": {
+        "KRITA_IOS_PLATFORM": "SIMULATOR"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ios-device",
+      "configurePreset": "ios-device",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "ios-simulator",
+      "configurePreset": "ios-simulator",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}

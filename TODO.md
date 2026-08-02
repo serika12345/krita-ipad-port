@@ -49,20 +49,20 @@
 
 ### タスク
 
-- [ ] **P0** 対象ブランチ、Qt/KFのrevision、最低iPadOSバージョンを記録する。
-- [ ] **P0** Xcode、iOS SDK、Nixの要求バージョンを決める。
-- [ ] **P0** macOSまたは既存Androidビルドの手順を確認し、移植前の既知エラーを分離する。
-- [ ] **P0** Android版の機能を「必須・後回し・削除」に分類する。
-- [ ] **P0** 173個の`MODULE`ターゲットをカテゴリ別に棚卸しし、初期版の静的リンク対象を選ぶ。
-- [ ] **P0** 必須依存と任意依存の一覧を機械可読な形で作る。
-- [ ] **P0** ADR（Architecture Decision Record）を作り、Nix/Xcode境界と静的リンク方針を記録する。
-- [ ] **P1** 既存Android固有コードのうち、iPadOSで再利用できるUI・タッチ対応を特定する。
+- [x] **P0** 対象ブランチ、Qt/KFのrevision、最低iPadOSバージョンを記録する。
+- [x] **P0** Xcode、iOS SDK、Nixの要求バージョンを決める。
+- [x] **P0** macOSまたは既存Androidビルドの手順を確認し、移植前の既知エラーを分離する。
+- [x] **P0** Android版の機能を「必須・後回し・削除」に分類する。
+- [x] **P0** 173件の`MODULE`定義（具体的な172ターゲットとテスト用テンプレート1件）をカテゴリ別に棚卸しし、初期版の静的リンク対象を選ぶ。
+- [x] **P0** 必須依存と任意依存の一覧を機械可読な形で作る。
+- [x] **P0** ADR（Architecture Decision Record）を作り、Nix/Xcode境界と静的リンク方針を記録する。
+- [x] **P1** 既存Android固有コードのうち、iPadOSで再利用できるUI・タッチ対応を特定する。
 
 ### 完了条件
 
-- [ ] 初期機能セットと削除機能が明文化されている。
-- [ ] 必須依存、内部プラグイン、プラットフォームAPIの三つのリスク表がある。
-- [ ] Qt/KF/Xcode/iPadOSの組み合わせが一つに固定されている。
+- [x] 初期機能セットと削除機能が明文化されている。
+- [x] 必須依存、内部プラグイン、プラットフォームAPIの三つのリスク表がある。
+- [x] Qt/KF/Xcode/iPadOSの組み合わせが一つに固定されている。
 
 ---
 
@@ -70,22 +70,22 @@
 
 ### タスク
 
-- [ ] **P0** `flake.nix`と`flake.lock`を追加する。
-- [ ] **P0** `aarch64-darwin`用dev shellを作る。
-- [ ] **P0** CMake、Ninja、Python、pkg-config等のホストツールを固定する。
-- [ ] **P0** macOSホストツールとarm64/iOSターゲットライブラリを明確に分離する。
-- [ ] **P0** `CMAKE_SYSTEM_NAME=iOS`を設定するtoolchain/presetを追加する。
-- [ ] **P0** XcodeとiOS SDKのversionを検査し、不一致時に早期失敗させる。
-- [ ] **P0** deployment target、architecture、bitcode、visibility、dead stripping方針を固定する。
-- [ ] **P0** 実機用とSimulator用の出力ディレクトリを分離する。
-- [ ] **P1** ローカルNix binary cacheの利用手順を用意する。
-- [ ] **P1** CIなしでも実行できるビルドログ収集スクリプトを追加する。
+- [x] **P0** `flake.nix`と`flake.lock`を追加する。
+- [x] **P0** `aarch64-darwin`用dev shellを作る。
+- [x] **P0** CMake、Ninja、Python、pkg-config等のホストツールを固定する。
+- [x] **P0** macOSホストツールとarm64/iOSターゲットライブラリを明確に分離する。
+- [x] **P0** `CMAKE_SYSTEM_NAME=iOS`を設定するtoolchain/presetを追加する。
+- [x] **P0** XcodeとiOS SDKのversionを検査し、不一致時に早期失敗させる。
+- [x] **P0** deployment target、architecture、bitcode、visibility、dead stripping方針を固定する。
+- [x] **P0** 実機用とSimulator用の出力ディレクトリを分離する。
+- [x] **P1** ローカルNix binary cacheの利用手順を用意する。
+- [x] **P1** CIなしでも実行できるビルドログ収集スクリプトを追加する。
 
 ### 完了条件
 
-- [ ] クリーンなshellから同じコンパイラ、SDK、CMake設定が選択される。
-- [ ] Mac用バイナリとiOS用ライブラリの混入を検査できる。
-- [ ] `nix develop`から最小のiOS Hello Worldをビルドできる。
+- [x] クリーンなshellから同じコンパイラ、SDK、CMake設定が選択される。
+- [x] Mac用バイナリとiOS用ライブラリの混入を検査できる。
+- [x] `nix develop`から最小のiOS Hello Worldをビルドできる。
 
 ---
 
