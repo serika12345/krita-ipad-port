@@ -5,6 +5,8 @@ if(IOS)
     add_subdirectory(impex/kra)
     add_subdirectory(impex/png)
     add_subdirectory(paintops)
+    add_subdirectory(tools)
+    add_subdirectory(dockers)
     return()
 endif()
 

@@ -15,7 +15,7 @@
 
 #include "LayerBox.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(KritaLayerDockerPluginFactory, "kritalayerdocker.json", registerPlugin<KritaLayerDockerPlugin>();)
+K_PLUGIN_CLASS_WITH_JSON(KritaLayerDockerPlugin, "kritalayerdocker.json")
 
 KritaLayerDockerPlugin::KritaLayerDockerPlugin(QObject *parent, const QVariantList &)
         : QObject(parent)

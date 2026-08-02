@@ -157,8 +157,8 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 最小セットのKRA import/exportを有効化する。
 - [x] **P0** 最小セットのPNG import/exportを有効化する。
 - [x] **P0** 最小セットのPixel Brushを有効化する。
-- [ ] **P0** 最小セットの基本Toolを有効化する。
-- [ ] **P0** 最小セットのLayer Dockerを有効化する。
+- [x] **P0** 最小セットの基本Toolを有効化する。
+- [x] **P0** 最小セットのLayer Dockerを有効化する。
 - [ ] **P1** JPEG/ORA、主要Brush、主要Tool、Brush Presets、Color Selectorを追加する。
 - [ ] **P1** プラグイン単位でON/OFFできるiOS feature profileを作る。
 - [ ] **P2** 任意フィルタとDockerを段階的に追加する。

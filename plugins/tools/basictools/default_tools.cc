@@ -30,7 +30,7 @@
 #include "kis_tool_pencil.h"
 #include "kis_tool_pan.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(DefaultToolsFactory, "kritadefaulttools.json", registerPlugin<DefaultTools>();)
+K_PLUGIN_CLASS_WITH_JSON(DefaultTools, "kritadefaulttools.json")
 
 
 DefaultTools::DefaultTools(QObject *parent, const QVariantList &)

@@ -1,4 +1,10 @@
 add_subdirectory(layerdocker)
+
+if(IOS)
+    # The Layer Docker is the only Docker in the initial iPadOS profile.
+    return()
+endif()
+
 if(HAVE_OPENEXR AND NOT ANDROID)
     add_subdirectory(smallcolorselector)
 endif()

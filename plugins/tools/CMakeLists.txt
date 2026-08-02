@@ -1,4 +1,11 @@
 add_subdirectory( basictools )
+
+if(IOS)
+    # Freehand Brush and the other core canvas tools form the initial iPadOS
+    # tool profile. Desktop-oriented and advanced tools are added later.
+    return()
+endif()
+
 add_subdirectory( defaulttool )
 add_subdirectory( selectiontools )
 add_subdirectory( tool_crop )
