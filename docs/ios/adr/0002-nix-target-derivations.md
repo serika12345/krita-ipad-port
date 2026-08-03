@@ -250,6 +250,17 @@ false reverse rebuild edge. A consumer with only `lager-ios` as its direct Nix
 dependency compiles those APIs and a manual-event-loop store for arm64 iOS. The
 resulting 16-package aggregate has a complete 17-path target closure.
 
+libintl 1.0 is built from only the `gettext-runtime/intl` subtree of the locked
+GNU gettext source. The manifest fixes the cross-compile answers and excludes
+Java, C#, OpenMP, Emacs, libiconv-prefix, and ncurses-prefix integration. Its
+target output contains only `libintl.h` and the static `libintl.a`; the native
+gettext and Perl inputs remain build-time tools and do not appear in the output
+closure. A direct-only CMake consumer resolves the exact Intl version, calls
+the translation, domain, and plural APIs, and explicitly links the iOS SDK's
+iconv implementation and CoreFoundation. The package and consumer rebuild
+deterministically, while the resulting 17-package aggregate and complete
+18-path target closure restore into an empty local store from the cache.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

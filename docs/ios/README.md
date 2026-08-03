@@ -39,14 +39,14 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
 FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak,
-libjpeg-turbo, Exiv2, Boost, Immer, Zug, and Lager:
+libjpeg-turbo, Exiv2, Boost, Immer, Zug, Lager, and libintl:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -86,6 +86,16 @@ target, and deliberately leaves debugger-only Immer/Cereal support outside that
 core target. A consumer that directly depends on and links only Lager compiles
 those real APIs for arm64 iOS, proving that the two pure dependencies survive a
 standalone cache restore.
+
+libintl builds only GNU gettext's `gettext-runtime/intl` subtree. Its cross
+answers and feature exclusions are part of the manifest, and its output is
+limited to `libintl.h` and `libintl.a`; host gettext tools and install-time
+catalog data never enter the target closure. A direct-only consumer resolves
+CMake's `Intl::Intl`, calls the gettext/domain/plural APIs, and links the SDK's
+portable iconv and CoreFoundation interfaces into an arm64 iOS executable. The
+17-package aggregate and its complete 18-path closure were restored into an
+empty local store solely from the binary cache.
+
 The existing `build-ios/` builders remain authoritative for packages not yet
 migrated.
 
@@ -96,13 +106,13 @@ nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios \
   --no-link --no-substitute --rebuild
 ```
 

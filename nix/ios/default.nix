@@ -220,6 +220,15 @@ let
       ;
   };
 
+  libintl-ios = pkgs.callPackage ./packages/libintl.nix {
+    inherit mkIOSAutotoolsPackage toolchain;
+    packageSpec = dependencyByName.libintl;
+  };
+
+  libintl-consumer-check = pkgs.callPackage ./tests/libintl-consumer.nix {
+    inherit libintl-ios mkIOSCMakePackage toolchain;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -244,11 +253,12 @@ let
       immer-ios
       zug-ios
       lager-ios
+      libintl-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} ${libintl-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -272,6 +282,8 @@ in
     lager-consumer-check
     lager-ios
     lcms2-ios
+    libintl-consumer-check
+    libintl-ios
     libjpeg-turbo-consumer-check
     libjpeg-turbo-ios
     libunibreak-consumer-check

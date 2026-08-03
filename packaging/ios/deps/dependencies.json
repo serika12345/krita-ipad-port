@@ -366,6 +366,24 @@
         "--without-libiconv-prefix",
         "--without-libncurses-prefix"
       ],
+      "configure_cache": {
+        "am_cv_func_iconv_works": "yes",
+        "gl_cv_func_wcwidth_works": "yes"
+      },
+      "make_targets": [
+        [
+          "-C",
+          "intl",
+          "all"
+        ]
+      ],
+      "make_install_targets": [
+        [
+          "-C",
+          "intl",
+          "install"
+        ]
+      ],
       "artifacts": [
         "lib/libintl.a"
       ],

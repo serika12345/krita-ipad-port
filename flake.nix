@@ -68,6 +68,7 @@
           ios-dependencies
           lager-ios
           lcms2-ios
+          libintl-ios
           libjpeg-turbo-ios
           libunibreak-ios
           libpng-ios
@@ -96,6 +97,8 @@
           lager-consumer-check
           lager-ios
           lcms2-ios
+          libintl-consumer-check
+          libintl-ios
           libjpeg-turbo-consumer-check
           libjpeg-turbo-ios
           libunibreak-consumer-check
