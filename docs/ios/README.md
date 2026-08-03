@@ -16,9 +16,10 @@
 
 The exact executable host and SDK checks live in `packaging/ios/versions.env`.
 Dependency sources are selected by the locked nixpkgs revision and exposed as
-flake package outputs. Target packages are being migrated to granular Nix
-derivations which use the validated external Xcode SDK without copying it into
-the Nix store. See `docs/ios/adr/0002-nix-target-derivations.md`.
+flake package outputs. The current 31-package target dependency closure is
+fixed as granular Nix derivations which use the validated external Xcode SDK
+without copying it into the Nix store. See
+`docs/ios/adr/0002-nix-target-derivations.md`.
 
 ## Build boundary
 
@@ -35,18 +36,15 @@ derivations that explicitly declare it through `__impureHostDeps`; it is not a
 global `sandbox-paths` entry. Target recipes read version identity from Xcode's
 plists instead of starting `xcodebuild` inside the sandbox.
 
-## Build the migrated target derivations
+## Build the pinned target dependency closure
 
-The package-by-package Nix migration currently includes zlib, Expat, libpng,
-FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak,
-libjpeg-turbo, Exiv2, Boost, Immer, Zug, Lager, libintl, and FriBidi:
+The complete aggregate contains 18 base C/C++ packages; QtBase, QtSvg,
+Qt5Compat, and QuaZip; and the 9 required KF6 packages. Build the aggregate and
+its full consumer proof with:
 
 ```sh
-nix build \
-  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios
+nix build .#ios-dependencies --no-link
+nix build .#kf6-consumer-check --no-link
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -56,8 +54,9 @@ The FreeType package requires both target packages, fixes its optional feature
 set, and adds their missing CMake dependency discovery. Its direct-only consumer
 check links all three archives through `Freetype::Freetype` alone and verifies
 that the common builder expands FreeType's propagated zlib/libpng closure into
-the target CMake roots. The `.#ios-dependencies` aggregate contains this
-migrated subset only. HarfBuzz additionally verifies its FreeType bridge and
+the target CMake roots. The `.#ios-dependencies` output is the complete
+open-source dependency closure for the current iPad profile. HarfBuzz
+additionally verifies its FreeType bridge and
 portable CoreText framework export. Fontconfig uses the same sandbox and target
 closure contract through a separate common Autotools builder; its host probes
 use a Nix compiler with the iPhoneOS SDK removed. A pkg-config consumer forces
@@ -92,9 +91,9 @@ answers and feature exclusions are part of the manifest, and its output is
 limited to `libintl.h` and `libintl.a`; host gettext tools and install-time
 catalog data never enter the target closure. A direct-only consumer resolves
 CMake's `Intl::Intl`, calls the gettext/domain/plural APIs, and links the SDK's
-portable iconv and CoreFoundation interfaces into an arm64 iOS executable. The
-17-package aggregate and its complete 18-path closure were restored into an
-empty local store solely from the binary cache.
+portable iconv and CoreFoundation interfaces into an arm64 iOS executable. At
+that migration checkpoint, the 17-package aggregate and its complete 18-path
+closure were restored into an empty local store solely from the binary cache.
 
 FriBidi 1.0.16 is the first package using the common Meson target builder.
 Separate native and cross machine files keep its seven table generators on the
@@ -106,28 +105,20 @@ shared libraries. All 18 archive members and the enabled deprecated-interface
 contract are checked. A direct-only consumer resolves Krita's existing
 `FindFriBidi.cmake` module and calls the same bidi-type, bracket, and paragraph-
 embedding APIs as the bundled Raqm implementation. The package and consumer
-rebuild deterministically. The resulting 18-package aggregate and its complete
-19-path target closure were restored into an empty local store solely from the
-binary cache.
+rebuild deterministically. At the next migration checkpoint, the resulting
+18-package aggregate and its complete 19-path target closure were restored into
+an empty local store solely from the binary cache.
 
-The existing `build-ios/` builders remain authoritative for packages not yet
-migrated.
+All dependency packages in the current profile are now represented by the Nix
+aggregate. The existing `build-ios/` builders remain in the device deployment
+path until Krita itself and the unsigned IPA are moved into derivations; they
+are not part of the clean dependency-bootstrap proof.
 
 To validate an actual source build rather than a binary-cache substitution:
 
 ```sh
-nix build \
-  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios \
-  --no-link --no-substitute
-nix build \
-  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios \
-  --no-link --no-substitute --rebuild
+nix build .#ios-dependencies --no-link --no-substitute
+nix build .#kf6-consumer-check --no-link --no-substitute
 ```
 
 ## Start a development shell
@@ -298,7 +289,12 @@ The bootstrap checks the committed Git flake without building, releases only
 the known repository-local legacy GC-root symlinks, runs a full Nix GC, and
 builds `.#ios-dependencies` without an intermediate out-link. It roots only the
 successfully realised final aggregate. This is intentionally deferred until all
-dependency recipes are fixed; it has not passed until that command completes.
+dependency recipes are fixed.
+
+The clean bootstrap passed on 2026-08-03 from commit `e8ba4dc`. It removed
+1,808 unrooted store paths (4,627.38 MiB), rebuilt all 31 target dependencies
+from the normal committed Git flake, passed the complete KF6 iOS consumer link,
+and then created only `build-ios/nix-roots/ios-dependencies`.
 
 After the clean bootstrap, normal device deployment calls
 `packaging/ios/scripts/maintain-build-cache.sh --deployment`. This deployment-

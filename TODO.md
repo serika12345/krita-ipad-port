@@ -321,10 +321,10 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 ### タスク
 
-- [ ] **P0** 新規checkoutからのbootstrap手順を自動化する。
+- [x] **P0** 新規checkoutからのbootstrap手順を自動化する。
   - [x] 固定中は旧closureを保護せず、全依存の固定・commit後にだけ既知のrepository-local GC rootを解除、full GC、通常Git flakeの`ios-dependencies` build、成功したaggregateのroot化を順番に行うスクリプトを追加する。
-  - [ ] 全依存の固定完了後、`bootstrap-ios-dependencies.sh --confirm-pinning-complete`を実行してクリーンbootstrapを確認する。
-- [ ] **P0** `nix build`で依存物を再生成できるようにする。
+  - [x] commit `e8ba4dc`から`bootstrap-ios-dependencies.sh --confirm-pinning-complete`を実行し、full GC（1,808 store paths、4,627.38 MiB削除）後に通常Git flakeから31依存aggregateを再構築し、KF6 consumerの完全なiOSコード生成・リンク検査を通して最終aggregateだけをroot化することを確認する。
+- [x] **P0** `nix build`で依存物を再生成できるようにする。
   - [x] zlibを独立した`zlib-ios` derivationへ移し、Xcode/SDK/Clangの完全なbuild identity、arm64/IOS archive検査、決定的再ビルド、ローカルbinary cache投入を検証する。
   - [x] libpngを`libpng-ios` derivationへ移し、zlibへのstore依存、決定的再ビルド、binary cache復元を検証する。
   - [x] FreeTypeを`freetype-ios` derivationへ移し、zlib/libpngの複数store依存、固定feature contract、決定的再ビルド、3-path binary cache復元を検証する。
@@ -342,8 +342,9 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] Lagerを依存伝播対応のpure header derivationへ移し、欠落していたBoost依存、C++17/plain target/version契約、Krita実利用API、決定的再ビルド、3-path単体closureを検証する。
   - [x] libintlをgettext-runtime内の最小static runtime derivationへ移し、固定cross cache、SDK iconv/CoreFoundationを使う実リンク、決定的再ビルド、binary cache復元を検証する。
   - [x] FriBidiを共通Meson sandboxの最初の`fribidi-ios` derivationへ移し、7個のnative macOS generatorと18-object iOS runtimeの分離、deprecated API互換、Kritaの`FindFriBidi.cmake`を使うconsumer、決定的再ビルド、binary cache復元を検証する。
-  - [ ] 残るC/C++依存をパッケージ単位のderivationへ移し、`ios-dependencies`で統合する。
-  - [ ] Qt、KF6、Krita、未署名IPAを段階的なderivationへ移す。
+  - [x] 残るC/C++依存をパッケージ単位のderivationへ移し、18個の基礎依存を`ios-dependencies`で統合する。
+  - [x] Qt 6/QuaZipの4 derivationと必須KF6の9 derivationを段階化し、31依存aggregateへ統合する。
+  - [ ] Krita本体と未署名IPAを段階的なderivationへ移す。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
   - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
