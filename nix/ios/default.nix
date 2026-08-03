@@ -55,17 +55,44 @@ let
     packageSpec = dependencyByName.libpng;
   };
 
+  freetype-ios = pkgs.callPackage ./packages/freetype.nix {
+    inherit
+      libpng-ios
+      mkIOSCMakePackage
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.freetype;
+  };
+
+  freetype-consumer-check = pkgs.callPackage ./tests/freetype-consumer.nix {
+    inherit
+      freetype-ios
+      libpng-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+  };
+
   ios-dependencies = pkgs.symlinkJoin {
     name = "krita-ios-dependencies-bootstrap";
     paths = [
       zlib-ios
       libpng-ios
+      freetype-ios
     ];
+    postBuild = ''
+      mkdir -p "$out/nix-support"
+      rm -f "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${libpng-ios} ${freetype-ios} > "$out/nix-support/propagated-build-inputs"
+    '';
   };
 in
 {
   inherit
+    freetype-consumer-check
     ios-dependencies
+    freetype-ios
     libpng-ios
     toolchain
     zlib-ios

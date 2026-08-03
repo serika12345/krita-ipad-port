@@ -37,24 +37,29 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 ## Build the migrated target derivations
 
-The package-by-package Nix migration currently includes zlib and libpng:
+The package-by-package Nix migration currently includes zlib, libpng, and
+FreeType:
 
 ```sh
-nix build .#zlib-ios .#libpng-ios
+nix build .#zlib-ios .#libpng-ios .#freetype-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
 every member of the resulting static archives. The libpng check also builds a
 small iOS consumer through `PNG::PNG` and verifies the transitive zlib package.
-`.#ios-dependencies` is the aggregate prefix and currently contains the
+The FreeType package requires both target packages, fixes its optional feature
+set, and adds their missing CMake dependency discovery. Its direct-only consumer
+check links all three archives through `Freetype::Freetype` alone and verifies
+that the common builder expands FreeType's propagated zlib/libpng closure into
+the target CMake roots. The `.#ios-dependencies` aggregate contains this
 migrated subset only. The existing `build-ios/` builders remain authoritative
 for packages not yet migrated.
 
 To validate an actual source build rather than a binary-cache substitution:
 
 ```sh
-nix build .#zlib-ios .#libpng-ios --no-link --no-substitute
-nix build .#zlib-ios .#libpng-ios --no-link --no-substitute --rebuild
+nix build .#zlib-ios .#libpng-ios .#freetype-ios --no-link --no-substitute
+nix build .#zlib-ios .#libpng-ios .#freetype-ios --no-link --no-substitute --rebuild
 ```
 
 ## Start a development shell

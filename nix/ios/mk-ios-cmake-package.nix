@@ -26,8 +26,20 @@
 }@args:
 
 let
-  targetRootPath = lib.concatStringsSep ";" (map toString targetDependencies);
+  dependencyEntry = dependency: {
+    key = dependency.outPath;
+    value = dependency;
+  };
+  targetDependencyClosure = map (entry: entry.value) (
+    builtins.genericClosure {
+      startSet = map dependencyEntry targetDependencies;
+      operator = entry: map dependencyEntry (entry.value.propagatedBuildInputs or [ ]);
+    }
+  );
+  targetRootPath = lib.concatStringsSep ";" (map toString targetDependencyClosure);
 in
+assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
+  "iOS target dependencies must all be derivations";
 stdenvNoCC.mkDerivation (
   {
     inherit
@@ -238,6 +250,7 @@ stdenvNoCC.mkDerivation (
 
     passthru = {
       iosToolchainIdentity = toolchain.identity;
+      iosTargetDependencyClosure = targetDependencyClosure;
     };
 
     meta = {

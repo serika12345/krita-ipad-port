@@ -56,11 +56,21 @@
         host-qttools = pkgs.qt6Packages.qttools;
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
 
-        inherit (iosPackages) ios-dependencies libpng-ios zlib-ios;
+        inherit (iosPackages)
+          freetype-ios
+          ios-dependencies
+          libpng-ios
+          zlib-ios
+          ;
       };
 
       checks.${system} = {
-        inherit (iosPackages) libpng-ios zlib-ios;
+        inherit (iosPackages)
+          freetype-consumer-check
+          freetype-ios
+          libpng-ios
+          zlib-ios
+          ;
       };
 
       devShells.${system}.default = pkgs.mkShellNoCC {

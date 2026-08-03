@@ -113,6 +113,22 @@ platform checks. Forced rebuilds of zlib and libpng matched their existing
 outputs, and the two-path closure was restored and recursively verified in an
 isolated Nix store from the local binary cache.
 
+## Third proof
+
+FreeType 2.14.3 is the first package with two direct migrated target
+dependencies. Its feature contract requires zlib and libpng while disabling
+BZip2, HarfBuzz, and Brotli. The generated `ftoption.h` is checked against that
+contract, and all 42 object members in the archive pass the iOS metadata gates.
+A consumer declares only FreeType as its direct target dependency but discovers
+and links all three archives through `Freetype::Freetype` alone. The installed
+config adds the `ZLIB::ZLIB` and `PNG::PNG` dependency discovery missing from
+upstream's export. That consumer also proves that the common builder recursively
+adds propagated target dependencies to CMake's search roots. A forced rebuild
+matched the existing output. The three-path
+zlib/libpng/FreeType closure was then published to the local binary cache,
+restored into a separate temporary Nix store, and verified recursively without
+rebuilding.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.
