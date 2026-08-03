@@ -38,13 +38,14 @@ plists instead of starting `xcodebuild` inside the sandbox.
 ## Build the migrated target derivations
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
-FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, and libunibreak:
+FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak, and
+libjpeg-turbo:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios
+  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -64,8 +65,9 @@ archive iOS link. Expat, Little CMS, Eigen, xsimd, and libunibreak each build a
 small target consumer for their CMake package contract. The xsimd proof compiles
 an arm64 SIMD batch through its exported header-only target. The libunibreak
 proof follows Krita's `Findlibunibreak.cmake` path and links its UTF-8 line-break
-API. The existing `build-ios/` builders remain authoritative for packages not
-yet migrated.
+API. The libjpeg-turbo proof links its JPEG and TurboJPEG static exports in
+separate consumers and requires arm64 NEON objects. The existing `build-ios/`
+builders remain authoritative for packages not yet migrated.
 
 To validate an actual source build rather than a binary-cache substitution:
 
@@ -73,12 +75,12 @@ To validate an actual source build rather than a binary-cache substitution:
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios \
+  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
-  .#xsimd-ios .#libunibreak-ios \
+  .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios \
   --no-link --no-substitute --rebuild
 ```
 

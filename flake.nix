@@ -64,6 +64,7 @@
           harfbuzz-ios
           ios-dependencies
           lcms2-ios
+          libjpeg-turbo-ios
           libunibreak-ios
           libpng-ios
           xsimd-ios
@@ -82,6 +83,8 @@
           harfbuzz-consumer-check
           harfbuzz-ios
           lcms2-ios
+          libjpeg-turbo-consumer-check
+          libjpeg-turbo-ios
           libunibreak-consumer-check
           libunibreak-ios
           libpng-ios

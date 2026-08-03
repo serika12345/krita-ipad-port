@@ -182,6 +182,17 @@ updated ten-package aggregate and its complete 11-path runtime closure were
 published to the local binary cache, restored into an empty isolated Nix store,
 and recursively verified without access to the primary store.
 
+libjpeg-turbo 3.1.4.1 fixes its static JPEG and TurboJPEG outputs, requires the
+arm64 NEON implementation, and pins the embedded build identity to the existing
+iOS dependency baseline date `19800101`. Two separate consumers use the
+installed `libjpeg-turbo::jpeg-static` and
+`libjpeg-turbo::turbojpeg-static` targets so overlapping codec objects never
+make the proof depend on archive order. Krita's active iOS JPEG file plugin
+continues to use Qt's bundled JPEG implementation; migrating this dependency
+does not reintroduce the external codec into that crash-sensitive path. Its
+source and forced rebuilds matched, and the resulting 12-path aggregate closure
+was restored and verified in an empty store from the local cache.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

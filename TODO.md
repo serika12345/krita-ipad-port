@@ -333,6 +333,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] Fontconfigを`fontconfig-ios` derivationへ移し、共通Autotools sandbox、Expat/FreeTypeの推移依存、pkg-config consumer、決定的再ビルド、5-path binary cache復元を検証する。
   - [x] xsimdを`xsimd-ios` derivationへ移し、header-only CMake targetを使うiOS SIMD consumer、決定的再ビルド、binary cache復元を検証する。
   - [x] libunibreakを`libunibreak-ios` derivationへ移し、KritaのCMake検索契約、UTF-8改行APIを使うconsumer、決定的再ビルド、binary cache復元を検証する。
+  - [x] libjpeg-turboを`libjpeg-turbo-ios` derivationへ移し、2つのstatic target、arm64 NEON、決定的なbuild identity、独立consumer、binary cache復元を検証する。
   - [ ] 残るC/C++依存をパッケージ単位のderivationへ移し、`ios-dependencies`で統合する。
   - [ ] Qt、KF6、Krita、未署名IPAを段階的なderivationへ移す。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。

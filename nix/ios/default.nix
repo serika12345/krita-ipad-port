@@ -87,6 +87,15 @@ let
     inherit libunibreak-ios mkIOSCMakePackage toolchain;
   };
 
+  libjpeg-turbo-ios = pkgs.callPackage ./packages/libjpeg-turbo.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.libjpeg-turbo;
+  };
+
+  libjpeg-turbo-consumer-check = pkgs.callPackage ./tests/libjpeg-turbo-consumer.nix {
+    inherit libjpeg-turbo-ios mkIOSCMakePackage toolchain;
+  };
+
   freetype-ios = pkgs.callPackage ./packages/freetype.nix {
     inherit
       libpng-ios
@@ -164,11 +173,12 @@ let
       eigen-ios
       xsimd-ios
       libunibreak-ios
+      libjpeg-turbo-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -184,6 +194,8 @@ in
     harfbuzz-consumer-check
     harfbuzz-ios
     lcms2-ios
+    libjpeg-turbo-consumer-check
+    libjpeg-turbo-ios
     libunibreak-consumer-check
     libunibreak-ios
     libpng-ios
