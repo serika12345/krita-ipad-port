@@ -271,7 +271,7 @@ mkIOSCMakePackage {
       echo "error: QuaZip/CMake did not produce a regular xcrun shim log" >&2
       exit 1
     fi
-    if grep -Ev -- '^(-sdk iphoneos --show-sdk-path|--sdk iphoneos --show-sdk-path|--sdk iphoneos --show-sdk-version|xcodebuild -version)$' "$xcrun_log"; then
+    if grep -Ev -- '^-sdk iphoneos --show-sdk-path$' "$xcrun_log"; then
       echo "error: QuaZip/CMake made an unsupported xcrun invocation" >&2
       exit 1
     fi
@@ -279,8 +279,6 @@ mkIOSCMakePackage {
     actual_xcrun_set="$NIX_BUILD_TOP/quazip-xcrun.actual"
     printf '%s\n' \
       '-sdk iphoneos --show-sdk-path' \
-      '--sdk iphoneos --show-sdk-version' \
-      'xcodebuild -version' \
       | LC_ALL=C sort > "$expected_xcrun_set"
     LC_ALL=C sort -u "$xcrun_log" > "$actual_xcrun_set"
     if ! cmp -s "$expected_xcrun_set" "$actual_xcrun_set"; then
