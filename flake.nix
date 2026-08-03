@@ -8,12 +8,16 @@
     let
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
+      iosPackages = import ./nix/ios {
+        inherit pkgs;
+        versionsFile = ./packaging/ios/versions.env;
+        dependencyManifestFile = ./packaging/ios/deps/dependencies.json;
+      };
     in
     {
-      # These outputs expose the exact source derivations selected by flake.lock.
-      # Target compilation deliberately happens outside a Nix derivation so the
-      # proprietary Xcode SDK is neither copied into nor referenced from the
-      # Nix store.
+      # Source outputs retain the legacy script-driven build. New iOS package
+      # outputs cross-compile inside individual Nix derivations while using the
+      # validated external Xcode SDK as a narrowly defined host dependency.
       packages.${system} = {
         source-zlib = pkgs.zlib.src;
         source-libpng = pkgs.libpng.src;
@@ -51,6 +55,12 @@
         host-qtbase = pkgs.qt6Packages.qtbase;
         host-qttools = pkgs.qt6Packages.qttools;
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
+
+        inherit (iosPackages) ios-dependencies libpng-ios zlib-ios;
+      };
+
+      checks.${system} = {
+        inherit (iosPackages) libpng-ios zlib-ios;
       };
 
       devShells.${system}.default = pkgs.mkShellNoCC {

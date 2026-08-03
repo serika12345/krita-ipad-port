@@ -16,15 +16,33 @@
 
 The exact executable host and SDK checks live in `packaging/ios/versions.env`.
 Dependency sources are selected by the locked nixpkgs revision and exposed as
-flake package outputs. Target artifacts are built locally against the validated
-Xcode SDK rather than importing the proprietary SDK into the Nix store.
+flake package outputs. Target packages are being migrated to granular Nix
+derivations which use the validated external Xcode SDK without copying it into
+the Nix store. See `docs/ios/adr/0002-nix-target-derivations.md`.
 
 ## Build boundary
 
-Nix pins host build tools and open-source target dependencies. Xcode supplies
-Apple Clang and the proprietary SDK. AltStore/AltServer can perform local
-development signing and device installation without storing credentials in the
-repository. See `docs/ios/adr/0001-nix-xcode-boundary.md`.
+Nix pins host build tools and open-source target dependencies and owns the
+cacheable target build recipes. Xcode supplies Apple Clang and the proprietary
+SDK. AltStore/AltServer can perform local development signing and device
+installation without storing credentials in the repository. See
+`docs/ios/adr/0001-nix-xcode-boundary.md` and
+`docs/ios/adr/0002-nix-target-derivations.md`.
+
+## Build the migrated target derivations
+
+The package-by-package Nix migration currently includes zlib and libpng:
+
+```sh
+nix build .#zlib-ios .#libpng-ios
+```
+
+Their derivations check the complete Xcode/SDK/compiler contract and validate
+every member of the resulting static archives. The libpng check also builds a
+small iOS consumer through `PNG::PNG` and verifies the transitive zlib package.
+`.#ios-dependencies` is the aggregate prefix and currently contains the
+migrated subset only. The existing `build-ios/` builders remain authoritative
+for packages not yet migrated.
 
 ## Start a development shell
 
@@ -163,16 +181,37 @@ python3 packaging/ios/scripts/inventory-plugins.py
 
 ## Local cache
 
-The local Nix store is the default build cache. Inspect the closure with:
+The local Nix store is the first-level build cache. A GC-independent local Nix
+binary cache can be populated with:
+
+```sh
+packaging/ios/scripts/publish-nix-cache.sh .#zlib-ios
+```
+
+Restore a local cache object without rebuilding it, for example after Nix GC:
+
+```sh
+packaging/ios/scripts/restore-nix-cache.sh .#zlib-ios
+```
+
+The default repository is the ignored
+`build-ios/nix-binary-cache`. Set `KRITA_IOS_NIX_CACHE_URI` to a private,
+writable Nix store URI supported by `nix copy`. A non-file destination also
+requires `KRITA_IOS_NIX_CACHE_SIGNING_KEY`; keep that private key outside the
+repository. Services with their own push protocol require their own client
+rather than this generic script.
+
+Inspect a closure with:
 
 ```sh
 nix path-info --recursive .#devShells.aarch64-darwin.default
 ```
 
-For multiple Macs, configure a private substituter and trusted public key in
-the normal Nix configuration. Do not publish Apple SDK-derived or signing
-material. The flake pins tools; `packaging/ios/versions.env` prevents silently
-reusing a cache under an unvalidated Xcode/SDK combination.
+For multiple Macs, configure the private cache as a substituter with its trusted
+public key in the normal Nix configuration. Do not publish these SDK-derived
+artifacts to a public cache, and never cache Apple signing material. The exact
+Xcode build, SDK build, and Apple Clang build are derivation inputs, so a
+different validated toolchain selects a different cache key.
 
 ## Existing platform baseline
 

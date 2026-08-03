@@ -57,6 +57,14 @@ fi
 if [[ ! -e "$nix_roots/host-qttools" ]]; then
     nix build --out-link "$nix_roots/host-qttools" .#host-qttools
 fi
+current_ios_dependencies="$(nix eval --raw .#ios-dependencies.outPath)"
+if nix-store --check-validity "$current_ios_dependencies" 2>/dev/null; then
+    # Refresh a stale out-link only when the new aggregate is already built.
+    # Cache maintenance must not trigger a target dependency compilation.
+    nix build --out-link "$nix_roots/ios-dependencies" .#ios-dependencies
+elif [[ ! -e "$nix_roots/ios-dependencies" ]]; then
+    echo "Nix GC root deferred: build .#ios-dependencies before collecting target dependencies"
+fi
 
 available_kib="$(df -Pk "$repo_root" | awk 'NR == 2 { print $4 }')"
 minimum_free_kib=$((minimum_free_gib * 1024 * 1024))

@@ -323,6 +323,12 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [ ] **P0** 新規checkoutからのbootstrap手順を自動化する。
 - [ ] **P0** `nix build`で依存物を再生成できるようにする。
+  - [x] zlibを独立した`zlib-ios` derivationへ移し、Xcode/SDK/Clangの完全なbuild identity、arm64/IOS archive検査、決定的再ビルド、ローカルbinary cache投入を検証する。
+  - [x] libpngを`libpng-ios` derivationへ移し、zlibへのstore依存、決定的再ビルド、binary cache復元を検証する。
+  - [ ] 残るC/C++依存をパッケージ単位のderivationへ移し、`ios-dependencies`で統合する。
+  - [ ] Qt、KF6、Krita、未署名IPAを段階的なderivationへ移す。
+  - [ ] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
+  - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
 - [x] **P0** 直近3件を残すIPA整理と、ビルド依存をGC rootで保護した低容量時Nix GCを自動化する。
 - [ ] **P0** configure、build、development sign、install、log取得を個別コマンドにする。

@@ -1,6 +1,6 @@
 # ADR 0001: Keep a strict Nix/Xcode boundary
 
-- Status: accepted
+- Status: superseded by ADR 0002
 - Date: 2026-08-02
 
 ## Context
