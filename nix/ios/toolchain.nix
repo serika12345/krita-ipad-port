@@ -5,13 +5,17 @@ let
   developerDir = "${xcodeApp}/Contents/Developer";
   toolchainDir = "${developerDir}/Toolchains/XcodeDefault.xctoolchain/usr/bin";
   sdkRoot = "${developerDir}/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${versions.KRITA_IOS_SDK_VERSION}.sdk";
+  xcodeVersionPlist = "${xcodeApp}/Contents/version.plist";
+  sdkVersionPlist = "${developerDir}/Platforms/iPhoneOS.platform/version.plist";
 in
 {
   inherit
     developerDir
     sdkRoot
+    sdkVersionPlist
     toolchainDir
     xcodeApp
+    xcodeVersionPlist
     ;
 
   architecture = versions.KRITA_IOS_ARCHITECTURE;
@@ -31,7 +35,6 @@ in
   lipo = "${toolchainDir}/lipo";
   otool = "${toolchainDir}/otool";
   vtool = "${toolchainDir}/vtool";
-  xcodebuild = "${developerDir}/usr/bin/xcodebuild";
 
   impureHostDeps = [
     xcodeApp

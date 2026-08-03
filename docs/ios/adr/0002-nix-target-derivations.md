@@ -41,42 +41,49 @@ artifact built by a different SDK is never accepted under the same cache key.
 9. The script-driven build remains available until equivalent Nix packages and
    probes have been validated. Migration is package-by-package, not a flag day.
 
-## Xcode sandbox transition
+## Xcode sandbox boundary
 
-The initial proof runs on the currently validated host where Nix reports
-`sandbox = false`. The desired steady state is a Darwin Nix daemon with
-sandboxing enabled and only `/Applications/Xcode.app` added to
-`allowed-impure-host-deps`. Toolchain inspection uses Xcode's own `xcodebuild`
-instead of adding system `xcrun` or `xcode-select` paths to the exception.
-
-The transition order is significant because Nix validates
-`__impureHostDeps` against the daemon allowlist even while `sandbox = false`:
-
-1. add `/Applications/Xcode.app` to the nix-darwin daemon allowlist and activate
-   that configuration while leaving the sandbox disabled;
-2. declare the same `toolchain.impureHostDeps` through `__impureHostDeps` in
-   the common iOS builder, then rebuild and run the determinism gates;
-3. enable the Darwin sandbox, restart the daemon, and perform a cache-miss build
-   of the complete target dependency aggregate.
-
-The restricted daemon setting cannot be changed by an untrusted client or a
-flake. Installing that daemon policy is therefore a separate, explicit host
-administration step. Until it is installed, the recipe must not claim that the
-external Xcode boundary is sandbox-enforced.
-
-The first nix-darwin activation adds the exception without enabling the
-sandbox:
+The validated host runs the Darwin Nix daemon with sandboxing enabled and
+fallback disabled. Xcode is not in `sandbox-paths`; it is the only project-
+specific addition to the administrator-controlled impure host dependency
+allowlist:
 
 ```nix
+nix.settings.sandbox = true;
+nix.settings.sandbox-fallback = false;
 nix.settings.extra-allowed-impure-host-deps = [
   "/Applications/Xcode.app"
 ];
 ```
 
-Using the `extra-` setting preserves Nix's Darwin defaults. Xcode must not be
-added to `sandbox-paths`, which would expose it to every derivation. The later
-activation sets `nix.settings.sandbox = true` and keeps
-`nix.settings.sandbox-fallback = false`.
+Using the `extra-` setting preserves Nix's required Darwin defaults. The common
+iOS builder declares `toolchain.impureHostDeps` through `__impureHostDeps`, so
+only those derivations can see Xcode. A negative test derivation without that
+declaration confirmed that `/Applications/Xcode.app` is absent from its build
+sandbox.
+
+Target derivations read the canonical Xcode and iPhoneOS platform XML plists
+directly for version and build identity. They do not invoke `xcodebuild`:
+although `xcodebuild -version` appears read-only, it initializes IDE/DVT file
+watchers and crashes when their unrelated Mach services and host paths are
+denied. Apple Clang and the SDK work in the strict sandbox without widening the
+host allowlist. Host-side configure, bundling, signing, and installation scripts
+may still use `xcodebuild` outside a Nix build sandbox.
+
+The restricted daemon settings cannot be changed by an untrusted client or a
+flake. They are installed through the host's nix-darwin configuration. On
+2026-08-03 the active policy was verified with `nix config show`, followed by:
+
+```sh
+nix build .#zlib-ios .#libpng-ios --no-link --no-substitute
+nix build .#zlib-ios .#libpng-ios --no-link --no-substitute --rebuild
+nix build .#ios-dependencies --no-link --no-substitute
+nix flake check
+```
+
+The first command rebuilt both packages from source, including archive checks
+and the libpng consumer link probe. The second command matched both existing
+outputs, establishing determinism under the enforced sandbox.
 
 ## First proof
 

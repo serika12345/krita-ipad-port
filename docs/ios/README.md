@@ -29,6 +29,12 @@ installation without storing credentials in the repository. See
 `docs/ios/adr/0001-nix-xcode-boundary.md` and
 `docs/ios/adr/0002-nix-target-derivations.md`.
 
+The validated Darwin daemon uses `sandbox = true` and
+`sandbox-fallback = false`. `/Applications/Xcode.app` is allowed only for
+derivations that explicitly declare it through `__impureHostDeps`; it is not a
+global `sandbox-paths` entry. Target recipes read version identity from Xcode's
+plists instead of starting `xcodebuild` inside the sandbox.
+
 ## Build the migrated target derivations
 
 The package-by-package Nix migration currently includes zlib and libpng:
@@ -44,6 +50,13 @@ small iOS consumer through `PNG::PNG` and verifies the transitive zlib package.
 migrated subset only. The existing `build-ios/` builders remain authoritative
 for packages not yet migrated.
 
+To validate an actual source build rather than a binary-cache substitution:
+
+```sh
+nix build .#zlib-ios .#libpng-ios --no-link --no-substitute
+nix build .#zlib-ios .#libpng-ios --no-link --no-substitute --rebuild
+```
+
 ## Start a development shell
 
 In a normal terminal:
@@ -52,6 +65,10 @@ In a normal terminal:
 nix develop
 packaging/ios/scripts/check-host.sh
 ```
+
+The host check also fails if sandboxing is disabled, fallback is enabled, the
+Xcode allowlist entry is missing, or Xcode has been exposed globally through
+`sandbox-paths`.
 
 In a restricted environment where the user cache is not writable:
 

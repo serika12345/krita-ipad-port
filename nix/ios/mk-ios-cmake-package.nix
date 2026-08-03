@@ -66,9 +66,9 @@ stdenvNoCC.mkDerivation (
     SOURCE_DATE_EPOCH = "1";
     ZERO_AR_DATE = "1";
 
-    # Xcode is the only non-store build input. __impureHostDeps is enabled only
-    # after the daemon allowlist is installed; Nix enforces that allowlist even
-    # while sandbox=false. See the ordered transition in ADR 0002.
+    # Xcode is the only non-store build input. The daemon validates this
+    # declaration against its allowlist and exposes it only to this sandbox.
+    __impureHostDeps = toolchain.impureHostDeps;
 
     preConfigure = ''
       check_toolchain_value() {
@@ -81,11 +81,25 @@ stdenvNoCC.mkDerivation (
         fi
       }
 
-      xcode_output="$(DEVELOPER_DIR="$DEVELOPER_DIR" ${toolchain.xcodebuild} -version)"
-      actual_xcode_version="$(awk 'NR == 1 { print $2 }' <<<"$xcode_output")"
-      actual_xcode_build="$(awk 'NR == 2 { print $3 }' <<<"$xcode_output")"
-      actual_sdk_version="$(DEVELOPER_DIR="$DEVELOPER_DIR" ${toolchain.xcodebuild} -version -sdk iphoneos SDKVersion)"
-      actual_sdk_build="$(DEVELOPER_DIR="$DEVELOPER_DIR" ${toolchain.xcodebuild} -version -sdk iphoneos ProductBuildVersion)"
+      read_plist_string() {
+        key="$1"
+        plist="$2"
+        awk -v key="$key" '
+          index($0, "<key>" key "</key>") { found = 1; next }
+          found && match($0, /<string>([^<]*)<\/string>/, value) {
+            print value[1]
+            exit
+          }
+        ' "$plist"
+      }
+
+      # xcodebuild starts IDE frameworks and crashes inside a Nix Darwin
+      # sandbox. These two canonical XML plists contain the same immutable
+      # build identities without invoking an IDE/XPC process.
+      actual_xcode_version="$(read_plist_string CFBundleShortVersionString ${toolchain.xcodeVersionPlist})"
+      actual_xcode_build="$(read_plist_string ProductBuildVersion ${toolchain.xcodeVersionPlist})"
+      actual_sdk_version="$(read_plist_string CFBundleShortVersionString ${toolchain.sdkVersionPlist})"
+      actual_sdk_build="$(read_plist_string ProductBuildVersion ${toolchain.sdkVersionPlist})"
       clang_output="$(${toolchain.cc} --version | head -n 1)"
       actual_clang_version="$(sed -E 's/^Apple clang version ([^ ]+).*/\1/' <<<"$clang_output")"
       actual_clang_build="$(sed -E 's/^.*\(clang-([^\)]+)\).*$/\1/' <<<"$clang_output")"
