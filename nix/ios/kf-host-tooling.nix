@@ -92,6 +92,9 @@ let
     src = hostKConfig.src;
 
     strictDeps = true;
+    # The compiler uses only Qt Core/Xml and never loads Qt plugins.  Keep its
+    # native executable unwrapped so the output contract remains one file.
+    dontWrapQtApps = true;
     nativeBuildInputs = [
       hostEcm
       pkgs.cmake
