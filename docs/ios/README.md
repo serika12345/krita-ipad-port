@@ -253,6 +253,13 @@ Restore a local cache object without rebuilding it, for example after Nix GC:
 packaging/ios/scripts/restore-nix-cache.sh .#zlib-ios
 ```
 
+`packaging/ios/scripts/maintain-build-cache.sh` roots both the current target
+aggregate and its Nix cache-deployment closure. The second root retains the
+derivations, sources, and existing build-time-only tool outputs needed to
+reproduce the target libraries; rooting only the runtime aggregate is not
+sufficient. Maintenance never builds a missing target aggregate and skips Nix
+GC when the current build closure cannot be protected safely.
+
 The default repository is the ignored
 `build-ios/nix-binary-cache`. Set `KRITA_IOS_NIX_CACHE_URI` to a private,
 writable Nix store URI supported by `nix copy`. A non-file destination also

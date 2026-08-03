@@ -342,7 +342,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
   - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
-- [x] **P0** 直近3件を残すIPA整理と、ビルド依存をGC rootで保護した低容量時Nix GCを自動化する。
+- [x] **P0** 直近3件を残すIPA整理と、runtimeおよびcache-deployment closureをGC rootで保護した低容量時Nix GCを自動化する。
 - [ ] **P0** configure、build、development sign、install、log取得を個別コマンドにする。
 - [ ] **P0** Xcode/SDK更新時の検証手順を作る。
 - [ ] **P0** upstream追従時のrebase/checklistを作る。

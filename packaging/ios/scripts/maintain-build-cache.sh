@@ -58,18 +58,52 @@ if [[ ! -e "$nix_roots/host-qttools" ]]; then
     nix build --out-link "$nix_roots/host-qttools" .#host-qttools
 fi
 current_ios_dependencies="$(nix eval --raw .#ios-dependencies.outPath)"
+current_ios_dependencies_drv="$(nix eval --raw .#ios-dependencies.drvPath)"
+target_dependencies_protected=0
 if nix-store --check-validity "$current_ios_dependencies" 2>/dev/null; then
     # Refresh a stale out-link only when the new aggregate is already built.
     # Cache maintenance must not trigger a target dependency compilation.
     nix build --out-link "$nix_roots/ios-dependencies" .#ios-dependencies
-elif [[ ! -e "$nix_roots/ios-dependencies" ]]; then
-    echo "Nix GC root deferred: build .#ios-dependencies before collecting target dependencies"
+
+    # The aggregate output only references the target runtime libraries. Keep
+    # the derivations, sources, and every existing build-time output as one
+    # additional root so a GC cannot discard the host toolchain used to
+    # reproduce those libraries. --include-outputs is Nix's cache-deployment
+    # closure; builtins.storePath preserves those references in the root file.
+    closure_paths="$(mktemp "${TMPDIR:-/tmp}/krita-ios-build-closure.XXXXXX")"
+    closure_references="$(mktemp "${TMPDIR:-/tmp}/krita-ios-build-references.XXXXXX")"
+    trap 'rm -f "$closure_paths" "$closure_references"' EXIT
+    nix-store --query --requisites --include-outputs \
+        "$current_ios_dependencies_drv" > "$closure_paths"
+    LC_ALL=C sort -u -o "$closure_paths" "$closure_paths"
+    build_closure_root="$(
+        KRITA_IOS_BUILD_CLOSURE_PATHS="$closure_paths" \
+            nix eval --impure --raw --file "$repo_root/nix/ios/build-closure-root.nix"
+    )"
+    nix-store --query --references "$build_closure_root" \
+        | LC_ALL=C sort -u > "$closure_references"
+    if ! cmp -s "$closure_paths" "$closure_references"; then
+        echo "error: iOS build closure root is incomplete; Nix GC disabled" >&2
+        exit 1
+    fi
+    # Replace the last known-good root only after the new reference set has
+    # been proved complete. A concurrent external GC can at worst make this
+    # realisation fail while leaving the previous root intact.
+    nix-store --realise "$build_closure_root" \
+        --add-root "$nix_roots/ios-dependencies-build" >/dev/null
+    target_dependencies_protected=1
+else
+    echo "Nix GC deferred: build .#ios-dependencies before collecting target dependencies"
 fi
 
 available_kib="$(df -Pk "$repo_root" | awk 'NR == 2 { print $4 }')"
 minimum_free_kib=$((minimum_free_gib * 1024 * 1024))
 if (( ! force_nix_gc && available_kib >= minimum_free_kib )); then
     echo "Nix GC skipped: free space is above ${minimum_free_gib} GiB"
+    exit 0
+fi
+if (( ! target_dependencies_protected )); then
+    echo "Nix GC skipped: the current iOS dependency build closure is not protected"
     exit 0
 fi
 

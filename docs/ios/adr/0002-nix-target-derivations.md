@@ -36,9 +36,13 @@ artifact built by a different SDK is never accepted under the same cache key.
 7. Target store paths are published only to a private Nix binary cache. Shared
    caches require a Nix cache signature; this is unrelated to Apple application
    signing. Cache private keys and Apple credentials are never committed.
-8. AltStore signing, USB device installation, launch, and device log collection
+8. Local GC roots retain both the current target aggregate and its cache-
+   deployment closure, including derivations, sources, and existing build-time-
+   only outputs. GC is skipped when that closure cannot be refreshed without a
+   target build.
+9. AltStore signing, USB device installation, launch, and device log collection
    stay outside Nix because they mutate external state and require credentials.
-9. The script-driven build remains available until equivalent Nix packages and
+10. The script-driven build remains available until equivalent Nix packages and
    probes have been validated. Migration is package-by-package, not a flag day.
 
 ## Xcode sandbox boundary
