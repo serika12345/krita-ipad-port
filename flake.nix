@@ -66,10 +66,12 @@
           fontconfig-ios
           freetype-ios
           harfbuzz-ios
+          host-kconfig-compiler
           immer-ios
           ios-dependencies
           lager-ios
           lcms2-ios
+          kf6-host-tooling
           libintl-ios
           libjpeg-turbo-ios
           libunibreak-ios
@@ -78,6 +80,7 @@
           qtbase-ios
           qtsvg-ios
           qt-xcrun-shim
+          qttools-host-contract-check
           quazip-ios
           xsimd-ios
           zlib-ios
@@ -101,11 +104,13 @@
           freetype-ios
           harfbuzz-consumer-check
           harfbuzz-ios
+          host-kconfig-compiler
           immer-consumer-check
           immer-ios
           lager-consumer-check
           lager-ios
           lcms2-ios
+          kf6-host-tooling
           libintl-consumer-check
           libintl-ios
           libjpeg-turbo-consumer-check
@@ -116,6 +121,7 @@
           qt5compat-ios
           qtbase-ios
           qtsvg-ios
+          qttools-host-contract-check
           quazip-ios
           xsimd-consumer-check
           xsimd-ios

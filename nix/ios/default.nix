@@ -62,6 +62,14 @@ let
     inherit lib versions;
   };
 
+  kfHostTooling = import ./kf-host-tooling.nix {
+    inherit pkgs versions;
+  };
+
+  host-kconfig-compiler = kfHostTooling.kconfigCompiler;
+  kf6-host-tooling = kfHostTooling.kf6HostTooling;
+  qttools-host-contract-check = kfHostTooling.qtToolsContractCheck;
+
   mkIOSCMakePackage = pkgs.callPackage ./mk-ios-cmake-package.nix {
     inherit toolchain;
   };
@@ -360,11 +368,13 @@ in
     freetype-ios
     harfbuzz-consumer-check
     harfbuzz-ios
+    host-kconfig-compiler
     immer-consumer-check
     immer-ios
     lager-consumer-check
     lager-ios
     lcms2-ios
+    kf6-host-tooling
     libintl-consumer-check
     libintl-ios
     libjpeg-turbo-consumer-check
@@ -376,6 +386,7 @@ in
     qtbase-ios
     qtsvg-ios
     qt-xcrun-shim
+    qttools-host-contract-check
     quazip-ios
     toolchain
     xsimd-consumer-check
