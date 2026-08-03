@@ -57,6 +57,7 @@
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
 
         inherit (iosPackages)
+          boost-ios
           eigen-ios
           exiv2-ios
           expat-ios
@@ -75,6 +76,8 @@
 
       checks.${system} = {
         inherit (iosPackages)
+          boost-consumer-check
+          boost-ios
           eigen-ios
           exiv2-consumer-check
           exiv2-ios

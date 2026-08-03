@@ -49,6 +49,8 @@ let
     inherit toolchain;
   };
 
+  mkIOSHeaderPackage = pkgs.callPackage ./mk-ios-header-package.nix { };
+
   zlib-ios = pkgs.callPackage ./packages/zlib.nix {
     inherit mkIOSCMakePackage;
     packageSpec = dependencyByName.zlib;
@@ -67,6 +69,15 @@ let
   eigen-ios = pkgs.callPackage ./packages/eigen.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.eigen;
+  };
+
+  boost-ios = pkgs.callPackage ./packages/boost.nix {
+    inherit mkIOSHeaderPackage;
+    packageSpec = dependencyByName.boost;
+  };
+
+  boost-consumer-check = pkgs.callPackage ./tests/boost-consumer.nix {
+    inherit boost-ios mkIOSCMakePackage toolchain;
   };
 
   xsimd-ios = pkgs.callPackage ./packages/xsimd.nix {
@@ -189,16 +200,19 @@ let
       libunibreak-ios
       libjpeg-turbo-ios
       exiv2-ios
+      boost-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
 {
   inherit
+    boost-consumer-check
+    boost-ios
     eigen-ios
     exiv2-consumer-check
     exiv2-ios

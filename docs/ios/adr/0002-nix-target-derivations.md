@@ -73,11 +73,17 @@ may still use `xcodebuild` outside a Nix build sandbox.
 The common builders reserve their phase, fixed-output, network, and impure-host
 attributes so a package recipe cannot weaken that boundary accidentally.
 Package-specific passthru data cannot replace the checked toolchain identity,
-and every member of a propagated target dependency closure must carry the same
-identity. Autoconf cache entries are validated strings exported only to
-`configure`; they are never merged into derivation attributes. Autotools
-pkg-config lookup uses only declared target closures, with a private empty
-directory as the search root when a package has no target dependency.
+and every compiled member of a propagated target dependency closure must carry
+the same identity. Pure header packages use a separate builder without Xcode,
+SDK, compiler, or impure host inputs and carry `iosTargetIndependent = true`.
+Target builders accept a dependency only when it either has that marker and no
+toolchain identity, or carries the exact current toolchain identity. Header
+trees reject symlinks, special files, compiled artifacts, and mutations by
+package check hooks before they can enter a target closure. Autoconf cache
+entries are validated strings exported only to `configure`; they are never
+merged into derivation attributes. Autotools pkg-config lookup uses only
+declared target closures, with a private empty directory as the search root when
+a package has no target dependency.
 
 The restricted daemon settings cannot be changed by an untrusted client or a
 flake. They are installed through the host's nix-darwin configuration. On
@@ -194,8 +200,8 @@ source and forced rebuilds matched, and the resulting 12-path aggregate closure
 was restored and verified in an empty store from the local cache.
 
 Exiv2 0.28.8 fixes its audited library-only feature contract instead of
-inheriting the relevant upstream defaults. It keeps the SDK-provided Iconv implementation without
-exporting a host or SDK path: the static CMake and pkg-config metadata carries
+inheriting the relevant upstream defaults. It keeps the SDK-provided Iconv
+implementation without exporting a host or SDK path: the static CMake and pkg-config metadata carries
 the portable `-liconv` item required by final iOS links. It propagates only the
 migrated zlib target as a store dependency. Its consumer compiles and links the
 creation and reopening of an in-memory JPEG with Exif metadata plus the public
@@ -203,6 +209,15 @@ character-conversion API through `Exiv2::exiv2lib`. Every archive member and the
 resulting executable use the pinned arm64 iOS target. The resulting 12-package
 aggregate and its complete 13-path closure were restored into an empty store
 from the local cache.
+
+Boost 1.89.0 is the first package built by the pure header path. It copies the
+locked upstream headers and generates the same relocatable `Boost::headers`,
+`Boost::boost`, and `Boost::disable_autolinking` CMake contract used by the
+legacy prefix. The package output contains no Xcode, SDK, toolchain identity, or
+other Nix store reference. A separate pinned-toolchain consumer compiles real
+Boost.MP11 and circular-buffer APIs for arm64 iOS. The resulting 13-package
+aggregate and its complete 14-path target closure were restored into an empty
+store from the local cache.
 
 ## Consequences
 

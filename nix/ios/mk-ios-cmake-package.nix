@@ -40,6 +40,17 @@ let
       operator = entry: map dependencyEntry (entry.value.propagatedBuildInputs or [ ]);
     }
   );
+  targetDependencyIsCompatible =
+    dependency:
+    let
+      targetIndependent = dependency.iosTargetIndependent or false;
+      dependencyToolchainIdentity = dependency.iosToolchainIdentity or null;
+    in
+    lib.isBool targetIndependent
+    && (
+      (targetIndependent && dependencyToolchainIdentity == null)
+      || (!targetIndependent && dependencyToolchainIdentity == toolchain.identity)
+    );
   targetRootPath = lib.concatStringsSep ";" (map toString targetDependencyClosure);
   targetPkgConfigPath = lib.concatStringsSep ":" (
     lib.concatMap (dependency: [
@@ -165,10 +176,8 @@ let
 in
 assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
   "iOS target dependencies must all be derivations";
-assert lib.assertMsg (lib.all
-  (dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity)
-  targetDependencyClosure
-) "iOS target dependency closures must use the same pinned toolchain identity";
+assert lib.assertMsg (lib.all targetDependencyIsCompatible targetDependencyClosure)
+  "iOS target dependency closures must be toolchain-independent or use the same pinned toolchain identity";
 assert lib.assertMsg (overriddenProtectedAttrs == [ ])
   "iOS CMake packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
 assert lib.assertMsg (lib.all lib.isString cmakeFlags) "iOS CMake cmakeFlags must all be strings";
