@@ -1,0 +1,12 @@
+diff --git a/cmake/Lcms2Features.cmake b/cmake/Lcms2Features.cmake
+--- a/cmake/Lcms2Features.cmake
++++ b/cmake/Lcms2Features.cmake
+@@ -63,6 +63,8 @@ function(lcms2_detect_features)
+   # libm detection (for Linux and similar platforms).
+-  find_library(LCMS2_MATH_LIB m)
++  if(NOT APPLE)
++    find_library(LCMS2_MATH_LIB m)
++  endif()
+   if(LCMS2_MATH_LIB)
+     set(LCMS2_LINK_LIBM 1 PARENT_SCOPE)
+   else()

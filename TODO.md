@@ -326,6 +326,10 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] zlibを独立した`zlib-ios` derivationへ移し、Xcode/SDK/Clangの完全なbuild identity、arm64/IOS archive検査、決定的再ビルド、ローカルbinary cache投入を検証する。
   - [x] libpngを`libpng-ios` derivationへ移し、zlibへのstore依存、決定的再ビルド、binary cache復元を検証する。
   - [x] FreeTypeを`freetype-ios` derivationへ移し、zlib/libpngの複数store依存、固定feature contract、決定的再ビルド、3-path binary cache復元を検証する。
+  - [x] Expatを`expat-ios` derivationへ移し、XML feature contract、CMake/pkg-config consumer、決定的再ビルド、binary cache復元を検証する。
+  - [x] HarfBuzzを`harfbuzz-ios` derivationへ移し、FreeTypeの推移依存、CoreText bridge、再配置可能なCMake export、4-path binary cache復元を検証する。
+  - [x] Little CMSを`lcms2-ios` derivationへ移し、thread対応、Xcode SDK pathを含まないCMake export、consumer、決定的再ビルドを検証する。
+  - [x] Eigenを`eigen-ios` derivationへ移し、header-only CMake targetを使うiOS C++ consumerと決定的再ビルドを検証する。
   - [ ] 残るC/C++依存をパッケージ単位のderivationへ移し、`ios-dependencies`で統合する。
   - [ ] Qt、KF6、Krita、未署名IPAを段階的なderivationへ移す。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。

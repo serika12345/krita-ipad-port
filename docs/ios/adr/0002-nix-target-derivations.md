@@ -129,6 +129,23 @@ zlib/libpng/FreeType closure was then published to the local binary cache,
 restored into a separate temporary Nix store, and verified recursively without
 rebuilding.
 
+## Further target proofs
+
+Expat 2.8.2 fixes the XML character, DTD, general-entity, namespace, and context
+features and validates both its CMake target and static pkg-config contract.
+Little CMS 2.19.1 keeps thread support while suppressing an unnecessary Apple
+`libm` lookup that otherwise embeds the external SDK path in its exported CMake
+target. Eigen 3.4.1 is header-only, so its proof builds an iOS C++ consumer
+through `Eigen3::Eigen` instead of inspecting an archive.
+
+HarfBuzz 13.2.1 consumes only FreeType directly; the common target closure adds
+zlib and libpng. Its installed CMake export replaces upstream's raw FreeType
+archive and absolute SDK framework paths with `Freetype::Freetype` and portable
+CoreFoundation/CoreText/CoreGraphics link items. A direct-only consumer forces
+both the FreeType and CoreText bridges into the link. Source and forced rebuilds
+matched for all four packages. Their outputs and the four-path HarfBuzz closure
+were published to the local cache and restored into isolated stores.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

@@ -145,6 +145,7 @@
       "source_flake_attr": "source-eigen",
       "dependencies": [],
       "cmake_args": [
+        "-DCMAKE_EXPORT_PACKAGE_REGISTRY=OFF",
         "-DEIGEN_BUILD_TESTING=OFF",
         "-DEIGEN_BUILD_BLAS=OFF",
         "-DEIGEN_BUILD_LAPACK=OFF",
@@ -180,6 +181,7 @@
         "-DLCMS2_BUILD_STATIC=ON",
         "-DLCMS2_BUILD_TOOLS=OFF",
         "-DLCMS2_BUILD_TESTS=OFF",
+        "-DLCMS2_WITH_THREADS=ON",
         "-DLCMS2_WITH_FASTFLOAT=OFF",
         "-DLCMS2_WITH_THREADED_PLUGIN=OFF"
       ],
@@ -249,6 +251,7 @@
         "freetype"
       ],
       "cmake_args": [
+        "-DHB_IOS=ON",
         "-DHB_HAVE_FREETYPE=ON",
         "-DHB_HAVE_CORETEXT=ON",
         "-DHB_HAVE_GLIB=OFF",

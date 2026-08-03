@@ -57,8 +57,12 @@
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
 
         inherit (iosPackages)
+          eigen-ios
+          expat-ios
           freetype-ios
+          harfbuzz-ios
           ios-dependencies
+          lcms2-ios
           libpng-ios
           zlib-ios
           ;
@@ -66,8 +70,13 @@
 
       checks.${system} = {
         inherit (iosPackages)
+          eigen-ios
+          expat-ios
           freetype-consumer-check
           freetype-ios
+          harfbuzz-consumer-check
+          harfbuzz-ios
+          lcms2-ios
           libpng-ios
           zlib-ios
           ;

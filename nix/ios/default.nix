@@ -50,9 +50,19 @@ let
     packageSpec = dependencyByName.zlib;
   };
 
+  expat-ios = pkgs.callPackage ./packages/expat.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.expat;
+  };
+
   libpng-ios = pkgs.callPackage ./packages/libpng.nix {
     inherit mkIOSCMakePackage toolchain zlib-ios;
     packageSpec = dependencyByName.libpng;
+  };
+
+  eigen-ios = pkgs.callPackage ./packages/eigen.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.eigen;
   };
 
   freetype-ios = pkgs.callPackage ./packages/freetype.nix {
@@ -74,25 +84,55 @@ let
       ;
   };
 
+  harfbuzz-ios = pkgs.callPackage ./packages/harfbuzz.nix {
+    inherit freetype-ios mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.harfbuzz;
+  };
+
+  harfbuzz-consumer-check = pkgs.callPackage ./tests/harfbuzz-consumer.nix {
+    inherit
+      freetype-ios
+      harfbuzz-ios
+      libpng-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+  };
+
+  lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.lcms2;
+  };
+
   ios-dependencies = pkgs.symlinkJoin {
     name = "krita-ios-dependencies-bootstrap";
     paths = [
       zlib-ios
+      expat-ios
       libpng-ios
       freetype-ios
+      harfbuzz-ios
+      lcms2-ios
+      eigen-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${libpng-ios} ${freetype-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${lcms2-ios} ${eigen-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
 {
   inherit
+    eigen-ios
+    expat-ios
     freetype-consumer-check
     ios-dependencies
     freetype-ios
+    harfbuzz-consumer-check
+    harfbuzz-ios
+    lcms2-ios
     libpng-ios
     toolchain
     zlib-ios

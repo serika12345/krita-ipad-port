@@ -37,11 +37,13 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 ## Build the migrated target derivations
 
-The package-by-package Nix migration currently includes zlib, libpng, and
-FreeType:
+The package-by-package Nix migration currently includes zlib, Expat, libpng,
+FreeType, HarfBuzz, Little CMS, and Eigen:
 
 ```sh
-nix build .#zlib-ios .#libpng-ios .#freetype-ios
+nix build \
+  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
+  .#harfbuzz-ios .#lcms2-ios .#eigen-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -52,14 +54,22 @@ set, and adds their missing CMake dependency discovery. Its direct-only consumer
 check links all three archives through `Freetype::Freetype` alone and verifies
 that the common builder expands FreeType's propagated zlib/libpng closure into
 the target CMake roots. The `.#ios-dependencies` aggregate contains this
-migrated subset only. The existing `build-ios/` builders remain authoritative
-for packages not yet migrated.
+migrated subset only. HarfBuzz additionally verifies its FreeType bridge and
+portable CoreText framework export. Expat, Little CMS, and Eigen each build a
+small target consumer for their CMake package contract. The existing
+`build-ios/` builders remain authoritative for packages not yet migrated.
 
 To validate an actual source build rather than a binary-cache substitution:
 
 ```sh
-nix build .#zlib-ios .#libpng-ios .#freetype-ios --no-link --no-substitute
-nix build .#zlib-ios .#libpng-ios .#freetype-ios --no-link --no-substitute --rebuild
+nix build \
+  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
+  .#harfbuzz-ios .#lcms2-ios .#eigen-ios \
+  --no-link --no-substitute
+nix build \
+  .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
+  .#harfbuzz-ios .#lcms2-ios .#eigen-ios \
+  --no-link --no-substitute --rebuild
 ```
 
 ## Start a development shell
