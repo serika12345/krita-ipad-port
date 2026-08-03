@@ -284,12 +284,30 @@ Restore a local cache object without rebuilding it, for example after Nix GC:
 packaging/ios/scripts/restore-nix-cache.sh .#zlib-ios
 ```
 
-`packaging/ios/scripts/maintain-build-cache.sh` roots both the current target
-aggregate and its Nix cache-deployment closure. The second root retains the
-derivations, sources, and existing build-time-only tool outputs needed to
-reproduce the target libraries; rooting only the runtime aggregate is not
-sufficient. Maintenance never builds a missing target aggregate and skips Nix
-GC when the current build closure cannot be protected safely.
+Dependency pinning, clean bootstrap, and normal deployment use separate cache
+policies. While recipes are being pinned, do not run deployment maintenance or
+protect the legacy dev-shell, host-tool, and build-closure roots. Finish and
+commit every dependency recipe first. Then run the destructive clean bootstrap
+once from a clean repository root:
+
+```sh
+packaging/ios/scripts/bootstrap-ios-dependencies.sh --confirm-pinning-complete
+```
+
+The bootstrap checks the committed Git flake without building, releases only
+the known repository-local legacy GC-root symlinks, runs a full Nix GC, and
+builds `.#ios-dependencies` without an intermediate out-link. It roots only the
+successfully realised final aggregate. This is intentionally deferred until all
+dependency recipes are fixed; it has not passed until that command completes.
+
+After the clean bootstrap, normal device deployment calls
+`packaging/ios/scripts/maintain-build-cache.sh --deployment`. This deployment-
+only maintenance roots both the current target aggregate and its Nix cache-
+deployment closure. The second root retains the derivations, sources, and
+existing build-time-only tool outputs needed for efficient incremental builds;
+rooting only the runtime aggregate is not sufficient for that later operational
+phase. Maintenance never builds a missing target aggregate and skips Nix GC
+when the current build closure cannot be protected safely.
 
 The default repository is the ignored
 `build-ios/nix-binary-cache`. Set `KRITA_IOS_NIX_CACHE_URI` to a private,

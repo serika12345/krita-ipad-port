@@ -2,18 +2,28 @@
 set -euo pipefail
 
 usage() {
-    echo "usage: $0 [--force-nix-gc]" >&2
+    echo "usage: $0 --deployment [--force-nix-gc]" >&2
     exit 2
 }
 
+deployment_mode=0
 force_nix_gc=0
-if (( $# > 1 )); then
-    usage
-fi
-if (( $# == 1 )); then
-    [[ "$1" == "--force-nix-gc" ]] || usage
-    force_nix_gc=1
-fi
+while (( $# > 0 )); do
+    case "$1" in
+        --deployment)
+            deployment_mode=1
+            ;;
+        --force-nix-gc)
+            force_nix_gc=1
+            ;;
+        *)
+            usage
+            ;;
+    esac
+    shift
+done
+
+(( deployment_mode )) || usage
 
 repo_root="$(git rev-parse --show-toplevel)"
 deploy_dir="$repo_root/build-ios/deploy"
@@ -46,9 +56,13 @@ if (( prune_count > 0 )); then
     done
 fi
 
-# Protect everything needed by the normal iPad build before collecting dead
-# Nix store paths. This prevents a cleanup from turning the next build into a
-# dependency download/rebuild.
+# This script is intentionally deployment-only. During dependency pinning and
+# the final clean bootstrap, do not preserve the legacy dev shell, host tools,
+# or cache-deployment closure. bootstrap-ios-dependencies.sh owns that phase.
+#
+# Once normal deployment has resumed, protect everything needed by the active
+# iPad build before collecting dead Nix store paths. This prevents a cleanup
+# from turning the next incremental build into a dependency download/rebuild.
 nix_roots="$repo_root/build-ios/nix-roots"
 mkdir -p "$nix_roots"
 if [[ ! -e "$nix_roots/dev-shell" ]]; then
@@ -77,6 +91,7 @@ if nix-store --check-validity "$current_ios_dependencies" 2>/dev/null; then
         "$current_ios_dependencies_drv" > "$closure_paths"
     LC_ALL=C sort -u -o "$closure_paths" "$closure_paths"
     build_closure_root="$(
+        KRITA_IOS_CACHE_PHASE=deployment \
         KRITA_IOS_BUILD_CLOSURE_PATHS="$closure_paths" \
             nix eval --impure --raw --file "$repo_root/nix/ios/build-closure-root.nix"
     )"

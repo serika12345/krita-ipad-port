@@ -322,6 +322,8 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 ### タスク
 
 - [ ] **P0** 新規checkoutからのbootstrap手順を自動化する。
+  - [x] 固定中は旧closureを保護せず、全依存の固定・commit後にだけ既知のrepository-local GC rootを解除、full GC、通常Git flakeの`ios-dependencies` build、成功したaggregateのroot化を順番に行うスクリプトを追加する。
+  - [ ] 全依存の固定完了後、`bootstrap-ios-dependencies.sh --confirm-pinning-complete`を実行してクリーンbootstrapを確認する。
 - [ ] **P0** `nix build`で依存物を再生成できるようにする。
   - [x] zlibを独立した`zlib-ios` derivationへ移し、Xcode/SDK/Clangの完全なbuild identity、arm64/IOS archive検査、決定的再ビルド、ローカルbinary cache投入を検証する。
   - [x] libpngを`libpng-ios` derivationへ移し、zlibへのstore依存、決定的再ビルド、binary cache復元を検証する。

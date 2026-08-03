@@ -217,4 +217,4 @@ else
     echo "warning: could not collect the Krita startup log" >&2
 fi
 
-"$scripts_dir/maintain-build-cache.sh"
+"$scripts_dir/maintain-build-cache.sh" --deployment
