@@ -58,6 +58,7 @@
 
         inherit (iosPackages)
           eigen-ios
+          exiv2-ios
           expat-ios
           fontconfig-ios
           freetype-ios
@@ -75,6 +76,8 @@
       checks.${system} = {
         inherit (iosPackages)
           eigen-ios
+          exiv2-consumer-check
+          exiv2-ios
           expat-ios
           fontconfig-consumer-check
           fontconfig-ios

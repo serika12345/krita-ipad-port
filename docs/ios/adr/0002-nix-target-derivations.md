@@ -193,6 +193,17 @@ does not reintroduce the external codec into that crash-sensitive path. Its
 source and forced rebuilds matched, and the resulting 12-path aggregate closure
 was restored and verified in an empty store from the local cache.
 
+Exiv2 0.28.8 fixes its audited library-only feature contract instead of
+inheriting the relevant upstream defaults. It keeps the SDK-provided Iconv implementation without
+exporting a host or SDK path: the static CMake and pkg-config metadata carries
+the portable `-liconv` item required by final iOS links. It propagates only the
+migrated zlib target as a store dependency. Its consumer compiles and links the
+creation and reopening of an in-memory JPEG with Exif metadata plus the public
+character-conversion API through `Exiv2::exiv2lib`. Every archive member and the
+resulting executable use the pinned arm64 iOS target. The resulting 12-package
+aggregate and its complete 13-path closure were restored into an empty store
+from the local cache.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

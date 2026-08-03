@@ -96,6 +96,20 @@ let
     inherit libjpeg-turbo-ios mkIOSCMakePackage toolchain;
   };
 
+  exiv2-ios = pkgs.callPackage ./packages/exiv2.nix {
+    inherit mkIOSCMakePackage toolchain zlib-ios;
+    packageSpec = dependencyByName.exiv2;
+  };
+
+  exiv2-consumer-check = pkgs.callPackage ./tests/exiv2-consumer.nix {
+    inherit
+      exiv2-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+  };
+
   freetype-ios = pkgs.callPackage ./packages/freetype.nix {
     inherit
       libpng-ios
@@ -174,17 +188,20 @@ let
       xsimd-ios
       libunibreak-ios
       libjpeg-turbo-ios
+      exiv2-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
 {
   inherit
     eigen-ios
+    exiv2-consumer-check
+    exiv2-ios
     expat-ios
     fontconfig-consumer-check
     fontconfig-ios
