@@ -146,6 +146,21 @@ both the FreeType and CoreText bridges into the link. Source and forced rebuilds
 matched for all four packages. Their outputs and the four-path HarfBuzz closure
 were published to the local cache and restored into isolated stores.
 
+Fontconfig 2.18.2 is the first package using the common Autotools target
+builder. Target compilation and pkg-config lookup see only its direct Expat and
+FreeType dependencies and their propagated libpng/zlib closure. Build-machine
+configure probes use the Nix host compiler with `SDKROOT` removed, while target
+objects use the validated Apple compiler and iPhoneOS SDK. The release
+`configure` omits expansion of its `AX_FUNC_SNPRINTF` check, so the recipe fixes
+the generated script and records the known iOS C99 snprintf/vsnprintf contract
+as configure-cache inputs. A second upstream Autotools omission leaves
+`fcconffile.c` out of the archive despite exporting `FcConfigFileGenerate`; the
+package patches both source and generated Makefile bookkeeping. Its consumer
+forces that symbol, the Expat parser, and the FreeType query path into one iOS
+link and checks the exact five-archive closure. A forced rebuild matched the
+existing output, and the five-path closure was restored into an isolated store
+from the local cache.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

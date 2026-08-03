@@ -38,12 +38,12 @@ plists instead of starting `xcodebuild` inside the sandbox.
 ## Build the migrated target derivations
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
-FreeType, HarfBuzz, Little CMS, and Eigen:
+FreeType, HarfBuzz, Fontconfig, Little CMS, and Eigen:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#lcms2-ios .#eigen-ios
+  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -55,20 +55,24 @@ check links all three archives through `Freetype::Freetype` alone and verifies
 that the common builder expands FreeType's propagated zlib/libpng closure into
 the target CMake roots. The `.#ios-dependencies` aggregate contains this
 migrated subset only. HarfBuzz additionally verifies its FreeType bridge and
-portable CoreText framework export. Expat, Little CMS, and Eigen each build a
-small target consumer for their CMake package contract. The existing
-`build-ios/` builders remain authoritative for packages not yet migrated.
+portable CoreText framework export. Fontconfig uses the same sandbox and target
+closure contract through a separate common Autotools builder; its host probes
+use a Nix compiler with the iPhoneOS SDK removed. A pkg-config consumer forces
+Fontconfig's XML, FreeType, and generated-configuration paths into a five-
+archive iOS link. Expat, Little CMS, and Eigen each build a small target
+consumer for their CMake package contract. The existing `build-ios/` builders
+remain authoritative for packages not yet migrated.
 
 To validate an actual source build rather than a binary-cache substitution:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#lcms2-ios .#eigen-ios \
+  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
-  .#harfbuzz-ios .#lcms2-ios .#eigen-ios \
+  .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   --no-link --no-substitute --rebuild
 ```
 

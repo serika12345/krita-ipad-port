@@ -45,6 +45,10 @@ let
     inherit toolchain;
   };
 
+  mkIOSAutotoolsPackage = pkgs.callPackage ./mk-ios-autotools-package.nix {
+    inherit toolchain;
+  };
+
   zlib-ios = pkgs.callPackage ./packages/zlib.nix {
     inherit mkIOSCMakePackage;
     packageSpec = dependencyByName.zlib;
@@ -100,6 +104,30 @@ let
       ;
   };
 
+  fontconfig-ios = pkgs.callPackage ./packages/fontconfig.nix {
+    inherit
+      expat-ios
+      freetype-ios
+      libpng-ios
+      mkIOSAutotoolsPackage
+      toolchain
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.fontconfig;
+  };
+
+  fontconfig-consumer-check = pkgs.callPackage ./tests/fontconfig-consumer.nix {
+    inherit
+      expat-ios
+      fontconfig-ios
+      freetype-ios
+      libpng-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -113,13 +141,14 @@ let
       libpng-ios
       freetype-ios
       harfbuzz-ios
+      fontconfig-ios
       lcms2-ios
       eigen-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${lcms2-ios} ${eigen-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -127,6 +156,8 @@ in
   inherit
     eigen-ios
     expat-ios
+    fontconfig-consumer-check
+    fontconfig-ios
     freetype-consumer-check
     ios-dependencies
     freetype-ios

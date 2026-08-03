@@ -59,6 +59,7 @@
         inherit (iosPackages)
           eigen-ios
           expat-ios
+          fontconfig-ios
           freetype-ios
           harfbuzz-ios
           ios-dependencies
@@ -72,6 +73,8 @@
         inherit (iosPackages)
           eigen-ios
           expat-ios
+          fontconfig-consumer-check
+          fontconfig-ios
           freetype-consumer-check
           freetype-ios
           harfbuzz-consumer-check

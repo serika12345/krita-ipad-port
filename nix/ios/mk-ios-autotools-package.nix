@@ -1,14 +1,15 @@
 {
   lib,
+  stdenv,
   stdenvNoCC,
-  cmake,
-  ninja,
   coreutils,
   file,
   findutils,
   gawk,
   gnugrep,
   gnused,
+  gnumake,
+  pkg-config,
   toolchain,
 }:
 
@@ -17,10 +18,18 @@
   version,
   src,
   patches ? [ ],
-  cmakeFlags ? [ ],
+  configureFlags ? [ ],
+  configureCache ? { },
+  configureScript ? "./configure",
+  makeTargets ? [ [ ] ],
+  installTargets ? [ [ "install" ] ],
+  nativeBuildInputs ? [ ],
+  nativeInstallCheckInputs ? [ ],
+  preConfigure ? "",
   requiredPaths ? [ ],
   staticArchives ? [ ],
   targetDependencies ? [ ],
+  passthru ? { },
   meta ? { },
   ...
 }@args:
@@ -36,7 +45,27 @@ let
       operator = entry: map dependencyEntry (entry.value.propagatedBuildInputs or [ ]);
     }
   );
-  targetRootPath = lib.concatStringsSep ";" (map toString targetDependencyClosure);
+  targetIncludeFlags = lib.concatStringsSep " " (
+    map (dependency: "-I${dependency}/include") targetDependencyClosure
+  );
+  targetLibraryFlags = lib.concatStringsSep " " (
+    map (dependency: "-L${dependency}/lib") targetDependencyClosure
+  );
+  targetPkgConfigPath = lib.concatStringsSep ":" (
+    lib.concatMap (dependency: [
+      "${dependency}/lib/pkgconfig"
+      "${dependency}/share/pkgconfig"
+    ]) targetDependencyClosure
+  );
+  validArgumentList = arguments: lib.isList arguments && lib.all lib.isString arguments;
+  buildCommands = lib.concatStringsSep "\n" (
+    map (target: ''
+      make -j"''${NIX_BUILD_CORES:-1}" ${lib.escapeShellArgs target}
+    '') makeTargets
+  );
+  installCommands = lib.concatStringsSep "\n" (
+    map (target: "make ${lib.escapeShellArgs target}") installTargets
+  );
   protectedDerivationAttrs = [
     "DEVELOPER_DIR"
     "KRITA_IOS_TOOLCHAIN_IDENTITY"
@@ -62,7 +91,6 @@ let
     "patchPhase"
     "phases"
     "postPhases"
-    "preConfigure"
     "prePhases"
     "propagatedBuildInputs"
     "strictDeps"
@@ -78,9 +106,19 @@ assert lib.assertMsg (lib.all (
   dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity
 ) targetDependencies) "iOS target dependencies must use the same pinned toolchain identity";
 assert lib.assertMsg (overriddenProtectedAttrs == [ ])
-  "iOS CMake packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
+  "iOS Autotools packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
+assert lib.assertMsg (lib.all lib.isString configureFlags)
+  "Autotools configureFlags must all be strings";
+assert lib.assertMsg (lib.all validArgumentList makeTargets)
+  "Autotools makeTargets must be a list of argument lists";
+assert lib.assertMsg (lib.all validArgumentList installTargets)
+  "Autotools installTargets must be a list of argument lists";
+assert lib.assertMsg (lib.all (name: builtins.match "[A-Za-z_][A-Za-z0-9_]*" name != null) (
+  lib.attrNames configureCache
+)) "Autotools configureCache keys must be shell variable names";
 stdenvNoCC.mkDerivation (
-  {
+  configureCache
+  // {
     inherit
       pname
       version
@@ -93,19 +131,25 @@ stdenvNoCC.mkDerivation (
     enableParallelBuilding = true;
 
     nativeBuildInputs = [
-      cmake
       coreutils
+      file
+      findutils
       gawk
+      gnugrep
       gnused
-      ninja
-    ];
+      gnumake
+      pkg-config
+      stdenv.cc
+    ]
+    ++ nativeBuildInputs;
 
     nativeInstallCheckInputs = [
       coreutils
       file
       findutils
       gnugrep
-    ];
+    ]
+    ++ nativeInstallCheckInputs;
 
     # Static target dependencies must remain in the output closure so an
     # individual package can be cached and consumed without a mutable prefix.
@@ -117,11 +161,11 @@ stdenvNoCC.mkDerivation (
     SOURCE_DATE_EPOCH = "1";
     ZERO_AR_DATE = "1";
 
-    # Xcode is the only non-store build input. The daemon validates this
-    # declaration against its allowlist and exposes it only to this sandbox.
+    # Xcode is the only non-store target build input. Host probes use the pure
+    # native stdenv compiler and explicitly discard the iPhoneOS SDKROOT.
     __impureHostDeps = toolchain.impureHostDeps;
 
-    preConfigure = ''
+    preConfigure = preConfigure + ''
       check_toolchain_value() {
         name="$1"
         actual="$2"
@@ -145,8 +189,7 @@ stdenvNoCC.mkDerivation (
       }
 
       # xcodebuild starts IDE frameworks and crashes inside a Nix Darwin
-      # sandbox. These two canonical XML plists contain the same immutable
-      # build identities without invoking an IDE/XPC process.
+      # sandbox. Read the canonical XML plists instead.
       actual_xcode_version="$(read_plist_string CFBundleShortVersionString ${toolchain.xcodeVersionPlist})"
       actual_xcode_build="$(read_plist_string ProductBuildVersion ${toolchain.xcodeVersionPlist})"
       actual_sdk_version="$(read_plist_string CFBundleShortVersionString ${toolchain.sdkVersionPlist})"
@@ -162,45 +205,67 @@ stdenvNoCC.mkDerivation (
       check_toolchain_value "Apple Clang" "$actual_clang_version" "${toolchain.clangVersion}"
       check_toolchain_value "Apple Clang build" "$actual_clang_build" "${toolchain.clangBuildVersion}"
 
+      ios_target_flags="-arch ${toolchain.architecture} -isysroot ${toolchain.sdkRoot} -miphoneos-version-min=${toolchain.deploymentTarget}"
+
+      export CC="${toolchain.cc}"
+      export CXX="${toolchain.cxx}"
+      export CPP="${toolchain.cc} -E $ios_target_flags"
+      export AR="${toolchain.ar}"
+      export RANLIB="${toolchain.ranlib}"
+      export STRIP="${toolchain.strip}"
+      export LD="${toolchain.toolchainDir}/ld"
+      export NM="${toolchain.toolchainDir}/nm"
+      export OBJDUMP="${toolchain.toolchainDir}/objdump"
+      export DSYMUTIL="${toolchain.toolchainDir}/dsymutil"
+      export NMEDIT="${toolchain.toolchainDir}/nmedit"
+      export LIPO="${toolchain.lipo}"
+      export OTOOL="${toolchain.otool}"
+
+      # Some Autoconf projects probe build-machine executables even while
+      # cross compiling. Keep those probes pure and away from the iPhone SDK.
+      export CC_FOR_BUILD="${coreutils}/bin/env -u SDKROOT ${stdenv.cc}/bin/cc"
+
       export SOURCE_DATE_EPOCH=1
-      export CFLAGS="-ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build"
+      export CFLAGS="$ios_target_flags -fPIC -ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build"
       export CXXFLAGS="$CFLAGS"
+      export CPPFLAGS="${targetIncludeFlags}"
+      export LDFLAGS="$ios_target_flags ${targetLibraryFlags}"
+
+      # pkg-config is a host tool, but it may only resolve declared iOS
+      # target dependencies. An SDK sysroot must not prefix Nix store paths.
+      export PKG_CONFIG="${pkg-config}/bin/pkg-config"
+      export PKG_CONFIG_PATH=
+      export PKG_CONFIG_DIR=
+      export PKG_CONFIG_LIBDIR="${targetPkgConfigPath}"
+      export PKG_CONFIG_SYSROOT_DIR=
     '';
 
-    cmakeFlags = [
-      "-G=Ninja"
-      "-DCMAKE_SYSTEM_NAME=iOS"
-      "-DCMAKE_SYSTEM_PROCESSOR=${toolchain.architecture}"
-      "-DCMAKE_OSX_ARCHITECTURES=${toolchain.architecture}"
-      "-DCMAKE_OSX_DEPLOYMENT_TARGET=${toolchain.deploymentTarget}"
-      "-DCMAKE_OSX_SYSROOT=${toolchain.sdkRoot}"
-      "-DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY"
-      "-DCMAKE_BUILD_TYPE=Release"
-      "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
-      "-DCMAKE_INSTALL_BINDIR=bin"
-      "-DCMAKE_INSTALL_SBINDIR=sbin"
-      "-DCMAKE_INSTALL_LIBDIR=lib"
-      "-DCMAKE_INSTALL_LIBEXECDIR=libexec"
-      "-DCMAKE_INSTALL_INCLUDEDIR=include"
-      "-DCMAKE_INSTALL_DATADIR=share"
-      "-DCMAKE_INSTALL_DOCDIR=share/doc/${pname}"
-      "-DCMAKE_INSTALL_MANDIR=share/man"
-      "-DCMAKE_INSTALL_LOCALEDIR=share/locale"
-      "-DCMAKE_C_COMPILER=${toolchain.cc}"
-      "-DCMAKE_CXX_COMPILER=${toolchain.cxx}"
-      "-DCMAKE_AR=${toolchain.ar}"
-      "-DCMAKE_RANLIB=${toolchain.ranlib}"
-      "-DCMAKE_STRIP=${toolchain.strip}"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY"
-    ]
-    ++ lib.optionals (targetDependencies != [ ]) [
-      "-DCMAKE_PREFIX_PATH=${targetRootPath}"
-      "-DCMAKE_FIND_ROOT_PATH=${targetRootPath}"
-    ]
-    ++ cmakeFlags;
+    configurePhase = ''
+      runHook preConfigure
+
+      ${lib.escapeShellArg configureScript} \
+        --build=${stdenvNoCC.buildPlatform.config} \
+        --host=arm-apple-darwin \
+        --prefix="$out" \
+        --libdir="$out/lib" \
+        --disable-shared \
+        --enable-static \
+        ${lib.escapeShellArgs configureFlags}
+
+      runHook postConfigure
+    '';
+
+    buildPhase = ''
+      runHook preBuild
+      ${buildCommands}
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      ${installCommands}
+      runHook postInstall
+    '';
 
     doInstallCheck = true;
     installCheckPhase = ''
@@ -290,7 +355,8 @@ stdenvNoCC.mkDerivation (
     passthru = {
       iosToolchainIdentity = toolchain.identity;
       iosTargetDependencyClosure = targetDependencyClosure;
-    };
+    }
+    // passthru;
 
     meta = {
       platforms = [ "aarch64-darwin" ];
@@ -298,8 +364,16 @@ stdenvNoCC.mkDerivation (
     // meta;
   }
   // removeAttrs args [
-    "cmakeFlags"
+    "configureCache"
+    "configureFlags"
+    "configureScript"
+    "installTargets"
+    "makeTargets"
     "meta"
+    "nativeBuildInputs"
+    "nativeInstallCheckInputs"
+    "passthru"
+    "preConfigure"
     "requiredPaths"
     "staticArchives"
     "targetDependencies"

@@ -305,7 +305,10 @@
       ],
       "cmake_args": [],
       "configure_cache": {
-        "ac_cv_va_copy": "C99"
+        "ac_cv_func_snprintf": "yes",
+        "ac_cv_func_vsnprintf": "yes",
+        "ac_cv_va_copy": "C99",
+        "fc_cv_c99_vsnprintf": "yes"
       },
       "configure_args": [
         "--disable-docs",
@@ -313,9 +316,7 @@
         "--disable-nls",
         "--disable-cache-build",
         "--disable-iconv",
-        "--with-expat=yes",
-        "--with-expat-includes={prefix}/include",
-        "--with-expat-lib={prefix}/lib",
+        "--disable-libxml2",
         "--with-default-fonts=/System/Library/Fonts",
         "--with-add-fonts=/System/Library/Fonts"
       ],

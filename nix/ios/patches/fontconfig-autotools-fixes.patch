@@ -1,0 +1,35 @@
+diff --git a/configure b/configure
+--- a/configure
++++ b/configure
+@@ -19610 +19610,6 @@ fi
+-AX_FUNC_SNPRINTF
++if test "$ac_cv_func_snprintf" = yes; then
++  printf '%s\n' "#define HAVE_SNPRINTF 1" >>confdefs.h
++fi
++if test "$ac_cv_func_vsnprintf" = yes; then
++  printf '%s\n' "#define HAVE_VSNPRINTF 1" >>confdefs.h
++fi
+diff --git a/src/Makefile.am b/src/Makefile.am
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -139,0 +140 @@ libfontconfig_la_SOURCES = \
++	fcconffile.c \
+diff --git a/src/Makefile.in b/src/Makefile.in
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -173,2 +173,2 @@ am_libfontconfig_la_OBJECTS = fcatomic.lo fccache.lo fccfg.lo \
+-	fccharset.lo fccompat.lo fcdbg.lo fcdefault.lo fcdir.lo \
+-	fcformat.lo fcfreetype.lo fcfs.lo fcgenericalias.lo \
++	fccharset.lo fcconffile.lo fccompat.lo fcdbg.lo fcdefault.lo \
++	fcdir.lo fcformat.lo fcfreetype.lo fcfs.lo fcgenericalias.lo \
+@@ -209 +209 @@ am__depfiles_remade = ./$(DEPDIR)/fcarch.Po ./$(DEPDIR)/fcatomic.Plo \
+-	./$(DEPDIR)/fccharset.Plo ./$(DEPDIR)/fccompat.Plo \
++	./$(DEPDIR)/fccharset.Plo ./$(DEPDIR)/fcconffile.Plo ./$(DEPDIR)/fccompat.Plo \
+@@ -511,0 +512 @@ libfontconfig_la_SOURCES = \
++	fcconffile.c \
+@@ -656,0 +657 @@ distclean-compile:
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcconffile.Plo@am__quote@ # am--include-marker
+@@ -856,0 +858 @@ distclean: distclean-am
++	-rm -f ./$(DEPDIR)/fcconffile.Plo
+@@ -931,0 +934 @@ maintainer-clean: maintainer-clean-am
++	-rm -f ./$(DEPDIR)/fcconffile.Plo
