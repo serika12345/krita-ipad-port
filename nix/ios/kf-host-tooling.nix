@@ -188,13 +188,32 @@ let
       runHook preInstallCheck
 
       compiler="$out/libexec/kf6/kconfig_compiler_kf6"
-      test -x "$compiler"
-      test "$("$compiler" --version)" = "kconfig_compiler ${kfVersion}"
-      file "$compiler" | grep -Fq 'Mach-O 64-bit executable arm64'
+      if ! test -x "$compiler"; then
+        echo "error: host KConfig compiler is missing or not executable: $compiler" >&2
+        exit 1
+      fi
 
-      if find "$out" -type f ! -path "$compiler" -print -quit | grep -q .; then
-        echo "error: host KConfig output contains files other than kconfig_compiler_kf6" >&2
-        find "$out" -type f -print >&2
+      actual_version="$("$compiler" --version)"
+      if test "$actual_version" != "kconfig_compiler ${kfVersion}"; then
+        echo "error: host KConfig compiler version is '$actual_version'; expected 'kconfig_compiler ${kfVersion}'" >&2
+        exit 1
+      fi
+
+      compiler_description="$(file -b "$compiler")"
+      for required_marker in 'Mach-O' '64-bit' 'arm64' 'executable'; do
+        case "$compiler_description" in
+          *"$required_marker"*) ;;
+          *)
+            echo "error: host KConfig compiler is not a native arm64 Mach-O executable: $compiler_description" >&2
+            exit 1
+            ;;
+        esac
+      done
+
+      extra_entries="$(find "$out" \( -type f -o -type l \) ! -path "$compiler" -print)"
+      if test -n "$extra_entries"; then
+        echo "error: host KConfig output contains entries other than kconfig_compiler_kf6" >&2
+        printf '%s\n' "$extra_entries" >&2
         exit 1
       fi
 
