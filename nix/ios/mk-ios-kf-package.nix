@@ -117,17 +117,11 @@ let
     lib.mapAttrsToList (name: value: "-D${name}=${value}") cacheStringLocks
     ++ lib.mapAttrsToList (name: value: "-D${name}=${cmakeBoolean value}") cacheBooleanLocks;
 
-  cacheStringCheckScript =
-    lib.concatStrings (
-      lib.mapAttrsToList (name: value: ''
-        check_cache_string ${lib.escapeShellArg name} ${lib.escapeShellArg value}
-      '') (removeAttrs cacheStringLocks kdeInstallDirCacheStrings)
-    )
-    + lib.concatStrings (
-      lib.mapAttrsToList (name: value: ''
-        check_cache_string ${lib.escapeShellArg name} "$out/${value}"
-      '') (lib.getAttrs kdeInstallDirCacheStrings cacheStringLocks)
-    );
+  cacheStringCheckScript = lib.concatStrings (
+    lib.mapAttrsToList (name: value: ''
+      check_cache_string ${lib.escapeShellArg name} ${lib.escapeShellArg value}
+    '') cacheStringLocks
+  );
   cacheBooleanCheckScript = lib.concatStrings (
     lib.mapAttrsToList (name: value: ''
       check_cache_boolean ${lib.escapeShellArg name} ${lib.escapeShellArg (cmakeBoolean value)}
