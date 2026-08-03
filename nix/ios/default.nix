@@ -51,6 +51,8 @@ let
 
   mkIOSHeaderPackage = pkgs.callPackage ./mk-ios-header-package.nix { };
 
+  mkCMakePackageVersion = pkgs.callPackage ./cmake-package-version.nix { };
+
   zlib-ios = pkgs.callPackage ./packages/zlib.nix {
     inherit mkIOSCMakePackage;
     packageSpec = dependencyByName.zlib;
@@ -78,6 +80,24 @@ let
 
   boost-consumer-check = pkgs.callPackage ./tests/boost-consumer.nix {
     inherit boost-ios mkIOSCMakePackage toolchain;
+  };
+
+  immer-ios = pkgs.callPackage ./packages/immer.nix {
+    inherit mkCMakePackageVersion mkIOSHeaderPackage;
+    packageSpec = dependencyByName.immer;
+  };
+
+  immer-consumer-check = pkgs.callPackage ./tests/immer-consumer.nix {
+    inherit immer-ios mkIOSCMakePackage toolchain;
+  };
+
+  zug-ios = pkgs.callPackage ./packages/zug.nix {
+    inherit mkCMakePackageVersion mkIOSHeaderPackage;
+    packageSpec = dependencyByName.zug;
+  };
+
+  zug-consumer-check = pkgs.callPackage ./tests/zug-consumer.nix {
+    inherit mkIOSCMakePackage toolchain zug-ios;
   };
 
   xsimd-ios = pkgs.callPackage ./packages/xsimd.nix {
@@ -201,11 +221,13 @@ let
       libjpeg-turbo-ios
       exiv2-ios
       boost-ios
+      immer-ios
+      zug-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -224,6 +246,8 @@ in
     freetype-ios
     harfbuzz-consumer-check
     harfbuzz-ios
+    immer-consumer-check
+    immer-ios
     lcms2-ios
     libjpeg-turbo-consumer-check
     libjpeg-turbo-ios
@@ -234,5 +258,7 @@ in
     xsimd-consumer-check
     xsimd-ios
     zlib-ios
+    zug-consumer-check
+    zug-ios
     ;
 }

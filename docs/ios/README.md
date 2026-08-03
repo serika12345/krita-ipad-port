@@ -39,14 +39,14 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
 FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak,
-libjpeg-turbo, Exiv2, and Boost:
+libjpeg-turbo, Exiv2, Boost, Immer, and Zug:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios
+  .#boost-ios .#immer-ios .#zug-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -74,6 +74,11 @@ transitive zlib archive. Its export carries the SDK-portable `-liconv` link item
 instead of an absolute Xcode path. Boost is a pure header derivation:
 its package output is source-keyed but deliberately independent of Xcode, while
 its consumer still compiles representative APIs with the pinned Apple toolchain.
+Immer and Zug use the same pure path, fix their manifest versions in relocatable
+CMake metadata, implement standard same-major range matching, and export the
+C++14 requirement that upstream omitted. Their consumers check rejected,
+accepted, and exact version requests. Zug additionally uses its C++17
+`std::variant` skip path without an accidental Boost dependency.
 The existing `build-ios/` builders remain authoritative for packages not yet
 migrated.
 
@@ -84,13 +89,13 @@ nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios \
+  .#boost-ios .#immer-ios .#zug-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios \
+  .#boost-ios .#immer-ios .#zug-ios \
   --no-link --no-substitute --rebuild
 ```
 

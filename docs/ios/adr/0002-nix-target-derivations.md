@@ -219,6 +219,16 @@ Boost.MP11 and circular-buffer APIs for arm64 iOS. The resulting 13-package
 aggregate and its complete 14-path target closure were restored into an empty
 store from the local cache.
 
+Immer 0.9.1 and Zug 0.1.2 also use the pure header path. Their generated
+package metadata corrects the older versions declared by upstream CMake,
+retains Krita's plain `immer` and `zug` target names, and exports their C++14
+minimum. Separate consumers exercise rejected and accepted same-major ranges,
+resolve the exact versions, and compile real APIs. The Zug proof uses a
+filtering transducer under C++17 so `std::variant`, rather than an undeclared
+Boost.Variant dependency, implements its skip state. The resulting 15-package
+aggregate and its complete 16-path target closure were restored into an empty
+store from the local cache.
+
 ## Consequences
 
 - A normal Krita source edit does not rebuild target dependencies.

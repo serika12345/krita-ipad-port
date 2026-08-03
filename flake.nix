@@ -64,6 +64,7 @@
           fontconfig-ios
           freetype-ios
           harfbuzz-ios
+          immer-ios
           ios-dependencies
           lcms2-ios
           libjpeg-turbo-ios
@@ -71,6 +72,7 @@
           libpng-ios
           xsimd-ios
           zlib-ios
+          zug-ios
           ;
       };
 
@@ -88,6 +90,8 @@
           freetype-ios
           harfbuzz-consumer-check
           harfbuzz-ios
+          immer-consumer-check
+          immer-ios
           lcms2-ios
           libjpeg-turbo-consumer-check
           libjpeg-turbo-ios
@@ -97,6 +101,8 @@
           xsimd-consumer-check
           xsimd-ios
           zlib-ios
+          zug-consumer-check
+          zug-ios
           ;
       };
 
