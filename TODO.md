@@ -192,6 +192,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** 正常終了と再起動を確認する。
 - [ ] **P0** 最小キャンバスを作成し、指でストロークを描く。
 - [x] **P0** Apple Pencilの位置、筆圧、傾き、方位、接触状態を記録・検証する（iPad8,1実機で`QTabletEvent`のpress/move/release、pressure、xTilt/yTiltを確認済み）。
+- [x] **P0** 起動・ファイル表示直後から、ツールの再選択なしで最初のApple Pencilストロークを描画できることを実機検証する（初期Enter・Pencil入力デバイス切替を実装し、実機確認済み）。
 - [ ] **P0** Pencil描画と指ジェスチャーを分離する。
 - [ ] **P0** undo/redo、pan、zoom、rotateを実装・確認する。
 - [ ] **P0** 高DPI、Safe Area、画面回転を修正する。

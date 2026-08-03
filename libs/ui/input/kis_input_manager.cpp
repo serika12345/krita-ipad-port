@@ -17,6 +17,9 @@
 
 #include <KoToolManager.h>
 #include <KoPointerEvent.h>
+#ifdef Q_OS_IOS
+#include <KoInputDevice.h>
+#endif
 
 #include "kis_tool_proxy.h"
 
@@ -632,6 +635,35 @@ bool KisInputManager::eventFilterImpl(QEvent * event)
         {
             //Make sure the input actions know we are active.
             KisAbstractInputAction::setInputManager(this);
+
+#ifdef Q_OS_IOS
+            // Apple Pencil can press without a preceding hover/enter event.
+            // Switch to its CanvasData before the matcher starts a stroke;
+            // switching from the mouse tool during begin() would cancel that
+            // first stroke through the tool-change signals.
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+            const qint64 uniqueId = tabletEvent->uniqueId();
+#else
+            const qint64 uniqueId = tabletEvent->pointingDevice()
+                ? tabletEvent->pointingDevice()->uniqueId().numericId() : -1;
+#endif
+            const KoInputDevice inputDevice(
+                KoInputDevice::convertDeviceType(tabletEvent),
+                KoInputDevice::convertPointerType(tabletEvent),
+                uniqueId);
+            KoToolManager::instance()->switchInputDeviceRequested(inputDevice);
+
+            // A tablet press delivered to this event filter proves that the
+            // pointer is inside the canvas. Qt iOS does not synthesize Enter
+            // for a non-hovering Pencil, while the shortcut matcher requires
+            // it before enabling the Tool Invocation action.
+            if (!d->containsPointer) {
+                d->containsPointer = true;
+                d->touchHasBlockedPressEvents = false;
+                d->matcher.enterEvent();
+            }
+#endif
+
             retval = d->matcher.buttonPressed(tabletEvent->button(), tabletEvent);
             if (!d->containsPointer) {
                 d->containsPointer = true;
@@ -690,7 +722,7 @@ bool KisInputManager::eventFilterImpl(QEvent * event)
         break;
     }
     case QEvent::TabletRelease: {
-#if defined(Q_OS_MACOS) || defined(Q_OS_ANDROID)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
         d->allowMouseEvents();
 #endif
         d->stopBlockingTouch();
