@@ -39,14 +39,14 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
 FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak,
-libjpeg-turbo, Exiv2, Boost, Immer, and Zug:
+libjpeg-turbo, Exiv2, Boost, Immer, Zug, and Lager:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -79,6 +79,13 @@ CMake metadata, implement standard same-major range matching, and export the
 C++14 requirement that upstream omitted. Their consumers check rejected,
 accepted, and exact version requests. Zug additionally uses its C++17
 `std::variant` skip path without an accidental Boost dependency.
+Lager corrects upstream's stale package version and omitted public contract. Its
+pure package propagates the Boost and Zug headers required by Krita's
+state/cursor/watch/store APIs, exports C++17 through the installed plain `lager`
+target, and deliberately leaves debugger-only Immer/Cereal support outside that
+core target. A consumer that directly depends on and links only Lager compiles
+those real APIs for arm64 iOS, proving that the two pure dependencies survive a
+standalone cache restore.
 The existing `build-ios/` builders remain authoritative for packages not yet
 migrated.
 
@@ -89,13 +96,13 @@ nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios \
   --no-link --no-substitute --rebuild
 ```
 

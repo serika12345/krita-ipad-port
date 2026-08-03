@@ -66,6 +66,7 @@
           harfbuzz-ios
           immer-ios
           ios-dependencies
+          lager-ios
           lcms2-ios
           libjpeg-turbo-ios
           libunibreak-ios
@@ -92,6 +93,8 @@
           harfbuzz-ios
           immer-consumer-check
           immer-ios
+          lager-consumer-check
+          lager-ios
           lcms2-ios
           libjpeg-turbo-consumer-check
           libjpeg-turbo-ios

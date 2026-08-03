@@ -100,6 +100,26 @@ let
     inherit mkIOSCMakePackage toolchain zug-ios;
   };
 
+  lager-ios = pkgs.callPackage ./packages/lager.nix {
+    inherit
+      boost-ios
+      mkCMakePackageVersion
+      mkIOSHeaderPackage
+      zug-ios
+      ;
+    packageSpec = dependencyByName.lager;
+  };
+
+  lager-consumer-check = pkgs.callPackage ./tests/lager-consumer.nix {
+    inherit
+      boost-ios
+      lager-ios
+      mkIOSCMakePackage
+      toolchain
+      zug-ios
+      ;
+  };
+
   xsimd-ios = pkgs.callPackage ./packages/xsimd.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.xsimd;
@@ -223,11 +243,12 @@ let
       boost-ios
       immer-ios
       zug-ios
+      lager-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -248,6 +269,8 @@ in
     harfbuzz-ios
     immer-consumer-check
     immer-ios
+    lager-consumer-check
+    lager-ios
     lcms2-ios
     libjpeg-turbo-consumer-check
     libjpeg-turbo-ios

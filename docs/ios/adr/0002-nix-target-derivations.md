@@ -80,6 +80,11 @@ Package-specific passthru data cannot replace the checked toolchain identity,
 and every compiled member of a propagated target dependency closure must carry
 the same identity. Pure header packages use a separate builder without Xcode,
 SDK, compiler, or impure host inputs and carry `iosTargetIndependent = true`.
+When one pure header package depends on another, that builder validates the
+complete closure as toolchain-independent and writes the direct dependencies to
+`nix-support/propagated-build-inputs`; this is explicit because its minimal
+phase list intentionally omits stdenv fixup. The resulting package remains
+Xcode-independent while binary-cache copies retain its required headers.
 Target builders accept a dependency only when it either has that marker and no
 toolchain identity, or carries the exact current toolchain identity. Header
 trees reject symlinks, special files, compiled artifacts, and mutations by
@@ -232,6 +237,18 @@ filtering transducer under C++17 so `std::variant`, rather than an undeclared
 Boost.Variant dependency, implements its skip state. The resulting 15-package
 aggregate and its complete 16-path target closure were restored into an empty
 store from the local cache.
+
+Lager 0.1.3 extends the pure header path with target dependencies. The upstream
+release still declares project version 0.1.0, installs no version file, exports
+only the plain `lager` target, and omits both its C++ standard and required
+headers from that target. The generated package metadata fixes the version,
+exports C++17, and propagates the Boost and Zug targets used directly by
+Lager's core state, cursor, watch, lens, and store headers. Immer remains a
+separate aggregate package: Lager uses it only in optional debugger/cereal
+headers that Krita does not consume, so making it a core dependency would add a
+false reverse rebuild edge. A consumer with only `lager-ios` as its direct Nix
+dependency compiles those APIs and a manual-event-loop store for arm64 iOS. The
+resulting 16-package aggregate has a complete 17-path target closure.
 
 ## Consequences
 

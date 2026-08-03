@@ -23,6 +23,7 @@ let
       add_library(Boost::disable_autolinking INTERFACE IMPORTED)
       set_target_properties(Boost::disable_autolinking PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_ALL_NO_LIB)
     endif()
+    unset(_BOOST_PREFIX)
   '';
   boostConfigVersion = ''
     set(PACKAGE_VERSION "${packageSpec.version}")
@@ -88,6 +89,7 @@ mkIOSHeaderPackage {
     grep -Fq 'INTERFACE_LINK_LIBRARIES Boost::headers' "$config"
     grep -Fq 'add_library(Boost::disable_autolinking INTERFACE IMPORTED)' "$config"
     grep -Fq 'INTERFACE_COMPILE_DEFINITIONS BOOST_ALL_NO_LIB' "$config"
+    grep -Fxq 'unset(_BOOST_PREFIX)' "$config"
     grep -Fxq 'set(PACKAGE_VERSION "${packageSpec.version}")' "$version_config"
 
     if grep -Fq '${boost.src}' "$config" "$version_config"; then

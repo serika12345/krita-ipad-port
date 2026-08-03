@@ -337,6 +337,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] Exiv2を`exiv2-ios` derivationへ移し、library-only feature、PNG support、JPEG/Exif/文字コード変換APIのcompile/link、zlibの推移依存、決定的再ビルド、binary cache復元を検証する。
   - [x] BoostをXcode非依存の`boost-ios` header derivationへ移し、relocatable CMake targets、Apple Clang iOS consumer、決定的再ビルド、binary cache復元を検証する。
   - [x] ImmerとZugをXcode非依存のpure header derivationへ移し、固定version metadata、plain CMake targets、C++14契約、C++17 Zug skip経路、決定的再ビルド、binary cache復元を検証する。
+  - [x] Lagerを依存伝播対応のpure header derivationへ移し、欠落していたBoost依存、C++17/plain target/version契約、Krita実利用API、決定的再ビルド、3-path単体closureを検証する。
   - [ ] 残るC/C++依存をパッケージ単位のderivationへ移し、`ios-dependencies`で統合する。
   - [ ] Qt、KF6、Krita、未署名IPAを段階的なderivationへ移す。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。

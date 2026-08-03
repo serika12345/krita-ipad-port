@@ -15,11 +15,30 @@
   generatedFiles ? { },
   requiredPaths ? [ ],
   postInstallCheck ? "",
+  targetDependencies ? [ ],
   passthru ? { },
   meta ? { },
 }:
 
 let
+  dependencyEntry = dependency: {
+    key = dependency.outPath;
+    value = dependency;
+  };
+  targetDependencyClosure = map (entry: entry.value) (
+    builtins.genericClosure {
+      startSet = map dependencyEntry targetDependencies;
+      operator = entry: map dependencyEntry (entry.value.propagatedBuildInputs or [ ]);
+    }
+  );
+  targetDependencyIsPure =
+    dependency:
+    let
+      targetIndependent = dependency.iosTargetIndependent or false;
+      dependencyToolchainIdentity = dependency.iosToolchainIdentity or null;
+    in
+    lib.isBool targetIndependent && targetIndependent && dependencyToolchainIdentity == null;
+  targetDependencyPaths = map toString targetDependencies;
   relativePathIsSafe =
     path:
     lib.isString path
@@ -105,9 +124,21 @@ assert lib.assertMsg (
 ) "iOS header package requiredPaths must contain only safe relative paths";
 assert lib.assertMsg (lib.isString postInstallCheck)
   "iOS header package postInstallCheck must be a string";
+assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
+  "iOS header package target dependencies must all be derivations";
+assert lib.assertMsg (
+  lib.length (lib.unique targetDependencyPaths) == lib.length targetDependencyPaths
+) "iOS header package target dependencies must be unique";
+assert lib.assertMsg (lib.all targetDependencyIsPure targetDependencyClosure)
+  "iOS header package dependency closures must be toolchain-independent pure packages";
+assert lib.assertMsg (
+  !(builtins.elem "nix-support/propagated-build-inputs" generatedPaths)
+) "iOS header packages reserve nix-support/propagated-build-inputs for target dependency metadata";
 assert lib.assertMsg (lib.isAttrs passthru) "iOS header package passthru must be an attribute set";
 assert lib.assertMsg (
-  !(passthru ? iosTargetIndependent) && !(passthru ? iosToolchainIdentity)
+  !(passthru ? iosTargetDependencyClosure)
+  && !(passthru ? iosTargetIndependent)
+  && !(passthru ? iosToolchainIdentity)
 ) "iOS header package target-independence passthru is fixed by the builder";
 assert lib.assertMsg (lib.isAttrs meta) "iOS header package meta must be an attribute set";
 
@@ -137,11 +168,22 @@ stdenvNoCC.mkDerivation {
     gnugrep
   ];
 
+  # A dependent header package is still independent of Xcode, but its output
+  # closure must retain every pure header dependency when copied through a
+  # binary cache. The explicit nix-support file is needed because this minimal
+  # builder intentionally omits stdenv's fixup phase.
+  propagatedBuildInputs = targetDependencies;
+
   installPhase = ''
     runHook preInstall
 
     ${lib.concatMapStringsSep "\n" copyHeaderTree headerTrees}
     ${lib.concatMapStringsSep "\n" installGeneratedFile generatedFileEntries}
+    ${lib.optionalString (targetDependencies != [ ]) ''
+      mkdir -p "$out/nix-support"
+      printf '%s\n' ${lib.escapeShellArgs targetDependencyPaths} \
+        > "$out/nix-support/propagated-build-inputs"
+    ''}
 
     runHook postInstall
   '';
@@ -177,6 +219,27 @@ stdenvNoCC.mkDerivation {
       fi
     done
 
+    ${lib.optionalString (targetDependencies != [ ]) ''
+      expected_dependencies="$NIX_BUILD_TOP/header-package-dependencies.expected"
+      actual_dependencies="$NIX_BUILD_TOP/header-package-dependencies.actual"
+      printf '%s\n' ${lib.escapeShellArgs targetDependencyPaths} \
+        | sort -u > "$expected_dependencies"
+      sort -u "$out/nix-support/propagated-build-inputs" \
+        > "$actual_dependencies"
+      expected_dependencies_digest="$(sha256sum "$expected_dependencies" | cut -d ' ' -f 1)"
+      actual_dependencies_digest="$(sha256sum "$actual_dependencies" | cut -d ' ' -f 1)"
+      if test "$expected_dependencies_digest" != "$actual_dependencies_digest"; then
+        echo "error: propagated header dependency metadata is incomplete" >&2
+        exit 1
+      fi
+      while IFS= read -r dependency; do
+        if ! test -e "$dependency"; then
+          echo "error: propagated header dependency does not exist: $dependency" >&2
+          exit 1
+        fi
+      done < "$actual_dependencies"
+    ''}
+
     unexpected_artifact="$(find "$out" \( \
       -type f \( \
         -name '*.a' -o -name '*.o' -o -name '*.dylib' -o \
@@ -206,6 +269,7 @@ stdenvNoCC.mkDerivation {
   '';
 
   passthru = passthru // {
+    iosTargetDependencyClosure = targetDependencyClosure;
     iosTargetIndependent = true;
   };
 
