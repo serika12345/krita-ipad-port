@@ -78,12 +78,12 @@ let
     gettext
     gnugrep
     hostEcm
-    hostQt
-    hostQtTools
     kf6HostTooling
     python3
   ];
   nativeReferenceRoots = nativeInputs ++ [
+    hostQt
+    hostQtTools
     kf6HostTooling.kconfigCompiler
     qtXcrunShim
   ];
@@ -122,6 +122,7 @@ mkIOSCMakePackage {
   cmakeToolchainFile = "${qtbase-ios}/lib/cmake/Qt6/qt.toolchain.cmake";
   enableFullAppleToolchain = true;
   tryCompileTargetType = null;
+  dontWrapQtApps = true;
   nativeBuildInputs = nativeInputs;
 
   cmakeFlags = [
