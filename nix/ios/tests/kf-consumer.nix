@@ -259,7 +259,16 @@ mkIOSCMakePackage {
     bundle="$out/bin/KritaIOSFrameworksProbe.app"
     consumer="$bundle/KritaIOSFrameworksProbe"
 
-    file "$consumer" | grep -Fq 'Mach-O 64-bit executable arm64'
+    consumer_description="$(file -b "$consumer")"
+    for required_marker in 'Mach-O' '64-bit' 'arm64' 'executable'; do
+      case "$consumer_description" in
+        *"$required_marker"*) ;;
+        *)
+          echo "error: consumer is not an arm64 Mach-O executable: $consumer_description" >&2
+          exit 1
+          ;;
+      esac
+    done
     test "$(${toolchain.lipo} -archs "$consumer")" = "${toolchain.architecture}"
     consumer_metadata="$(${toolchain.vtool} -show-build "$consumer")"
     grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' <<<"$consumer_metadata"

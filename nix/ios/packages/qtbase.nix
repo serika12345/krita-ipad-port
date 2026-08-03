@@ -402,9 +402,11 @@ mkIOSCMakePackage {
         exit 1
       fi
     done
-    forbidden_file="$(find "$out" \
-      \( -name '*.app' -o -name '*.dylib' -o -name '*.framework' \
-         -o -name '*.so' -o -name '*.so.*' \) -print -quit)"
+    forbidden_file="$(find "$out" \( \
+      \( \( -type d -o -type l \) \( -name '*.app' -o -name '*.framework' \) \) -o \
+      \( \( -type f -o -type l \) \
+         \( -name '*.dylib' -o -name '*.so' -o -name '*.so.*' \) \) \
+      \) -print -quit)"
     if test -n "$forbidden_file"; then
       echo "error: Qtbase installed a non-static target: $forbidden_file" >&2
       exit 1
