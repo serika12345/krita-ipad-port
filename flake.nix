@@ -61,6 +61,7 @@
           eigen-ios
           exiv2-ios
           expat-ios
+          fribidi-ios
           fontconfig-ios
           freetype-ios
           harfbuzz-ios
@@ -86,6 +87,8 @@
           exiv2-consumer-check
           exiv2-ios
           expat-ios
+          fribidi-consumer-check
+          fribidi-ios
           fontconfig-consumer-check
           fontconfig-ios
           freetype-consumer-check

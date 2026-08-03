@@ -90,9 +90,15 @@ toolchain identity, or carries the exact current toolchain identity. Header
 trees reject symlinks, special files, compiled artifacts, and mutations by
 package check hooks before they can enter a target closure. Autoconf cache
 entries are validated strings exported only to `configure`; they are never
-merged into derivation attributes. Autotools pkg-config lookup uses only
-declared target closures, with a private empty directory as the search root when
-a package has no target dependency.
+merged into derivation attributes. Autotools and Meson pkg-config lookups use
+only declared target closures, with a private empty directory as the search
+root when a package has no target dependency. Meson's CMake prefix similarly
+contains only the declared target closure, while native pkg-config and CMake
+search paths are empty. Its `nofallback` wrap mode rejects dependency fallback.
+The Meson cross file deliberately leaves `sys_root` unset. Its separate native
+machine file invokes the Nix compiler with both `SDKROOT` and `DEVELOPER_DIR`
+removed from the compiler commands, while target compilation and linking remain
+fixed to the validated Apple compiler and iPhoneOS SDK.
 
 The restricted daemon settings cannot be changed by an untrusted client or a
 flake. They are installed through the host's nix-darwin configuration. On
@@ -260,6 +266,17 @@ the translation, domain, and plural APIs, and explicitly links the iOS SDK's
 iconv implementation and CoreFoundation. The package and consumer rebuild
 deterministically, while the resulting 17-package aggregate and complete
 18-path target closure restore into an empty local store from the cache.
+
+FriBidi 1.0.16 is the first package using the common Meson target builder. Its
+seven `gen-*` build executables are verified as arm64 macOS binaries, while all
+18 members of `libfribidi.a` are verified against the pinned arm64 iOS
+toolchain contract. The locked feature set keeps deprecated interfaces enabled
+and disables documentation, command-line binaries, and tests; install checks
+also reject manuals and dynamic libraries. A direct-only consumer resolves the
+exact version through Krita's existing `FindFriBidi.cmake` module and calls the
+three FriBidi APIs used by bundled Raqm. The package and consumer rebuild
+deterministically, and the resulting 18-package aggregate and complete 19-path
+target closure restore into an empty local store from the cache.
 
 ## Consequences
 

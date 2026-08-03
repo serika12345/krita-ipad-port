@@ -49,6 +49,10 @@ let
     inherit toolchain;
   };
 
+  mkIOSMesonPackage = pkgs.callPackage ./mk-ios-meson-package.nix {
+    inherit toolchain;
+  };
+
   mkIOSHeaderPackage = pkgs.callPackage ./mk-ios-header-package.nix { };
 
   mkCMakePackageVersion = pkgs.callPackage ./cmake-package-version.nix { };
@@ -229,6 +233,15 @@ let
     inherit libintl-ios mkIOSCMakePackage toolchain;
   };
 
+  fribidi-ios = pkgs.callPackage ./packages/fribidi.nix {
+    inherit mkIOSMesonPackage toolchain;
+    packageSpec = dependencyByName.fribidi;
+  };
+
+  fribidi-consumer-check = pkgs.callPackage ./tests/fribidi-consumer.nix {
+    inherit fribidi-ios mkIOSCMakePackage toolchain;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -254,11 +267,12 @@ let
       zug-ios
       lager-ios
       libintl-ios
+      fribidi-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} ${libintl-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} ${libintl-ios} ${fribidi-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -270,6 +284,8 @@ in
     exiv2-consumer-check
     exiv2-ios
     expat-ios
+    fribidi-consumer-check
+    fribidi-ios
     fontconfig-consumer-check
     fontconfig-ios
     freetype-consumer-check

@@ -39,14 +39,14 @@ plists instead of starting `xcodebuild` inside the sandbox.
 
 The package-by-package Nix migration currently includes zlib, Expat, libpng,
 FreeType, HarfBuzz, Fontconfig, Little CMS, Eigen, xsimd, libunibreak,
-libjpeg-turbo, Exiv2, Boost, Immer, Zug, Lager, and libintl:
+libjpeg-turbo, Exiv2, Boost, Immer, Zug, Lager, libintl, and FriBidi:
 
 ```sh
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios
 ```
 
 Their derivations check the complete Xcode/SDK/compiler contract and validate
@@ -96,6 +96,20 @@ portable iconv and CoreFoundation interfaces into an arm64 iOS executable. The
 17-package aggregate and its complete 18-path closure were restored into an
 empty local store solely from the binary cache.
 
+FriBidi 1.0.16 is the first package using the common Meson target builder.
+Separate native and cross machine files keep its seven table generators on the
+Nix-provided arm64 macOS compiler while fixing the runtime to Apple Clang and
+the iPhoneOS SDK. Dependency fallback and ambient native dependency lookup are
+disabled. The target output retains the public headers, static
+`libfribidi.a`, and `fribidi.pc`, but omits command-line tools, manuals, and
+shared libraries. All 18 archive members and the enabled deprecated-interface
+contract are checked. A direct-only consumer resolves Krita's existing
+`FindFriBidi.cmake` module and calls the same bidi-type, bracket, and paragraph-
+embedding APIs as the bundled Raqm implementation. The package and consumer
+rebuild deterministically. The resulting 18-package aggregate and its complete
+19-path target closure were restored into an empty local store solely from the
+binary cache.
+
 The existing `build-ios/` builders remain authoritative for packages not yet
 migrated.
 
@@ -106,13 +120,13 @@ nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios \
   --no-link --no-substitute
 nix build \
   .#zlib-ios .#expat-ios .#libpng-ios .#freetype-ios \
   .#harfbuzz-ios .#fontconfig-ios .#lcms2-ios .#eigen-ios \
   .#xsimd-ios .#libunibreak-ios .#libjpeg-turbo-ios .#exiv2-ios \
-  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios \
+  .#boost-ios .#immer-ios .#zug-ios .#lager-ios .#libintl-ios .#fribidi-ios \
   --no-link --no-substitute --rebuild
 ```
 

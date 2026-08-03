@@ -399,6 +399,7 @@
       "dependencies": [],
       "cmake_args": [],
       "meson_args": [
+        "-Ddeprecated=true",
         "-Ddocs=false",
         "-Dbin=false",
         "-Dtests=false"
