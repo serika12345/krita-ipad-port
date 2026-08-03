@@ -69,6 +69,24 @@ let
     packageSpec = dependencyByName.eigen;
   };
 
+  xsimd-ios = pkgs.callPackage ./packages/xsimd.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.xsimd;
+  };
+
+  xsimd-consumer-check = pkgs.callPackage ./tests/xsimd-consumer.nix {
+    inherit mkIOSCMakePackage toolchain xsimd-ios;
+  };
+
+  libunibreak-ios = pkgs.callPackage ./packages/libunibreak.nix {
+    inherit mkIOSCMakePackage toolchain;
+    packageSpec = dependencyByName.libunibreak;
+  };
+
+  libunibreak-consumer-check = pkgs.callPackage ./tests/libunibreak-consumer.nix {
+    inherit libunibreak-ios mkIOSCMakePackage toolchain;
+  };
+
   freetype-ios = pkgs.callPackage ./packages/freetype.nix {
     inherit
       libpng-ios
@@ -144,11 +162,13 @@ let
       fontconfig-ios
       lcms2-ios
       eigen-ios
+      xsimd-ios
+      libunibreak-ios
     ];
     postBuild = ''
       mkdir -p "$out/nix-support"
       rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} > "$out/nix-support/propagated-build-inputs"
+      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} > "$out/nix-support/propagated-build-inputs"
     '';
   };
 in
@@ -164,8 +184,12 @@ in
     harfbuzz-consumer-check
     harfbuzz-ios
     lcms2-ios
+    libunibreak-consumer-check
+    libunibreak-ios
     libpng-ios
     toolchain
+    xsimd-consumer-check
+    xsimd-ios
     zlib-ios
     ;
 }

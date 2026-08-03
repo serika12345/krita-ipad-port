@@ -70,6 +70,15 @@ denied. Apple Clang and the SDK work in the strict sandbox without widening the
 host allowlist. Host-side configure, bundling, signing, and installation scripts
 may still use `xcodebuild` outside a Nix build sandbox.
 
+The common builders reserve their phase, fixed-output, network, and impure-host
+attributes so a package recipe cannot weaken that boundary accidentally.
+Package-specific passthru data cannot replace the checked toolchain identity,
+and every member of a propagated target dependency closure must carry the same
+identity. Autoconf cache entries are validated strings exported only to
+`configure`; they are never merged into derivation attributes. Autotools
+pkg-config lookup uses only declared target closures, with a private empty
+directory as the search root when a package has no target dependency.
+
 The restricted daemon settings cannot be changed by an untrusted client or a
 flake. They are installed through the host's nix-darwin configuration. On
 2026-08-03 the active policy was verified with `nix config show`, followed by:
@@ -160,6 +169,18 @@ forces that symbol, the Expat parser, and the FreeType query path into one iOS
 link and checks the exact five-archive closure. A forced rebuild matched the
 existing output, and the five-path closure was restored into an isolated store
 from the local cache.
+
+xsimd 14.3.0 adds a source- and toolchain-keyed header-only package. Its
+consumer uses the installed CMake target to compile a real vector batch for the
+pinned arm64 iOS target, so the absence of an archive does not weaken the target
+contract. libunibreak 7.0 builds through the same repository CMake wrapper used
+by the legacy dependency pipeline. Its consumer resolves
+`libunibreak::libunibreak` through Krita's find module and links the UTF-8 line-
+breaking API, keeping the Nix package aligned with the actual application
+discovery path. Source and forced rebuilds matched for both packages. The
+updated ten-package aggregate and its complete 11-path runtime closure were
+published to the local binary cache, restored into an empty isolated Nix store,
+and recursively verified without access to the primary store.
 
 ## Consequences
 

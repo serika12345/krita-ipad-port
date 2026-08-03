@@ -2,7 +2,6 @@
   expat-ios,
   fontconfig-ios,
   freetype-ios,
-  lib,
   libpng-ios,
   mkIOSCMakePackage,
   pkg-config,
@@ -19,16 +18,8 @@ mkIOSCMakePackage {
   # Fontconfig's propagated Expat/FreeType/zlib/libpng closure to CMake's
   # target-only search roots.
   targetDependencies = [ fontconfig-ios ];
-
-  PKG_CONFIG_PATH = "";
-  PKG_CONFIG_LIBDIR = lib.concatStringsSep ":" [
-    "${fontconfig-ios}/lib/pkgconfig"
-    "${expat-ios}/lib/pkgconfig"
-    "${freetype-ios}/lib/pkgconfig"
-    "${libpng-ios}/lib/pkgconfig"
-    "${zlib-ios}/lib/pkgconfig"
-  ];
-  PKG_CONFIG_SYSROOT_DIR = "";
+  nativeBuildInputs = [ pkg-config ];
+  enableTargetPkgConfig = true;
 
   cmakeFlags = [
     "-DCMAKE_FIND_PACKAGE_PREFER_CONFIG=TRUE"

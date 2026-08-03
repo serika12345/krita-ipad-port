@@ -64,7 +64,9 @@
           harfbuzz-ios
           ios-dependencies
           lcms2-ios
+          libunibreak-ios
           libpng-ios
+          xsimd-ios
           zlib-ios
           ;
       };
@@ -80,7 +82,11 @@
           harfbuzz-consumer-check
           harfbuzz-ios
           lcms2-ios
+          libunibreak-consumer-check
+          libunibreak-ios
           libpng-ios
+          xsimd-consumer-check
+          xsimd-ios
           zlib-ios
           ;
       };

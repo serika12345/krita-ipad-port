@@ -57,6 +57,11 @@ let
       "${dependency}/share/pkgconfig"
     ]) targetDependencyClosure
   );
+  targetPkgConfigLibDir =
+    if targetPkgConfigPath == "" then "$NIX_BUILD_TOP/empty-pkg-config" else targetPkgConfigPath;
+  configureCacheExports = lib.concatStringsSep "\n" (
+    lib.mapAttrsToList (name: value: "export ${name}=${lib.escapeShellArg value}") configureCache
+  );
   validArgumentList = arguments: lib.isList arguments && lib.all lib.isString arguments;
   buildCommands = lib.concatStringsSep "\n" (
     map (target: ''
@@ -66,13 +71,92 @@ let
   installCommands = lib.concatStringsSep "\n" (
     map (target: "make ${lib.escapeShellArgs target}") installTargets
   );
+  reservedConfigureOptions = [
+    "--bindir"
+    "--build"
+    "--cache-file"
+    "--datadir"
+    "--datarootdir"
+    "--docdir"
+    "--dvidir"
+    "--enable-shared"
+    "--enable-static"
+    "--exec-prefix"
+    "--host"
+    "--htmldir"
+    "--includedir"
+    "--infodir"
+    "--libdir"
+    "--libexecdir"
+    "--localedir"
+    "--localstatedir"
+    "--mandir"
+    "--oldincludedir"
+    "--pdfdir"
+    "--prefix"
+    "--psdir"
+    "--runstatedir"
+    "--sbindir"
+    "--sharedstatedir"
+    "--srcdir"
+    "--sysconfdir"
+    "--target"
+    "--disable-shared"
+    "--disable-static"
+  ];
+  reservedConfigureAssignments = [
+    "AR="
+    "CC="
+    "CC_FOR_BUILD="
+    "CFLAGS="
+    "CONFIG_SITE="
+    "CPP="
+    "CPPFLAGS="
+    "CXX="
+    "CXXFLAGS="
+    "DSYMUTIL="
+    "LD="
+    "LDFLAGS="
+    "LIPO="
+    "NM="
+    "NMEDIT="
+    "OBJDUMP="
+    "OTOOL="
+    "PKG_CONFIG="
+    "PKG_CONFIG_DIR="
+    "PKG_CONFIG_LIBDIR="
+    "PKG_CONFIG_PATH="
+    "PKG_CONFIG_SYSROOT_DIR="
+    "RANLIB="
+    "STRIP="
+  ];
+  reservedConfigureFlags = builtins.filter (
+    flag:
+    flag == "-C"
+    || flag == "--config-cache"
+    || lib.any (option: flag == option || lib.hasPrefix "${option}=" flag) reservedConfigureOptions
+    || lib.any (assignment: lib.hasPrefix assignment flag) reservedConfigureAssignments
+  ) configureFlags;
   protectedDerivationAttrs = [
+    "CONFIG_SITE"
     "DEVELOPER_DIR"
     "KRITA_IOS_TOOLCHAIN_IDENTITY"
+    "PKG_CONFIG"
+    "PKG_CONFIG_DIR"
+    "PKG_CONFIG_LIBDIR"
+    "PKG_CONFIG_PATH"
+    "PKG_CONFIG_SYSROOT_DIR"
     "SDKROOT"
     "SOURCE_DATE_EPOCH"
     "ZERO_AR_DATE"
+    "__contentAddressed"
+    "__darwinAllowLocalNetworking"
     "__impureHostDeps"
+    "__noChroot"
+    "__sandboxProfile"
+    "args"
+    "buildInputs"
+    "builder"
     "buildPhase"
     "configurePhase"
     "doInstallCheck"
@@ -82,18 +166,26 @@ let
     "dontInstall"
     "dontInstallCheck"
     "dontPatch"
+    "dontStrip"
     "dontUnpack"
     "enableParallelBuilding"
+    "env"
     "fixupPhase"
     "installCheckPhase"
     "installPhase"
+    "impureEnvVars"
+    "outputHash"
+    "outputHashAlgo"
+    "outputHashMode"
     "outputs"
     "patchPhase"
     "phases"
     "postPhases"
     "prePhases"
     "propagatedBuildInputs"
+    "propagatedNativeBuildInputs"
     "strictDeps"
+    "system"
     "unpackPhase"
   ];
   overriddenProtectedAttrs = builtins.filter (
@@ -102,23 +194,34 @@ let
 in
 assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
   "iOS target dependencies must all be derivations";
-assert lib.assertMsg (lib.all (
-  dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity
-) targetDependencies) "iOS target dependencies must use the same pinned toolchain identity";
+assert lib.assertMsg (lib.all
+  (dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity)
+  targetDependencyClosure
+) "iOS target dependency closures must use the same pinned toolchain identity";
 assert lib.assertMsg (overriddenProtectedAttrs == [ ])
   "iOS Autotools packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
 assert lib.assertMsg (lib.all lib.isString configureFlags)
   "Autotools configureFlags must all be strings";
+assert lib.assertMsg (reservedConfigureFlags == [ ])
+  "iOS Autotools packages may not override reserved configure options: ${lib.concatStringsSep ", " reservedConfigureFlags}";
 assert lib.assertMsg (lib.all validArgumentList makeTargets)
   "Autotools makeTargets must be a list of argument lists";
 assert lib.assertMsg (lib.all validArgumentList installTargets)
   "Autotools installTargets must be a list of argument lists";
-assert lib.assertMsg (lib.all (name: builtins.match "[A-Za-z_][A-Za-z0-9_]*" name != null) (
-  lib.attrNames configureCache
-)) "Autotools configureCache keys must be shell variable names";
+assert lib.assertMsg (lib.all
+  (name: builtins.match "[A-Za-z][A-Za-z0-9]*_cv_[A-Za-z0-9_]+" name != null)
+  (lib.attrNames configureCache)
+) "Autotools configureCache keys must use an Autoconf *_cv_* cache namespace";
+assert lib.assertMsg (lib.all lib.isString (
+  lib.attrValues configureCache
+)) "Autotools configureCache values must all be strings";
+assert lib.assertMsg (lib.all lib.isDerivation nativeBuildInputs)
+  "iOS Autotools nativeBuildInputs must all be derivations";
+assert lib.assertMsg (lib.all lib.isDerivation nativeInstallCheckInputs)
+  "iOS Autotools nativeInstallCheckInputs must all be derivations";
+assert lib.assertMsg (lib.isAttrs passthru) "iOS Autotools passthru must be an attribute set";
 stdenvNoCC.mkDerivation (
-  configureCache
-  // {
+  {
     inherit
       pname
       version
@@ -236,11 +339,14 @@ stdenvNoCC.mkDerivation (
       export PKG_CONFIG="${pkg-config}/bin/pkg-config"
       export PKG_CONFIG_PATH=
       export PKG_CONFIG_DIR=
-      export PKG_CONFIG_LIBDIR="${targetPkgConfigPath}"
+      mkdir -p "$NIX_BUILD_TOP/empty-pkg-config"
+      export PKG_CONFIG_LIBDIR="${targetPkgConfigLibDir}"
       export PKG_CONFIG_SYSROOT_DIR=
     '';
 
     configurePhase = ''
+      ${configureCacheExports}
+
       runHook preConfigure
 
       ${lib.escapeShellArg configureScript} \
@@ -352,11 +458,10 @@ stdenvNoCC.mkDerivation (
       runHook postInstallCheck
     '';
 
-    passthru = {
+    passthru = passthru // {
       iosToolchainIdentity = toolchain.identity;
       iosTargetDependencyClosure = targetDependencyClosure;
-    }
-    // passthru;
+    };
 
     meta = {
       platforms = [ "aarch64-darwin" ];

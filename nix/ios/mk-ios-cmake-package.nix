@@ -18,6 +18,10 @@
   src,
   patches ? [ ],
   cmakeFlags ? [ ],
+  enableTargetPkgConfig ? false,
+  nativeBuildInputs ? [ ],
+  nativeInstallCheckInputs ? [ ],
+  passthru ? { },
   requiredPaths ? [ ],
   staticArchives ? [ ],
   targetDependencies ? [ ],
@@ -37,13 +41,91 @@ let
     }
   );
   targetRootPath = lib.concatStringsSep ";" (map toString targetDependencyClosure);
+  targetPkgConfigPath = lib.concatStringsSep ":" (
+    lib.concatMap (dependency: [
+      "${dependency}/lib/pkgconfig"
+      "${dependency}/share/pkgconfig"
+    ]) targetDependencyClosure
+  );
+  targetPkgConfigLibDir =
+    if targetPkgConfigPath == "" then "$NIX_BUILD_TOP/empty-pkg-config" else targetPkgConfigPath;
+  reservedCMakeVariables = [
+    "CMAKE_AR"
+    "CMAKE_BUILD_TYPE"
+    "CMAKE_CXX_COMPILER"
+    "CMAKE_CXX_FLAGS"
+    "CMAKE_C_COMPILER"
+    "CMAKE_C_FLAGS"
+    "CMAKE_EXE_LINKER_FLAGS"
+    "CMAKE_FIND_ROOT_PATH"
+    "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE"
+    "CMAKE_FIND_ROOT_PATH_MODE_LIBRARY"
+    "CMAKE_FIND_ROOT_PATH_MODE_PACKAGE"
+    "CMAKE_FIND_ROOT_PATH_MODE_PROGRAM"
+    "CMAKE_INSTALL_BINDIR"
+    "CMAKE_INSTALL_DATADIR"
+    "CMAKE_INSTALL_DOCDIR"
+    "CMAKE_INSTALL_INCLUDEDIR"
+    "CMAKE_INSTALL_LIBDIR"
+    "CMAKE_INSTALL_LIBEXECDIR"
+    "CMAKE_INSTALL_LOCALEDIR"
+    "CMAKE_INSTALL_MANDIR"
+    "CMAKE_INSTALL_PREFIX"
+    "CMAKE_INSTALL_SBINDIR"
+    "CMAKE_OSX_ARCHITECTURES"
+    "CMAKE_OSX_DEPLOYMENT_TARGET"
+    "CMAKE_OSX_SYSROOT"
+    "CMAKE_POSITION_INDEPENDENT_CODE"
+    "CMAKE_PREFIX_PATH"
+    "CMAKE_RANLIB"
+    "CMAKE_SHARED_LINKER_FLAGS"
+    "CMAKE_STATIC_LINKER_FLAGS"
+    "CMAKE_STRIP"
+    "CMAKE_SYSTEM_NAME"
+    "CMAKE_SYSTEM_PROCESSOR"
+    "CMAKE_TOOLCHAIN_FILE"
+    "CMAKE_TRY_COMPILE_TARGET_TYPE"
+  ];
+  cmakeDefinitionName =
+    flag:
+    let
+      match = builtins.match "-D([^:=]+)(:[^=]+)?=.*" flag;
+    in
+    if match == null then null else builtins.elemAt match 0;
+  overriddenCMakeVariables = builtins.filter (
+    name: name != null && builtins.elem name reservedCMakeVariables
+  ) (map cmakeDefinitionName cmakeFlags);
+  reservedCMakeFlagForms = builtins.filter (
+    flag:
+    flag == "-D"
+    || lib.hasPrefix "-C" flag
+    || lib.hasPrefix "-G" flag
+    || lib.hasPrefix "-S" flag
+    || lib.hasPrefix "-B" flag
+    || lib.hasPrefix "-U" flag
+    || lib.hasPrefix "@" flag
+    || lib.hasPrefix "--toolchain" flag
+    || lib.hasPrefix "--install-prefix" flag
+    || lib.hasPrefix "--preset" flag
+  ) cmakeFlags;
   protectedDerivationAttrs = [
     "DEVELOPER_DIR"
     "KRITA_IOS_TOOLCHAIN_IDENTITY"
+    "PKG_CONFIG"
+    "PKG_CONFIG_DIR"
+    "PKG_CONFIG_LIBDIR"
+    "PKG_CONFIG_PATH"
+    "PKG_CONFIG_SYSROOT_DIR"
     "SDKROOT"
     "SOURCE_DATE_EPOCH"
     "ZERO_AR_DATE"
+    "__contentAddressed"
+    "__darwinAllowLocalNetworking"
     "__impureHostDeps"
+    "__noChroot"
+    "__sandboxProfile"
+    "args"
+    "buildInputs"
     "buildPhase"
     "configurePhase"
     "doInstallCheck"
@@ -53,11 +135,17 @@ let
     "dontInstall"
     "dontInstallCheck"
     "dontPatch"
+    "dontStrip"
     "dontUnpack"
     "enableParallelBuilding"
+    "env"
     "fixupPhase"
     "installCheckPhase"
     "installPhase"
+    "impureEnvVars"
+    "outputHash"
+    "outputHashAlgo"
+    "outputHashMode"
     "outputs"
     "patchPhase"
     "phases"
@@ -65,8 +153,11 @@ let
     "preConfigure"
     "prePhases"
     "propagatedBuildInputs"
+    "propagatedNativeBuildInputs"
     "strictDeps"
+    "system"
     "unpackPhase"
+    "builder"
   ];
   overriddenProtectedAttrs = builtins.filter (
     name: builtins.hasAttr name args
@@ -74,11 +165,24 @@ let
 in
 assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
   "iOS target dependencies must all be derivations";
-assert lib.assertMsg (lib.all (
-  dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity
-) targetDependencies) "iOS target dependencies must use the same pinned toolchain identity";
+assert lib.assertMsg (lib.all
+  (dependency: (dependency.iosToolchainIdentity or null) == toolchain.identity)
+  targetDependencyClosure
+) "iOS target dependency closures must use the same pinned toolchain identity";
 assert lib.assertMsg (overriddenProtectedAttrs == [ ])
   "iOS CMake packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
+assert lib.assertMsg (lib.all lib.isString cmakeFlags) "iOS CMake cmakeFlags must all be strings";
+assert lib.assertMsg (overriddenCMakeVariables == [ ])
+  "iOS CMake packages may not override reserved cache variables: ${lib.concatStringsSep ", " overriddenCMakeVariables}";
+assert lib.assertMsg (reservedCMakeFlagForms == [ ])
+  "iOS CMake packages may not use reserved command flag forms: ${lib.concatStringsSep ", " reservedCMakeFlagForms}";
+assert lib.assertMsg (lib.all lib.isDerivation nativeBuildInputs)
+  "iOS CMake nativeBuildInputs must all be derivations";
+assert lib.assertMsg (lib.all lib.isDerivation nativeInstallCheckInputs)
+  "iOS CMake nativeInstallCheckInputs must all be derivations";
+assert lib.assertMsg (lib.isAttrs passthru) "iOS CMake passthru must be an attribute set";
+assert lib.assertMsg (lib.isBool enableTargetPkgConfig)
+  "iOS CMake enableTargetPkgConfig must be a boolean";
 stdenvNoCC.mkDerivation (
   {
     inherit
@@ -98,14 +202,16 @@ stdenvNoCC.mkDerivation (
       gawk
       gnused
       ninja
-    ];
+    ]
+    ++ nativeBuildInputs;
 
     nativeInstallCheckInputs = [
       coreutils
       file
       findutils
       gnugrep
-    ];
+    ]
+    ++ nativeInstallCheckInputs;
 
     # Static target dependencies must remain in the output closure so an
     # individual package can be cached and consumed without a mutable prefix.
@@ -165,6 +271,15 @@ stdenvNoCC.mkDerivation (
       export SOURCE_DATE_EPOCH=1
       export CFLAGS="-ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build"
       export CXXFLAGS="$CFLAGS"
+    ''
+    + lib.optionalString enableTargetPkgConfig ''
+      # CMake may invoke pkg-config only against the declared iOS target
+      # closure. An SDK sysroot must not prefix Nix store paths.
+      export PKG_CONFIG_PATH=
+      export PKG_CONFIG_DIR=
+      mkdir -p "$NIX_BUILD_TOP/empty-pkg-config"
+      export PKG_CONFIG_LIBDIR="${targetPkgConfigLibDir}"
+      export PKG_CONFIG_SYSROOT_DIR=
     '';
 
     cmakeFlags = [
@@ -287,7 +402,7 @@ stdenvNoCC.mkDerivation (
       runHook postInstallCheck
     '';
 
-    passthru = {
+    passthru = passthru // {
       iosToolchainIdentity = toolchain.identity;
       iosTargetDependencyClosure = targetDependencyClosure;
     };
@@ -299,7 +414,11 @@ stdenvNoCC.mkDerivation (
   }
   // removeAttrs args [
     "cmakeFlags"
+    "enableTargetPkgConfig"
     "meta"
+    "nativeBuildInputs"
+    "nativeInstallCheckInputs"
+    "passthru"
     "requiredPaths"
     "staticArchives"
     "targetDependencies"
