@@ -1,10 +1,104 @@
 {
   "schema": 1,
+  "frameworks_version": "6.28.0",
+  "target_defaults": {
+    "qt_version": "6.11.1",
+    "sdk_lock": {
+      "name": "iphoneos",
+      "cmake_cache_value": "iphoneos",
+      "allow_absolute_path": false
+    },
+    "languages": [
+      "C",
+      "CXX",
+      "OBJC",
+      "OBJCXX"
+    ],
+    "cache_string_locks": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_SYSTEM_NAME": "iOS",
+      "CMAKE_OSX_ARCHITECTURES": "arm64",
+      "CMAKE_OSX_DEPLOYMENT_TARGET": "17.0",
+      "CMAKE_OSX_SYSROOT": "iphoneos",
+      "KDE_INSTALL_LIBDIR": "lib",
+      "KDE_INSTALL_LIBEXECDIR": "libexec",
+      "KDE_INSTALL_INCLUDEDIR": "include"
+    },
+    "cache_boolean_locks": {
+      "BUILD_COVERAGE": false,
+      "BUILD_DESIGNERPLUGIN": false,
+      "BUILD_PYTHON_BINDINGS": false,
+      "BUILD_QCH": false,
+      "BUILD_SHARED_LIBS": false,
+      "BUILD_TESTING": false,
+      "BUILD_WITH_QT6": true,
+      "ENABLE_CLAZY": false,
+      "KDE_INSTALL_USE_QT_SYS_PATHS": false,
+      "KF_IGNORE_PLATFORM_CHECK": true,
+      "KF_SKIP_PO_PROCESSING": false
+    },
+    "host_inputs": {
+      "ecm": {
+        "flake_attr": "host-ecm",
+        "version": "6.28.0"
+      },
+      "gettext": {
+        "nixpkgs_attr": "gettext",
+        "version": "1.0"
+      },
+      "python3": {
+        "nixpkgs_attr": "python3",
+        "version": "3.14.6"
+      },
+      "qtbase": {
+        "flake_attr": "host-qtbase",
+        "version": "6.11.1"
+      },
+      "qttools": {
+        "flake_attr": "host-qttools",
+        "version": "6.11.1"
+      }
+    },
+    "forbidden": {
+      "paths": [
+        "bin",
+        "libexec",
+        "qml"
+      ],
+      "path_globs": [
+        "**/*.app",
+        "**/*.dylib",
+        "**/*.framework",
+        "**/*.so",
+        "**/*.so.*",
+        "doc/**",
+        "examples/**",
+        "tests/**"
+      ],
+      "reference_literals": [
+        "/Applications/Xcode.app"
+      ],
+      "reference_patterns": [
+        "/Users/[^/]+/",
+        "/private/tmp/nix-build-[^/]+/",
+        "/tmp/nix-build-[^/]+/",
+        "build-ios/"
+      ],
+      "reference_environment_values": [
+        "NIX_BUILD_TOP"
+      ]
+    }
+  },
   "packages": [
     {
       "name": "ecm",
       "version": "6.28.0",
       "source_flake_attr": "source-ecm",
+      "source": {
+        "flake_attr": "source-ecm",
+        "archive_name": "extra-cmake-modules-6.28.0.tar.xz",
+        "archive_sha256": "a32e24b267e8528d0253bc8df18bdc00e676560a43b796533e1b1406f4eef4db"
+      },
       "host_only": true,
       "dependencies": [],
       "cmake_args": [
@@ -14,12 +108,43 @@
       ],
       "required_paths": [
         "share/ECM/cmake/ECMConfig.cmake"
-      ]
+      ],
+      "configure_locks": {
+        "cache_boolean_locks": {
+          "BUILD_HTML_DOCS": false,
+          "BUILD_MAN_DOCS": false,
+          "BUILD_QTHELP_DOCS": false
+        }
+      },
+      "artifact_contract": {
+        "install_manifest": {
+          "relative_path_count": 132,
+          "sorted_relative_path_sha256": "cde980c9671b23da4f00ac8e1ba91356182973fc5f30ab2768140909333ead89"
+        },
+        "required_paths": [
+          "share/ECM/cmake/ECMConfig.cmake",
+          "share/ECM/kde-modules/KDEFrameworkCompilerSettings.cmake",
+          "share/ECM/kde-modules/KDEInstallDirs6.cmake",
+          "share/ECM/modules/ECMGenerateHeaders.cmake",
+          "share/ECM/modules/ECMPoQmTools.cmake",
+          "share/ECM/modules/ECMQtDeclareLoggingCategory.cmake"
+        ],
+        "forbidden_path_globs": [
+          "**/*.html",
+          "**/*.qch",
+          "man/**"
+        ]
+      }
     },
     {
       "name": "kconfig",
       "version": "6.28.0",
       "source_flake_attr": "source-kconfig",
+      "source": {
+        "flake_attr": "source-kconfig",
+        "archive_name": "kconfig-6.28.0.tar.xz",
+        "archive_sha256": "24e26e516b7904a26661eab7d2064bee1ac57165571e85b4da6020fd36f14322"
+      },
       "patches": [
         "packaging/ios/frameworks/patches/kconfig-ios-no-tools.patch"
       ],
@@ -36,13 +161,94 @@
         "lib/libKF6ConfigGui.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6Config/KF6ConfigConfig.cmake"
-      ]
+        "include/KF6/KConfigGui/kconfigguistaticinitializer.cpp",
+        "lib/cmake/KF6Config/KF6ConfigConfig.cmake",
+        "lib/cmake/KF6Config/KF6ConfigTargets.cmake",
+        "metatypes/qt6kf6configcore_metatypes.json",
+        "metatypes/qt6kf6configgui_metatypes.json"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/cmake_automoc_parser",
+          "qtbase/libexec/moc",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui",
+          "Xml"
+        ],
+        "cache_boolean_locks": {
+          "KCONFIG_USE_GUI": true,
+          "KCONFIG_USE_QML": false,
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false,
+          "USE_DBUS": false
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 2,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6ConfigCore.a",
+          "lib/libKF6ConfigGui.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::ConfigCore",
+          "KF6::ConfigGui"
+        ],
+        "install_manifest": {
+          "relative_path_count": 150,
+          "sorted_relative_path_sha256": "69c04983f84f9bc007e45776275f2b35d43105249f6ac2abee7157a015c5abdb"
+        },
+        "translation_inventory": {
+          "relative_path_count": 97,
+          "sorted_relative_path_sha256": "9a19c7826bac1013326268a480c7b0d1aefce04a6a6d7f93bae44fa2619cf702",
+          "file_counts_by_extension": {
+            "qm": 97
+          }
+        },
+        "required_interface_sources": [
+          "include/KF6/KConfigGui/kconfigguistaticinitializer.cpp",
+          "metatypes/qt6kf6configcore_metatypes.json",
+          "metatypes/qt6kf6configgui_metatypes.json"
+        ],
+        "forbidden_paths": [
+          "lib/cmake/KF6Config/KF6ConfigCompilerTargets.cmake",
+          "lib/cmake/KF6Config/KF6ConfigCompilerTargets-release.cmake",
+          "lib/libKF6ConfigQml.a"
+        ]
+      }
     },
     {
       "name": "kwidgetsaddons",
       "version": "6.28.0",
       "source_flake_attr": "source-kwidgetsaddons",
+      "source": {
+        "flake_attr": "source-kwidgetsaddons",
+        "archive_name": "kwidgetsaddons-6.28.0.tar.xz",
+        "archive_sha256": "6bb6a22e40bc8cfaeda08276b771488294ad417e7802b27bdc455202afdabd7d"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -51,13 +257,81 @@
         "lib/libKF6WidgetsAddons.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6WidgetsAddons/KF6WidgetsAddonsConfig.cmake"
-      ]
+        "lib/cmake/KF6WidgetsAddons/KF6WidgetsAddonsConfig.cmake",
+        "lib/cmake/KF6WidgetsAddons/KF6WidgetsAddonsTargets.cmake",
+        "lib/objects-Release/KF6WidgetsAddons_resources_1/.qt/rcc/qrc_kcharselect-data_init.cpp.o"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/moc",
+          "qtbase/libexec/rcc",
+          "qtbase/libexec/uic",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui",
+          "Widgets"
+        ],
+        "cache_boolean_locks": {
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 1
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6WidgetsAddons.a"
+        ],
+        "standalone_objects": [
+          "lib/objects-Release/KF6WidgetsAddons_resources_1/.qt/rcc/qrc_kcharselect-data_init.cpp.o"
+        ],
+        "cmake_targets": [
+          "KF6::WidgetsAddons",
+          "KF6::KF6WidgetsAddons_resources_1"
+        ],
+        "install_manifest": {
+          "relative_path_count": 278,
+          "sorted_relative_path_sha256": "cbbe49601a4e3a7ad457ff26eb27e4e6bdb14415307cecc5eca1b867fa3bee0b"
+        },
+        "translation_inventory": {
+          "relative_path_count": 102,
+          "sorted_relative_path_sha256": "96d391fd6843f1960816efa8a1d0ac3c96e5c21603905cd15376b97467bfec3a",
+          "file_counts_by_extension": {
+            "qm": 102
+          }
+        }
+      }
     },
     {
       "name": "kcodecs",
       "version": "6.28.0",
       "source_flake_attr": "source-kcodecs",
+      "source": {
+        "flake_attr": "source-kcodecs",
+        "archive_name": "kcodecs-6.28.0.tar.xz",
+        "archive_sha256": "b0a9ae34b389c6460adad5323d21bb9e43638acb58da9685f8dc8d821c38a4d8"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -66,13 +340,74 @@
         "lib/libKF6Codecs.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6Codecs/KF6CodecsConfig.cmake"
-      ]
+        "lib/cmake/KF6Codecs/KF6CodecsConfig.cmake",
+        "lib/cmake/KF6Codecs/KF6CodecsTargets.cmake"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/moc",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core"
+        ],
+        "cache_boolean_locks": {
+          "BUILD_FUZZERS": false,
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6Codecs.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::Codecs"
+        ],
+        "install_manifest": {
+          "relative_path_count": 119,
+          "sorted_relative_path_sha256": "1571eec3027e6e4d2018745258ee4f3e6dc0bc05fda3ee5aa5a9c7e040ed52f1"
+        },
+        "translation_inventory": {
+          "relative_path_count": 102,
+          "sorted_relative_path_sha256": "44f1d4e395f54a115cd978e201393ed24460fc35adfa5190d282f11c4df2c6a4",
+          "file_counts_by_extension": {
+            "qm": 102
+          }
+        }
+      }
     },
     {
       "name": "kcompletion",
       "version": "6.28.0",
       "source_flake_attr": "source-kcompletion",
+      "source": {
+        "flake_attr": "source-kcompletion",
+        "archive_name": "kcompletion-6.28.0.tar.xz",
+        "archive_sha256": "8aa9cbc36139adfa8e3b2c744cc94714afe154d21cef8a3a2d5f4d311be7cc3c"
+      },
       "dependencies": [
         "kcodecs",
         "kconfig",
@@ -83,13 +418,79 @@
         "lib/libKF6Completion.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6Completion/KF6CompletionConfig.cmake"
-      ]
+        "lib/cmake/KF6Completion/KF6CompletionConfig.cmake",
+        "lib/cmake/KF6Completion/KF6CompletionTargets.cmake"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [
+          "kcodecs",
+          "kconfig",
+          "kwidgetsaddons"
+        ],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/moc",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui",
+          "Widgets"
+        ],
+        "cache_boolean_locks": {
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6Completion.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::Completion"
+        ],
+        "install_manifest": {
+          "relative_path_count": 128,
+          "sorted_relative_path_sha256": "e9f890e6c797af81f0ea339999d851b0cf58478d541ac10759e604aa5446a9e0"
+        },
+        "translation_inventory": {
+          "relative_path_count": 102,
+          "sorted_relative_path_sha256": "e6e16053685769afbae580ea31c8a2d88bd72eaa2af055714210d9f0db844f5a",
+          "file_counts_by_extension": {
+            "qm": 102
+          }
+        }
+      }
     },
     {
       "name": "kcoreaddons",
       "version": "6.28.0",
       "source_flake_attr": "source-kcoreaddons",
+      "source": {
+        "flake_attr": "source-kcoreaddons",
+        "archive_name": "kcoreaddons-6.28.0.tar.xz",
+        "archive_sha256": "a713febee2f43bc31986d6c27d846ccab556fc7bc7c1919c3a662495720b431a"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -103,13 +504,94 @@
         "lib/libKF6CoreAddons.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake"
-      ]
+        "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake",
+        "lib/cmake/KF6CoreAddons/KF6CoreAddonsTargets.cmake",
+        "lib/pkgconfig/KF6CoreAddons.pc",
+        "metatypes/qt6kf6coreaddons_metatypes.json",
+        "share/kf6/jsonschema/kpluginmetadata.schema.json",
+        "share/mime/packages/kde6.xml"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/cmake_automoc_parser",
+          "qtbase/libexec/moc",
+          "qtbase/libexec/rcc",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core"
+        ],
+        "cache_boolean_locks": {
+          "ENABLE_INOTIFY": false,
+          "ENABLE_PCH": false,
+          "KCOREADDONS_USE_QML": false,
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false,
+          "USE_DBUS": false
+        },
+        "feature_locks": {
+          "disabled": [
+            "dbus",
+            "inotify",
+            "libmount",
+            "procstat",
+            "python_bindings",
+            "qml",
+            "udev"
+          ]
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6CoreAddons.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::CoreAddons"
+        ],
+        "install_manifest": {
+          "relative_path_count": 199,
+          "sorted_relative_path_sha256": "0ef957fac03b7362a745f3cedabd31060c2c95c4330154151803f04fefc659e3"
+        },
+        "translation_inventory": {
+          "relative_path_count": 112,
+          "sorted_relative_path_sha256": "36c17b32eb1a30cbe40d81588f6a16684257ea8ea63c60d622f0c99c55add269",
+          "file_counts_by_extension": {
+            "qm": 112
+          }
+        }
+      }
     },
     {
       "name": "kguiaddons",
       "version": "6.28.0",
       "source_flake_attr": "source-kguiaddons",
+      "source": {
+        "flake_attr": "source-kguiaddons",
+        "archive_name": "kguiaddons-6.28.0.tar.xz",
+        "archive_sha256": "f46aeca80707e774fcffe8aa82e464a81056ce84f613347a5c9cc24c1c9a8432"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -121,13 +603,83 @@
         "lib/libKF6GuiAddons.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6GuiAddons/KF6GuiAddonsConfig.cmake"
-      ]
+        "lib/cmake/KF6GuiAddons/KF6GuiAddonsConfig.cmake",
+        "lib/cmake/KF6GuiAddons/KF6GuiAddonsTargets.cmake",
+        "lib/pkgconfig/KF6GuiAddons.pc",
+        "metatypes/qt6kf6guiaddons_metatypes.json"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/cmake_automoc_parser",
+          "qtbase/libexec/moc"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui"
+        ],
+        "cache_boolean_locks": {
+          "BUILD_GEO_SCHEME_HANDLER": false,
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false,
+          "USE_DBUS": false
+        },
+        "feature_locks": {
+          "disabled": [
+            "dbus",
+            "geo_scheme_handler",
+            "python_bindings",
+            "wayland",
+            "x11"
+          ]
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6GuiAddons.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::GuiAddons"
+        ],
+        "install_manifest": {
+          "relative_path_count": 46,
+          "sorted_relative_path_sha256": "b507a87f0f22a2a7b2b365194f4b4e4de2bba3c0f24635112af51608a355cb6b"
+        },
+        "translation_inventory": {
+          "relative_path_count": 0,
+          "sorted_relative_path_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "file_counts_by_extension": {}
+        }
+      }
     },
     {
       "name": "ki18n",
       "version": "6.28.0",
       "source_flake_attr": "source-ki18n",
+      "source": {
+        "flake_attr": "source-ki18n",
+        "archive_name": "ki18n-6.28.0.tar.xz",
+        "archive_sha256": "820ce5858c6db732d68da53572a0e7db8353e4372d2122debcfb0f9ff10b85db"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -135,16 +687,114 @@
         "-DBUILD_WITH_QML=OFF"
       ],
       "artifacts": [
-        "lib/libKF6I18n.a"
+        "lib/libKF6I18n.a",
+        "lib/libKF6I18nLocaleData.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6I18n/KF6I18nConfig.cmake"
-      ]
+        "lib/cmake/KF6I18n/KF6I18nConfig.cmake",
+        "lib/cmake/KF6I18n/KF6I18nMacros.cmake",
+        "lib/cmake/KF6I18n/KF6I18nTargets.cmake",
+        "lib/cmake/KF6I18n/build-pofiles.cmake",
+        "lib/cmake/KF6I18n/build-tsfiles.cmake",
+        "lib/cmake/KF6I18n/kf6i18nuic.cmake",
+        "lib/cmake/KF6I18n/ts-pmap-compile.py"
+      ],
+      "nix_dependencies": {
+        "target_packages": [
+          "libintl"
+        ],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "gettext",
+          "python3",
+          "qtbase"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "gettext/bin/msgfmt",
+          "gettext/bin/msgmerge",
+          "python3/bin/python3",
+          "qtbase/libexec/moc"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core"
+        ],
+        "optional_qt_components": [
+          "Widgets"
+        ],
+        "cache_string_locks": {
+          "FALLBACK_KI18N_PYTHON_EXECUTABLE": "python3"
+        },
+        "cache_boolean_locks": {
+          "BUILD_WITH_QML": false,
+          "KI18N_EMBEDDED_ISO_CODES_CACHE": false
+        },
+        "feature_locks": {
+          "enabled": [
+            "libintl",
+            "translations"
+          ],
+          "disabled": [
+            "embedded_iso_codes_cache",
+            "qml"
+          ]
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 2,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6I18n.a",
+          "lib/libKF6I18nLocaleData.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::I18n",
+          "KF6::I18nLocaleData"
+        ],
+        "install_manifest": {
+          "relative_path_count": 163,
+          "sorted_relative_path_sha256": "0f99cc91fdabb1c2aeeaa3615453e40bd56589fd1301ad072adc853de4b359f0"
+        },
+        "translation_inventory": {
+          "relative_path_count": 129,
+          "sorted_relative_path_sha256": "09ca0bbb501587bc0d22b7850d224c9c9df0666451d99c76d2ce21b989f1dd32",
+          "file_counts_by_extension": {
+            "js": 14,
+            "mo": 103,
+            "pmap": 6,
+            "pmapc": 6
+          }
+        },
+        "required_build_macros": [
+          "lib/cmake/KF6I18n/KF6I18nMacros.cmake",
+          "lib/cmake/KF6I18n/build-pofiles.cmake",
+          "lib/cmake/KF6I18n/build-tsfiles.cmake",
+          "lib/cmake/KF6I18n/kf6i18nuic.cmake",
+          "lib/cmake/KF6I18n/ts-pmap-compile.py"
+        ]
+      }
     },
     {
       "name": "kitemviews",
       "version": "6.28.0",
       "source_flake_attr": "source-kitemviews",
+      "source": {
+        "flake_attr": "source-kitemviews",
+        "archive_name": "kitemviews-6.28.0.tar.xz",
+        "archive_sha256": "2b474a0a0ca1d59111ab864d4f05100e0056b5204d52dfbab6776ca0fbfdd402"
+      },
       "dependencies": [
         "ecm"
       ],
@@ -153,13 +803,80 @@
         "lib/libKF6ItemViews.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6ItemViews/KF6ItemViewsConfig.cmake"
-      ]
+        "lib/cmake/KF6ItemViews/KF6ItemViewsConfig.cmake",
+        "lib/cmake/KF6ItemViews/KF6ItemViewsTargets.cmake"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [],
+        "native_tools": [
+          "ecm",
+          "qtbase",
+          "qttools"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "qtbase/libexec/moc",
+          "qttools/bin/lconvert",
+          "qttools/bin/lrelease"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui",
+          "Widgets"
+        ],
+        "cache_boolean_locks": {
+          "KDE_L10N_AUTO_TRANSLATIONS": false,
+          "KDE_L10N_SYNC_TRANSLATIONS": false
+        },
+        "feature_locks": {
+          "disabled": [
+            "designer_plugin"
+          ]
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 0
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6ItemViews.a"
+        ],
+        "standalone_objects": [],
+        "cmake_targets": [
+          "KF6::ItemViews"
+        ],
+        "install_manifest": {
+          "relative_path_count": 126,
+          "sorted_relative_path_sha256": "a3c4d11ac73f49471bca4438eeaf74176595d63ed2e0c2916c59ab5b439ea706"
+        },
+        "translation_inventory": {
+          "relative_path_count": 102,
+          "sorted_relative_path_sha256": "10901afe6bdbcf6e3dc4e4d58a21c85e30af2b5bae3d38bf37236927a11b6541",
+          "file_counts_by_extension": {
+            "qm": 102
+          }
+        }
+      }
     },
     {
       "name": "kcolorscheme",
       "version": "6.28.0",
       "source_flake_attr": "source-kcolorscheme",
+      "source": {
+        "flake_attr": "source-kcolorscheme",
+        "archive_name": "kcolorscheme-6.28.0.tar.xz",
+        "archive_sha256": "129c98fd9ba3428cafbd7263557a9ea47c0d4f157b8a5f56b209a95dc9815e6a"
+      },
       "dependencies": [
         "kconfig",
         "kguiaddons",
@@ -170,8 +887,80 @@
         "lib/libKF6ColorScheme.a"
       ],
       "required_paths": [
-        "lib/cmake/KF6ColorScheme/KF6ColorSchemeConfig.cmake"
-      ]
+        "lib/cmake/KF6ColorScheme/KF6ColorSchemeConfig.cmake",
+        "lib/cmake/KF6ColorScheme/KF6ColorSchemeTargets.cmake",
+        "lib/objects-Release/KF6ColorScheme_resources_1/.qt/rcc/qrc_color_schemes_init.cpp.o"
+      ],
+      "nix_dependencies": {
+        "target_packages": [],
+        "qt_modules": [
+          "qtbase"
+        ],
+        "frameworks": [
+          "kconfig",
+          "kguiaddons",
+          "ki18n"
+        ],
+        "native_tools": [
+          "ecm",
+          "gettext",
+          "python3",
+          "qtbase"
+        ]
+      },
+      "host_tools": {
+        "executables": [
+          "gettext/bin/msgfmt",
+          "gettext/bin/msgmerge",
+          "python3/bin/python3",
+          "qtbase/libexec/moc",
+          "qtbase/libexec/rcc"
+        ]
+      },
+      "configure_locks": {
+        "required_qt_components": [
+          "Core",
+          "Gui",
+          "GuiPrivate"
+        ],
+        "feature_locks": {
+          "enabled": [
+            "translations"
+          ],
+          "disabled": [
+            "designer_plugin"
+          ]
+        }
+      },
+      "artifact_contract": {
+        "expected_counts": {
+          "static_archives": 1,
+          "standalone_objects": 1
+        },
+        "exact_static_archive_set": true,
+        "exact_standalone_object_set": true,
+        "static_archives": [
+          "lib/libKF6ColorScheme.a"
+        ],
+        "standalone_objects": [
+          "lib/objects-Release/KF6ColorScheme_resources_1/.qt/rcc/qrc_color_schemes_init.cpp.o"
+        ],
+        "cmake_targets": [
+          "KF6::ColorScheme",
+          "KF6::KF6ColorScheme_resources_1"
+        ],
+        "install_manifest": {
+          "relative_path_count": 62,
+          "sorted_relative_path_sha256": "4afaca87e81a34ae345544a6561ed37eeeb9defcbe66ee5c49b32208374ecbbc"
+        },
+        "translation_inventory": {
+          "relative_path_count": 45,
+          "sorted_relative_path_sha256": "f4691492a53e9e26862872387bab991d588188249d67a96113eff922bf2369d0",
+          "file_counts_by_extension": {
+            "mo": 45
+          }
+        }
+      }
     }
   ]
 }
