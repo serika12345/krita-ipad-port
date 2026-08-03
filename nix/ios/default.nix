@@ -297,6 +297,18 @@ let
     qtXcrunShim = qt-xcrun-shim;
   };
 
+  quazip-ios = pkgs.callPackage ./packages/quazip.nix {
+    inherit
+      mkIOSCMakePackage
+      qt5compat-ios
+      qtbase-ios
+      toolchain
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.quazip;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -364,6 +376,7 @@ in
     qtbase-ios
     qtsvg-ios
     qt-xcrun-shim
+    quazip-ios
     toolchain
     xsimd-consumer-check
     xsimd-ios

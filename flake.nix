@@ -78,6 +78,7 @@
           qtbase-ios
           qtsvg-ios
           qt-xcrun-shim
+          quazip-ios
           xsimd-ios
           zlib-ios
           zug-ios
@@ -115,6 +116,7 @@
           qt5compat-ios
           qtbase-ios
           qtsvg-ios
+          quazip-ios
           xsimd-consumer-check
           xsimd-ios
           zlib-ios
