@@ -386,6 +386,8 @@ let
     kf6HostTooling = kf6-host-tooling;
     qtXcrunShim = qt-xcrun-shim;
     inherit
+      freetype-ios
+      harfbuzz-ios
       kcodecs-ios
       kcolorscheme-ios
       kcompletion-ios
@@ -395,9 +397,11 @@ let
       ki18n-ios
       kitemviews-ios
       kwidgetsaddons-ios
+      libpng-ios
       mkIOSCMakePackage
       qtbase-ios
       toolchain
+      zlib-ios
       ;
   };
 

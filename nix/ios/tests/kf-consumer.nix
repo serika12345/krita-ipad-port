@@ -1,6 +1,8 @@
 {
+  freetype-ios,
   gettext,
   gnugrep,
+  harfbuzz-ios,
   hostEcm,
   hostQt,
   hostQtTools,
@@ -15,11 +17,13 @@
   kitemviews-ios,
   kwidgetsaddons-ios,
   lib,
+  libpng-ios,
   mkIOSCMakePackage,
   python3,
   qtbase-ios,
   qtXcrunShim,
   toolchain,
+  zlib-ios,
 }:
 
 let
@@ -46,6 +50,7 @@ let
     "kcolorscheme"
   ];
   frameworkVersion = kconfig-ios.version;
+  qtbaseTargetDependencies = qtbase-ios.propagatedBuildInputs or [ ];
   ki18nTargetPackageDependencies = ki18n-ios.iosTargetPackageDependencies or [ ];
   libintlTarget = builtins.head ki18nTargetPackageDependencies;
 
@@ -70,21 +75,24 @@ let
   ];
   linkedClosureArtifacts = [
     "${libintlTarget}/lib/libintl.a"
+    "${harfbuzz-ios}/lib/libharfbuzz.a"
+    "${freetype-ios}/lib/libfreetype.a"
+    "${libpng-ios}/lib/libpng16.a"
+    "${zlib-ios}/lib/libz.a"
     "${qtbase-ios}/lib/libQt6Core.a"
     "${qtbase-ios}/lib/libQt6Gui.a"
+    "${qtbase-ios}/lib/libQt6OpenGL.a"
     "${qtbase-ios}/lib/libQt6Widgets.a"
   ];
-  nativeInputs = [
-    gettext
-    gnugrep
-    hostEcm
-    kf6HostTooling
-    python3
-  ];
+  nativeInputs = [ gnugrep ];
   nativeReferenceRoots = nativeInputs ++ [
+    gettext
+    hostEcm
     hostQt
     hostQtTools
+    kf6HostTooling
     kf6HostTooling.kconfigCompiler
+    python3
     qtXcrunShim
   ];
 in
@@ -103,6 +111,16 @@ assert lib.assertMsg (
 assert lib.assertMsg (
   hostQtTools.version == qtbase-ios.version
 ) "KF6 consumer host Qt tools must match the target Qt version";
+assert lib.assertMsg
+  (
+    qtbaseTargetDependencies == [
+      zlib-ios
+      libpng-ios
+      freetype-ios
+      harfbuzz-ios
+    ]
+  )
+  "KF6 consumer Qtbase closure must contain exactly the pinned target text and compression libraries";
 assert lib.assertMsg (
   kf6HostTooling ? kconfigCompiler
 ) "KF6 consumer host tooling must expose its pinned KConfig compiler";
@@ -122,7 +140,6 @@ mkIOSCMakePackage {
   cmakeToolchainFile = "${qtbase-ios}/lib/cmake/Qt6/qt.toolchain.cmake";
   enableFullAppleToolchain = true;
   tryCompileTargetType = null;
-  dontWrapQtApps = true;
   nativeBuildInputs = nativeInputs;
 
   cmakeFlags = [
@@ -196,10 +213,21 @@ mkIOSCMakePackage {
     check_cache_value QT_HOST_PATH ${lib.escapeShellArg (toString hostQt)}
     check_cache_value QT_HOST_PATH_CMAKE_DIR ${lib.escapeShellArg "${hostQt}/lib/cmake"}
     check_cache_value QT_XCRUN ${lib.escapeShellArg "${qtXcrunShim}/bin/xcrun"}
+    check_cache_value QT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH ""
+    check_cache_value QT_ADDITIONAL_PACKAGES_PREFIX_PATH ""
+    if grep -Eq '^QT_OPTIONAL_TOOLS_PATH:[^=]*=' CMakeCache.txt; then
+      echo "error: KF6 consumer inherited QT_OPTIONAL_TOOLS_PATH from native QtTools" >&2
+      grep -E '^QT_OPTIONAL_TOOLS_PATH:[^=]*=' CMakeCache.txt >&2
+      exit 1
+    fi
     check_cache_value Qt6GuiPrivate_DIR \
       ${lib.escapeShellArg "${qtbase-ios}/lib/cmake/Qt6GuiPrivate"}
+    check_cache_value Qt6OpenGL_DIR \
+      ${lib.escapeShellArg "${qtbase-ios}/lib/cmake/Qt6OpenGL"}
     check_cache_value Qt6LinguistTools_DIR \
       ${lib.escapeShellArg "${hostQtTools}/lib/cmake/Qt6LinguistTools"}
+    check_cache_value harfbuzz_DIR \
+      ${lib.escapeShellArg "${harfbuzz-ios}/lib/cmake/harfbuzz"}
     check_cache_value KI18N_PYTHON_EXECUTABLE \
       ${lib.escapeShellArg "${python3}/bin/python3"}
     check_cache_value GETTEXT_MSGFMT_EXECUTABLE \

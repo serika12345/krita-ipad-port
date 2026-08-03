@@ -226,6 +226,9 @@ let
     "CMAKE_GENERATOR_INSTANCE"
     "CMAKE_GENERATOR_PLATFORM"
     "CMAKE_GENERATOR_TOOLSET"
+    "CMAKE_FRAMEWORK_PATH"
+    "CMAKE_INCLUDE_PATH"
+    "CMAKE_LIBRARY_PATH"
     "CMAKE_PREFIX_PATH"
     "CMAKE_PREFIX_PATH_FOR_BUILD"
     "CMAKE_TOOLCHAIN_FILE"
@@ -243,6 +246,7 @@ let
     "MACOSX_DEPLOYMENT_TARGET"
     "NIX_CFLAGS_COMPILE"
     "NIX_LDFLAGS"
+    "NIXPKGS_CMAKE_PREFIX_PATH"
     "NM"
     "OBJC"
     "OBJCFLAGS"
@@ -253,6 +257,9 @@ let
     "PKG_CONFIG_LIBDIR"
     "PKG_CONFIG_PATH"
     "PKG_CONFIG_SYSROOT_DIR"
+    "QT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH"
+    "QT_ADDITIONAL_PACKAGES_PREFIX_PATH"
+    "QT_OPTIONAL_TOOLS_PATH"
     "SDKROOT"
     "SOURCE_DATE_EPOCH"
     "ZERO_AR_DATE"
@@ -448,11 +455,19 @@ stdenvNoCC.mkDerivation (
       export ASMFLAGS="$CFLAGS"
       export OBJCFLAGS="$CFLAGS"
       export OBJCXXFLAGS="$CXXFLAGS"
+      # Native setup hooks may expose host CMake/Qt packages. Cross builds
+      # receive every target prefix explicitly below, so no ambient host
+      # package search path is allowed to survive into configurePhase.
       unset \
         AR AS CC CPP CXX LD LDFLAGS NM OBJC OBJCXX \
-        CMAKE_PREFIX_PATH CMAKE_PREFIX_PATH_FOR_BUILD \
+        CMAKE_FRAMEWORK_PATH CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH \
+        CMAKE_PREFIX_PATH CMAKE_PREFIX_PATH_FOR_BUILD NIXPKGS_CMAKE_PREFIX_PATH \
         CPATH IPHONEOS_DEPLOYMENT_TARGET LIBRARY_PATH \
         MACOSX_DEPLOYMENT_TARGET NIX_CFLAGS_COMPILE NIX_LDFLAGS
+      unset \
+        QT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH \
+        QT_ADDITIONAL_PACKAGES_PREFIX_PATH \
+        QT_OPTIONAL_TOOLS_PATH
     ''
     + lib.optionalString enableTargetPkgConfig ''
       # CMake may invoke pkg-config only against the declared iOS target

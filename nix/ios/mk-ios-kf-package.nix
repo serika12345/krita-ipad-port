@@ -59,6 +59,19 @@ let
   nativeToolNames = nix_dependencies.native_tools;
   usesKConfigHostTooling = builtins.elem "kconfig" nativeToolNames;
   selectedNativeTools = map (name: nativeToolRoots.${name}) nativeToolNames;
+  explicitPathNativeToolNames = [
+    "ecm"
+    "kconfig"
+    "qtbase"
+    "qttools"
+  ];
+  selectedExplicitPathNativeToolNames = builtins.filter (
+    name: builtins.elem name explicitPathNativeToolNames
+  ) nativeToolNames;
+  selectedNativeSetupToolNames = builtins.filter (
+    name: !builtins.elem name explicitPathNativeToolNames
+  ) nativeToolNames;
+  selectedNativeSetupTools = map (name: nativeToolRoots.${name}) selectedNativeSetupToolNames;
 
   hostExecutablePath =
     contract:
@@ -127,15 +140,15 @@ let
   qtComponentFlags = map (
     component: "-DQt6${component}_DIR:PATH=${qtbase-ios}/lib/cmake/Qt6${component}"
   ) allQtComponents;
-  requiredQtComponentCheckScript = lib.concatMapStrings (component: ''
+  qtComponentCheckScript = lib.concatMapStrings (component: ''
     component_config=${lib.escapeShellArg "${qtbase-ios}/lib/cmake/Qt6${component}/Qt6${component}Config.cmake"}
     if ! test -f "$component_config"; then
-      echo "error: target Qt omits required component ${component}" >&2
+      echo "error: target Qt omits audited component ${component}" >&2
       exit 1
     fi
     check_cache_string ${lib.escapeShellArg "Qt6${component}_DIR"} \
       ${lib.escapeShellArg "${qtbase-ios}/lib/cmake/Qt6${component}"}
-  '') requiredQtComponents;
+  '') allQtComponents;
 
   hostExecutableCheckScript = lib.concatMapStrings (hostExecutable: ''
     if ! test -x ${lib.escapeShellArg hostExecutable}; then
@@ -335,6 +348,23 @@ assert lib.assertMsg (lib.all (dependency: dependency.version == packageSpec.ver
 assert lib.assertMsg (
   sorted nativeToolNames == sortedUnique nativeToolNames
 ) "KF6 ${packageSpec.name} native tool manifest contains duplicates";
+assert lib.assertMsg
+  (
+    sorted (selectedExplicitPathNativeToolNames ++ selectedNativeSetupToolNames)
+    == sorted nativeToolNames
+    && lib.intersectLists selectedExplicitPathNativeToolNames selectedNativeSetupToolNames == [ ]
+  )
+  "KF6 ${packageSpec.name} native tools must be partitioned between explicit paths and setup inputs";
+assert lib.assertMsg (lib.all
+  (
+    name:
+    builtins.elem name [
+      "gettext"
+      "python3"
+    ]
+  )
+  selectedNativeSetupToolNames
+) "KF6 ${packageSpec.name} may activate setup hooks only for command-line translation tools";
 assert lib.assertMsg (usesKConfigHostTooling == builtins.elem "kconfig" nix_dependencies.frameworks)
   "KF6 ${packageSpec.name} must declare native KConfig tooling exactly when it consumes target KConfig";
 assert lib.assertMsg (lib.all (
@@ -560,18 +590,15 @@ mkIOSCMakePackage {
   inspectAllAppleObjects = true;
   tryCompileTargetType = "STATIC_LIBRARY";
 
-  # Every package produced here is a static target library.  Pulling Qt into
-  # nativeBuildInputs activates qtPreHook, so state explicitly that there is
-  # no host application bundle for the hook to wrap.
-  dontWrapQtApps = true;
-
   nativeBuildInputs = lib.unique (
     [
       diffutils
       findutils
       gnugrep
     ]
-    ++ selectedNativeTools
+    # Qt host tools are selected only through the absolute CMake paths below.
+    # Their setup hooks would add macOS Qt and its closure to target searches.
+    ++ selectedNativeSetupTools
   );
   nativeInstallCheckInputs = [ diffutils ];
 
@@ -703,12 +730,19 @@ mkIOSCMakePackage {
     check_cache_string Qt6CoreTools_DIR ${lib.escapeShellArg "${hostQt}/lib/cmake/Qt6CoreTools"}
     check_cache_string Qt6GuiTools_DIR ${lib.escapeShellArg "${hostQt}/lib/cmake/Qt6GuiTools"}
     check_cache_string Qt6WidgetsTools_DIR ${lib.escapeShellArg "${hostQt}/lib/cmake/Qt6WidgetsTools"}
+    check_cache_string QT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH ""
+    check_cache_string QT_ADDITIONAL_PACKAGES_PREFIX_PATH ""
+    if grep -Eq '^QT_OPTIONAL_TOOLS_PATH:[^=]*=' CMakeCache.txt; then
+      echo "error: ${packageSpec.name} inherited QT_OPTIONAL_TOOLS_PATH from native QtTools" >&2
+      grep -E '^QT_OPTIONAL_TOOLS_PATH:[^=]*=' CMakeCache.txt >&2
+      exit 1
+    fi
     ${lib.optionalString (builtins.elem "qttools" nativeToolNames) ''
       check_cache_string Qt6LinguistTools_DIR \
         ${lib.escapeShellArg "${hostQtTools}/lib/cmake/Qt6LinguistTools"}
     ''}
 
-    ${requiredQtComponentCheckScript}
+    ${qtComponentCheckScript}
     ${hostExecutableCheckScript}
 
     for host_cmake_package in Qt6HostInfo Qt6CoreTools Qt6GuiTools Qt6WidgetsTools; do
@@ -945,6 +979,8 @@ mkIOSCMakePackage {
     iosFrameworkSpec = packageSpec;
     iosFrameworkDependencies = frameworkDependencies;
     iosTargetPackageDependencies = targetPackageDependencies;
+    iosExplicitPathNativeToolNames = selectedExplicitPathNativeToolNames;
+    iosNativeSetupToolNames = selectedNativeSetupToolNames;
     iosSourceArchiveName = packageSpec.source.archive_name;
     iosSourceArchiveSha256 = packageSpec.source.archive_sha256;
   };
