@@ -197,10 +197,11 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** undo/redo、pan、zoom、rotateを実装・確認する。
 - [ ] **P0** 高DPI、Safe Area、画面回転を修正する。
 - [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する。
-- [ ] **P1 Apple Pencilダブルタップ対応**: Qt iOSのviewへ`UIPencilInteraction`を登録し、ダブルタップをKritaのアクションへ橋渡しする。生成済みQtソースの直接編集ではなく、再現可能なpatchとしてビルド手順へ組み込む。
+- [ ] **P1 Apple Pencilダブルタップ対応**: KritaのQt iOS viewへ`UIPencilInteraction`を登録し、ダブルタップを既存のKritaアクションへ橋渡しする（Qtソースpatch不要。最小ブリッジを実装し、消しゴム切り替えを実機確認済み）。
   - [ ] iPadOSの`preferredTapAction`を読み、少なくとも「消しゴム切り替え」「直前のプリセットへ切り替え」「カラーパレット表示」「何もしない」を対応する。
-  - [ ] 消しゴム切り替えはKritaの`erase_action`、直前プリセットは`previous_preset`へ接続する。既存S-Penアクション設定を再利用する場合は`kritaspensettings`をiOS静的プラグイン構成へ追加する。
-  - [ ] Apple Pencil第2世代の実機で、1回のダブルタップにつきアクションが1回だけ発火し、描画中のストローク、筆圧、傾き、指ジェスチャーへ回帰がないことを確認する。
+  - [x] 消しゴム切り替えを、ペン先／消しゴム側の別プリセットを保持する`eraser_preset_action`へ接続する（実機確認済み）。
+  - [ ] 直前プリセット切り替えを`previous_preset`へ接続する（実装済み・実機確認待ち）。任意アクション設定が必要になった場合のみ既存S-Pen設定のaction-name mapを再利用する。
+  - [ ] Apple Pencil第2世代の実機で、起動後の初回接触前と通常描画後の両方について、1回のダブルタップにつきアクションが1回だけ発火し、描画中のストローク、筆圧、傾き、指ジェスチャーへ回帰がないことを確認する。
 - [ ] **P1** hover対応iPadでPencil hoverを検証する。
 - [ ] **P1** キーボードショートカットを確認する。
 

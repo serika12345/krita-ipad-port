@@ -19,6 +19,7 @@ if (IOS)
     list(APPEND krita_SRCS
         ${KRITA_IOS_ICON}
         KisIOSMemoryWarningHandler.mm
+        KisIOSPencilInteraction.mm
     )
 endif()
 

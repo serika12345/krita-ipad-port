@@ -54,7 +54,13 @@
 #include "config-qt-patches-present.h"
 
 #ifdef Q_OS_IOS
+#include <QAction>
+#include <QWindow>
+#include <KoToolManager.h>
+#include <kactioncollection.h>
+
 #include "KisIOSMemoryWarningHandler.h"
+#include "KisIOSPencilInteraction.h"
 #endif
 
 #ifdef Q_OS_ANDROID
@@ -134,6 +140,34 @@ namespace
 {
 
 void installTranslators(KisApplication &app);
+
+#ifdef Q_OS_IOS
+void handleKisIOSPencilTap(KisIOSPencilTapAction tapAction)
+{
+    // A double tap proves that the Pencil is active even when it has not
+    // touched the screen yet. Establish the same device that Qt iOS uses for
+    // tablet events so the first mouse-to-Pencil transition does not overwrite
+    // the preset selected by this tap.
+    KoToolManager *toolManager = KoToolManager::instance();
+    if (toolManager->currentInputDevice().isMouse()) {
+        toolManager->switchInputDeviceRequested(KoInputDevice::stylus());
+    }
+
+    const QString actionName = tapAction == KisIOSPencilTapAction::SwitchEraser
+        ? QStringLiteral("eraser_preset_action")
+        : QStringLiteral("previous_preset");
+
+    KisMainWindow *mainWindow = KisPart::instance()->currentMainwindow();
+    QAction *action = mainWindow ? mainWindow->actionCollection()->action(actionName) : nullptr;
+    if (!action || !action->isEnabled()) {
+        qWarning() << "Apple Pencil double tap action is unavailable:" << actionName;
+        return;
+    }
+
+    action->trigger();
+    qInfo() << "Apple Pencil double tap triggered:" << actionName;
+}
+#endif
 
 } // namespace
 
@@ -887,6 +921,10 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     }
 
 #ifdef Q_OS_IOS
+    KisMainWindow *mainWindow = KisPart::instance()->currentMainwindow();
+    QWindow *window = mainWindow ? mainWindow->windowHandle() : nullptr;
+    void *nativeView = window ? reinterpret_cast<void *>(window->winId()) : nullptr;
+    installKisIOSPencilInteraction(nativeView, handleKisIOSPencilTap);
     installKisIOSMemoryWarningHandler();
 #endif
 
