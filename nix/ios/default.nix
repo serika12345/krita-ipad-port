@@ -2,6 +2,7 @@
   pkgs,
   versionsFile,
   dependencyManifestFile,
+  qtManifestFile,
 }:
 
 let
@@ -30,12 +31,32 @@ let
 
   versions = parseEnv versionsFile;
   dependencyManifest = builtins.fromJSON (builtins.readFile dependencyManifestFile);
+  qtManifest = builtins.fromJSON (builtins.readFile qtManifestFile);
   dependencyByName = builtins.listToAttrs (
     map (package: {
       name = package.name;
       value = package;
     }) dependencyManifest.packages
   );
+  qtModuleNames = map (module: module.name) qtManifest.modules;
+  qtModuleByName =
+    assert lib.assertMsg (qtManifest.schema == 1) "unsupported iOS Qt manifest schema";
+    assert lib.assertMsg (
+      qtManifest.qt_version == versions.KRITA_IOS_QT_VERSION
+    ) "iOS Qt manifest version does not match versions.env";
+    assert lib.assertMsg (
+      qtModuleNames == [
+        "qtbase"
+        "qtsvg"
+        "qt5compat"
+      ]
+    ) "iOS Qt manifest must contain exactly the pinned Qt module sequence";
+    builtins.listToAttrs (
+      map (module: {
+        name = module.name;
+        value = module;
+      }) qtManifest.modules
+    );
 
   toolchain = import ./toolchain.nix {
     inherit lib versions;
@@ -56,6 +77,10 @@ let
   mkIOSHeaderPackage = pkgs.callPackage ./mk-ios-header-package.nix { };
 
   mkCMakePackageVersion = pkgs.callPackage ./cmake-package-version.nix { };
+
+  qt-xcrun-shim = pkgs.callPackage ./qt-xcrun-shim.nix {
+    inherit toolchain;
+  };
 
   zlib-ios = pkgs.callPackage ./packages/zlib.nix {
     inherit mkIOSCMakePackage;
@@ -242,6 +267,36 @@ let
     inherit fribidi-ios mkIOSCMakePackage toolchain;
   };
 
+  qtbase-ios = pkgs.callPackage ./packages/qtbase.nix {
+    inherit
+      freetype-ios
+      harfbuzz-ios
+      libpng-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+    packageSpec = qtModuleByName.qtbase;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
+  qtsvg-ios = pkgs.callPackage ./packages/qtsvg.nix {
+    inherit
+      mkIOSCMakePackage
+      qtbase-ios
+      toolchain
+      zlib-ios
+      ;
+    packageSpec = qtModuleByName.qtsvg;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
+  qt5compat-ios = pkgs.callPackage ./packages/qt5compat.nix {
+    inherit mkIOSCMakePackage qtbase-ios toolchain;
+    packageSpec = qtModuleByName.qt5compat;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -305,6 +360,10 @@ in
     libunibreak-consumer-check
     libunibreak-ios
     libpng-ios
+    qt5compat-ios
+    qtbase-ios
+    qtsvg-ios
+    qt-xcrun-shim
     toolchain
     xsimd-consumer-check
     xsimd-ios

@@ -12,6 +12,7 @@
         inherit pkgs;
         versionsFile = ./packaging/ios/versions.env;
         dependencyManifestFile = ./packaging/ios/deps/dependencies.json;
+        qtManifestFile = ./packaging/ios/qt/modules.json;
       };
     in
     {
@@ -73,6 +74,10 @@
           libjpeg-turbo-ios
           libunibreak-ios
           libpng-ios
+          qt5compat-ios
+          qtbase-ios
+          qtsvg-ios
+          qt-xcrun-shim
           xsimd-ios
           zlib-ios
           zug-ios
@@ -107,6 +112,9 @@
           libunibreak-consumer-check
           libunibreak-ios
           libpng-ios
+          qt5compat-ios
+          qtbase-ios
+          qtsvg-ios
           xsimd-consumer-check
           xsimd-ios
           zlib-ios

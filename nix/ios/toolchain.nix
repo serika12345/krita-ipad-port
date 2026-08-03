@@ -30,8 +30,12 @@ in
   cc = "${toolchainDir}/clang";
   cxx = "${toolchainDir}/clang++";
   ar = "${toolchainDir}/ar";
+  installNameTool = "${toolchainDir}/install_name_tool";
+  ld = "${toolchainDir}/ld";
+  nm = "${toolchainDir}/nm";
   ranlib = "${toolchainDir}/ranlib";
   strip = "${toolchainDir}/strip";
+  tapi = "${toolchainDir}/tapi";
   lipo = "${toolchainDir}/lipo";
   otool = "${toolchainDir}/otool";
   vtool = "${toolchainDir}/vtool";

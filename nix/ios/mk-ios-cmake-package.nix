@@ -17,14 +17,19 @@
   version,
   src,
   patches ? [ ],
+  appleSdkResolver ? null,
   cmakeFlags ? [ ],
+  cmakeToolchainFile ? null,
+  enableFullAppleToolchain ? false,
   enableTargetPkgConfig ? false,
+  inspectAllAppleObjects ? false,
   nativeBuildInputs ? [ ],
   nativeInstallCheckInputs ? [ ],
   passthru ? { },
   requiredPaths ? [ ],
   staticArchives ? [ ],
   targetDependencies ? [ ],
+  tryCompileTargetType ? "STATIC_LIBRARY",
   meta ? { },
   ...
 }@args:
@@ -60,8 +65,81 @@ let
   );
   targetPkgConfigLibDir =
     if targetPkgConfigPath == "" then "$NIX_BUILD_TOP/empty-pkg-config" else targetPkgConfigPath;
+  cmakeOSXSysroot = if appleSdkResolver == null then toolchain.sdkRoot else "iphoneos";
+  inspectAllAppleObjectsHook = ''
+    inspect_ios_object() {
+      object_file="$1"
+      object_architectures="$(${toolchain.lipo} -archs "$object_file")"
+      if test "$object_architectures" != "${toolchain.architecture}"; then
+        echo "error: $object_file contains '$object_architectures'; expected ${toolchain.architecture}" >&2
+        exit 1
+      fi
+
+      object_metadata="$(${toolchain.vtool} -show-build "$object_file")"
+      if ! grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' <<<"$object_metadata"; then
+        echo "error: $object_file is not an iOS device object" >&2
+        exit 1
+      fi
+      if ! grep -Eq 'minos[[:space:]]+${toolchain.deploymentTarget}([[:space:]]|$)' <<<"$object_metadata"; then
+        echo "error: $object_file does not target iOS ${toolchain.deploymentTarget}" >&2
+        exit 1
+      fi
+      if ! grep -Eq 'sdk[[:space:]]+${toolchain.sdkVersion}([[:space:]]|$)' <<<"$object_metadata"; then
+        echo "error: $object_file was not built with SDK ${toolchain.sdkVersion}" >&2
+        exit 1
+      fi
+    }
+
+    all_archive_count=0
+    while IFS= read -r -d "" archive; do
+      all_archive_count=$((all_archive_count + 1))
+      ${toolchain.ranlib} -D "$archive"
+      file "$archive"
+
+      architectures="$(${toolchain.lipo} -archs "$archive")"
+      if test "$architectures" != "${toolchain.architecture}"; then
+        echo "error: $archive contains '$architectures'; expected exactly ${toolchain.architecture}" >&2
+        exit 1
+      fi
+
+      expected_member_count="$(${toolchain.ar} -t "$archive" | grep -v '^__.SYMDEF' | wc -l | tr -d ' ')"
+      if test "$expected_member_count" -eq 0; then
+        echo "error: $archive contains no object members" >&2
+        exit 1
+      fi
+
+      archive_dir="$inspection_root/all-archive-$all_archive_count"
+      mkdir -p "$archive_dir"
+      (
+        cd "$archive_dir"
+        ${toolchain.ar} -x "$archive"
+      )
+
+      extracted_count=0
+      while IFS= read -r -d "" member; do
+        extracted_count=$((extracted_count + 1))
+        inspect_ios_object "$member"
+      done < <(find "$archive_dir" -type f ! -name '__.SYMDEF*' -print0)
+
+      if test "$extracted_count" -ne "$expected_member_count"; then
+        echo "error: inspected $extracted_count of $expected_member_count members; duplicate names are not allowed" >&2
+        exit 1
+      fi
+    done < <(find "$out" -type f -name '*.a' -print0)
+
+    if test "$all_archive_count" -eq 0; then
+      echo "error: inspectAllAppleObjects found no static archives" >&2
+      exit 1
+    fi
+
+    while IFS= read -r -d "" object_file; do
+      inspect_ios_object "$object_file"
+    done < <(find "$out" -type f -name '*.o' -print0)
+  '';
   reservedCMakeVariables = [
     "CMAKE_AR"
+    "CMAKE_ASM_COMPILER"
+    "CMAKE_ASM_FLAGS"
     "CMAKE_BUILD_TYPE"
     "CMAKE_CXX_COMPILER"
     "CMAKE_CXX_FLAGS"
@@ -81,21 +159,36 @@ let
     "CMAKE_INSTALL_LIBEXECDIR"
     "CMAKE_INSTALL_LOCALEDIR"
     "CMAKE_INSTALL_MANDIR"
+    "CMAKE_INSTALL_NAME_TOOL"
     "CMAKE_INSTALL_PREFIX"
     "CMAKE_INSTALL_SBINDIR"
+    "CMAKE_LINKER"
+    "CMAKE_MAKE_PROGRAM"
+    "CMAKE_MODULE_LINKER_FLAGS"
+    "CMAKE_NM"
+    "CMAKE_OBJCXX_COMPILER"
+    "CMAKE_OBJCXX_FLAGS"
+    "CMAKE_OBJC_COMPILER"
+    "CMAKE_OBJC_FLAGS"
     "CMAKE_OSX_ARCHITECTURES"
     "CMAKE_OSX_DEPLOYMENT_TARGET"
     "CMAKE_OSX_SYSROOT"
     "CMAKE_POSITION_INDEPENDENT_CODE"
     "CMAKE_PREFIX_PATH"
     "CMAKE_RANLIB"
+    "CMAKE_OTOOL"
     "CMAKE_SHARED_LINKER_FLAGS"
     "CMAKE_STATIC_LINKER_FLAGS"
     "CMAKE_STRIP"
     "CMAKE_SYSTEM_NAME"
     "CMAKE_SYSTEM_PROCESSOR"
+    "CMAKE_TAPI"
     "CMAKE_TOOLCHAIN_FILE"
     "CMAKE_TRY_COMPILE_TARGET_TYPE"
+  ];
+  reservedCMakeVariablePatterns = [
+    "CMAKE_(ASM|C|CXX|OBJC|OBJCXX)_FLAGS(_[A-Za-z0-9_]+)?"
+    "CMAKE_(EXE|MODULE|SHARED|STATIC)_LINKER_FLAGS(_[A-Za-z0-9_]+)?"
   ];
   cmakeDefinitionName =
     flag:
@@ -103,9 +196,13 @@ let
       match = builtins.match "-D([^:=]+)(:[^=]+)?=.*" flag;
     in
     if match == null then null else builtins.elemAt match 0;
-  overriddenCMakeVariables = builtins.filter (
-    name: name != null && builtins.elem name reservedCMakeVariables
-  ) (map cmakeDefinitionName cmakeFlags);
+  cmakeVariableIsReserved =
+    name:
+    builtins.elem name reservedCMakeVariables
+    || lib.any (pattern: builtins.match pattern name != null) reservedCMakeVariablePatterns;
+  overriddenCMakeVariables = builtins.filter (name: name != null && cmakeVariableIsReserved name) (
+    map cmakeDefinitionName cmakeFlags
+  );
   reservedCMakeFlagForms = builtins.filter (
     flag:
     flag == "-D"
@@ -120,8 +217,37 @@ let
     || lib.hasPrefix "--preset" flag
   ) cmakeFlags;
   protectedDerivationAttrs = [
+    "AR"
+    "AS"
+    "ASMFLAGS"
+    "CC"
+    "CFLAGS"
+    "CMAKE_GENERATOR"
+    "CMAKE_GENERATOR_INSTANCE"
+    "CMAKE_GENERATOR_PLATFORM"
+    "CMAKE_GENERATOR_TOOLSET"
+    "CMAKE_PREFIX_PATH"
+    "CMAKE_PREFIX_PATH_FOR_BUILD"
+    "CMAKE_TOOLCHAIN_FILE"
+    "CPATH"
+    "CPP"
+    "CPPFLAGS"
+    "CXX"
+    "CXXFLAGS"
     "DEVELOPER_DIR"
+    "IPHONEOS_DEPLOYMENT_TARGET"
     "KRITA_IOS_TOOLCHAIN_IDENTITY"
+    "LD"
+    "LDFLAGS"
+    "LIBRARY_PATH"
+    "MACOSX_DEPLOYMENT_TARGET"
+    "NIX_CFLAGS_COMPILE"
+    "NIX_LDFLAGS"
+    "NM"
+    "OBJC"
+    "OBJCFLAGS"
+    "OBJCXX"
+    "OBJCXXFLAGS"
     "PKG_CONFIG"
     "PKG_CONFIG_DIR"
     "PKG_CONFIG_LIBDIR"
@@ -178,9 +304,16 @@ assert lib.assertMsg (lib.all lib.isDerivation targetDependencies)
   "iOS target dependencies must all be derivations";
 assert lib.assertMsg (lib.all targetDependencyIsCompatible targetDependencyClosure)
   "iOS target dependency closures must be toolchain-independent or use the same pinned toolchain identity";
+assert lib.assertMsg (
+  appleSdkResolver == null || lib.isDerivation appleSdkResolver
+) "iOS CMake appleSdkResolver must be null or a derivation";
 assert lib.assertMsg (overriddenProtectedAttrs == [ ])
   "iOS CMake packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
 assert lib.assertMsg (lib.all lib.isString cmakeFlags) "iOS CMake cmakeFlags must all be strings";
+assert lib.assertMsg (
+  cmakeToolchainFile == null
+  || (lib.isString cmakeToolchainFile && lib.hasPrefix "/" cmakeToolchainFile)
+) "iOS CMake cmakeToolchainFile must be null or an absolute path";
 assert lib.assertMsg (overriddenCMakeVariables == [ ])
   "iOS CMake packages may not override reserved cache variables: ${lib.concatStringsSep ", " overriddenCMakeVariables}";
 assert lib.assertMsg (reservedCMakeFlagForms == [ ])
@@ -190,8 +323,22 @@ assert lib.assertMsg (lib.all lib.isDerivation nativeBuildInputs)
 assert lib.assertMsg (lib.all lib.isDerivation nativeInstallCheckInputs)
   "iOS CMake nativeInstallCheckInputs must all be derivations";
 assert lib.assertMsg (lib.isAttrs passthru) "iOS CMake passthru must be an attribute set";
+assert lib.assertMsg (lib.isBool enableFullAppleToolchain)
+  "iOS CMake enableFullAppleToolchain must be a boolean";
 assert lib.assertMsg (lib.isBool enableTargetPkgConfig)
   "iOS CMake enableTargetPkgConfig must be a boolean";
+assert lib.assertMsg (lib.isBool inspectAllAppleObjects)
+  "iOS CMake inspectAllAppleObjects must be a boolean";
+assert lib.assertMsg (
+  !inspectAllAppleObjects || staticArchives == [ ]
+) "iOS CMake inspectAllAppleObjects cannot be combined with explicit staticArchives";
+assert lib.assertMsg (
+  tryCompileTargetType == null
+  || builtins.elem tryCompileTargetType [
+    "EXECUTABLE"
+    "STATIC_LIBRARY"
+  ]
+) "iOS CMake tryCompileTargetType must be null, EXECUTABLE, or STATIC_LIBRARY";
 stdenvNoCC.mkDerivation (
   {
     inherit
@@ -212,6 +359,7 @@ stdenvNoCC.mkDerivation (
       gnused
       ninja
     ]
+    ++ lib.optional (appleSdkResolver != null) appleSdkResolver
     ++ nativeBuildInputs;
 
     nativeInstallCheckInputs = [
@@ -281,6 +429,31 @@ stdenvNoCC.mkDerivation (
       export CFLAGS="-ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build"
       export CXXFLAGS="$CFLAGS"
     ''
+    + lib.optionalString (cmakeToolchainFile != null) ''
+      if ! test -f ${lib.escapeShellArg cmakeToolchainFile}; then
+        echo "error: pinned CMake toolchain file is missing: ${cmakeToolchainFile}" >&2
+        exit 1
+      fi
+    ''
+    + lib.optionalString (appleSdkResolver != null) ''
+      # Some Apple-aware projects require a logical SDK name. The resolver is
+      # pinned in the Nix closure and maps that name to the validated SDK.
+      if ! test -x "${appleSdkResolver}/bin/xcrun"; then
+        echo "error: appleSdkResolver does not provide bin/xcrun" >&2
+        exit 1
+      fi
+      export PATH="${appleSdkResolver}/bin:$PATH"
+    ''
+    + lib.optionalString enableFullAppleToolchain ''
+      export ASMFLAGS="$CFLAGS"
+      export OBJCFLAGS="$CFLAGS"
+      export OBJCXXFLAGS="$CXXFLAGS"
+      unset \
+        AR AS CC CPP CXX LD LDFLAGS NM OBJC OBJCXX \
+        CMAKE_PREFIX_PATH CMAKE_PREFIX_PATH_FOR_BUILD \
+        CPATH IPHONEOS_DEPLOYMENT_TARGET LIBRARY_PATH \
+        MACOSX_DEPLOYMENT_TARGET NIX_CFLAGS_COMPILE NIX_LDFLAGS
+    ''
     + lib.optionalString enableTargetPkgConfig ''
       # CMake may invoke pkg-config only against the declared iOS target
       # closure. An SDK sysroot must not prefix Nix store paths.
@@ -297,8 +470,13 @@ stdenvNoCC.mkDerivation (
       "-DCMAKE_SYSTEM_PROCESSOR=${toolchain.architecture}"
       "-DCMAKE_OSX_ARCHITECTURES=${toolchain.architecture}"
       "-DCMAKE_OSX_DEPLOYMENT_TARGET=${toolchain.deploymentTarget}"
-      "-DCMAKE_OSX_SYSROOT=${toolchain.sdkRoot}"
-      "-DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY"
+      "-DCMAKE_OSX_SYSROOT=${cmakeOSXSysroot}"
+    ]
+    ++ lib.optional (cmakeToolchainFile != null) "-DCMAKE_TOOLCHAIN_FILE=${cmakeToolchainFile}"
+    ++ lib.optional (
+      tryCompileTargetType != null
+    ) "-DCMAKE_TRY_COMPILE_TARGET_TYPE=${tryCompileTargetType}"
+    ++ [
       "-DCMAKE_BUILD_TYPE=Release"
       "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
       "-DCMAKE_INSTALL_BINDIR=bin"
@@ -319,6 +497,17 @@ stdenvNoCC.mkDerivation (
       "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY"
       "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY"
       "-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY"
+    ]
+    ++ lib.optionals enableFullAppleToolchain [
+      "-DCMAKE_ASM_COMPILER=${toolchain.cc}"
+      "-DCMAKE_OBJC_COMPILER=${toolchain.cc}"
+      "-DCMAKE_OBJCXX_COMPILER=${toolchain.cxx}"
+      "-DCMAKE_LINKER=${toolchain.ld}"
+      "-DCMAKE_NM=${toolchain.nm}"
+      "-DCMAKE_INSTALL_NAME_TOOL=${toolchain.installNameTool}"
+      "-DCMAKE_OTOOL=${toolchain.otool}"
+      "-DCMAKE_TAPI=${toolchain.tapi}"
+      "-DCMAKE_MAKE_PROGRAM=${ninja}/bin/ninja"
     ]
     ++ lib.optionals (targetDependencies != [ ]) [
       "-DCMAKE_PREFIX_PATH=${targetRootPath}"
@@ -422,8 +611,12 @@ stdenvNoCC.mkDerivation (
     // meta;
   }
   // removeAttrs args [
+    "appleSdkResolver"
     "cmakeFlags"
+    "cmakeToolchainFile"
+    "enableFullAppleToolchain"
     "enableTargetPkgConfig"
+    "inspectAllAppleObjects"
     "meta"
     "nativeBuildInputs"
     "nativeInstallCheckInputs"
@@ -431,5 +624,9 @@ stdenvNoCC.mkDerivation (
     "requiredPaths"
     "staticArchives"
     "targetDependencies"
+    "tryCompileTargetType"
   ]
+  // lib.optionalAttrs inspectAllAppleObjects {
+    postInstallCheck = inspectAllAppleObjectsHook + (args.postInstallCheck or "");
+  }
 )
