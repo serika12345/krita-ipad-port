@@ -88,6 +88,11 @@ let
     "CMAKE_OSX_SYSROOT"
     "CMAKE_SYSTEM_NAME"
   ];
+  kdeInstallDirCacheStrings = [
+    "KDE_INSTALL_INCLUDEDIR"
+    "KDE_INSTALL_LIBDIR"
+    "KDE_INSTALL_LIBEXECDIR"
+  ];
   projectCacheStringLocks = removeAttrs cacheStringLocks builderOwnedCacheStrings;
   cacheStringFlags = lib.mapAttrsToList (
     name: value: "-D${name}:STRING=${value}"
@@ -99,11 +104,17 @@ let
     lib.mapAttrsToList (name: value: "-D${name}=${value}") cacheStringLocks
     ++ lib.mapAttrsToList (name: value: "-D${name}=${cmakeBoolean value}") cacheBooleanLocks;
 
-  cacheStringCheckScript = lib.concatStrings (
-    lib.mapAttrsToList (name: value: ''
-      check_cache_string ${lib.escapeShellArg name} ${lib.escapeShellArg value}
-    '') cacheStringLocks
-  );
+  cacheStringCheckScript =
+    lib.concatStrings (
+      lib.mapAttrsToList (name: value: ''
+        check_cache_string ${lib.escapeShellArg name} ${lib.escapeShellArg value}
+      '') (removeAttrs cacheStringLocks kdeInstallDirCacheStrings)
+    )
+    + lib.concatStrings (
+      lib.mapAttrsToList (name: value: ''
+        check_cache_string ${lib.escapeShellArg name} "$out/${value}"
+      '') (lib.getAttrs kdeInstallDirCacheStrings cacheStringLocks)
+    );
   cacheBooleanCheckScript = lib.concatStrings (
     lib.mapAttrsToList (name: value: ''
       check_cache_boolean ${lib.escapeShellArg name} ${lib.escapeShellArg (cmakeBoolean value)}
@@ -405,6 +416,13 @@ assert lib.assertMsg (
     CMAKE_SYSTEM_NAME = "iOS";
   }
 ) "KF6 common cache strings disagree with the common iOS builder";
+assert lib.assertMsg (
+  lib.getAttrs kdeInstallDirCacheStrings commonCacheStringLocks == {
+    KDE_INSTALL_INCLUDEDIR = "include";
+    KDE_INSTALL_LIBDIR = "lib";
+    KDE_INSTALL_LIBEXECDIR = "libexec";
+  }
+) "KF6 install directory locks must remain relocatable inputs";
 assert lib.assertMsg (lib.all (flag: builtins.elem flag allLockFlags) (
   packageSpec.cmake_args or [ ]
 )) "KF6 ${packageSpec.name} legacy CMake arguments are not represented by cache locks";
@@ -541,6 +559,11 @@ mkIOSCMakePackage {
   enableFullAppleToolchain = true;
   inspectAllAppleObjects = true;
   tryCompileTargetType = "STATIC_LIBRARY";
+
+  # Every package produced here is a static target library.  Pulling Qt into
+  # nativeBuildInputs activates qtPreHook, so state explicitly that there is
+  # no host application bundle for the hook to wrap.
+  dontWrapQtApps = true;
 
   nativeBuildInputs = lib.unique (
     [
@@ -706,7 +729,7 @@ mkIOSCMakePackage {
       echo "error: ${packageSpec.name} did not produce a regular xcrun shim log" >&2
       exit 1
     fi
-    if grep -Ev -- '^(-sdk iphoneos --show-sdk-path|--sdk iphoneos --show-sdk-path|--sdk iphoneos --show-sdk-version|xcodebuild -version)$' "$xcrun_log"; then
+    if grep -Ev -- '^-sdk iphoneos --show-sdk-path$' "$xcrun_log"; then
       echo "error: ${packageSpec.name} made an unsupported xcrun invocation" >&2
       exit 1
     fi
@@ -714,8 +737,6 @@ mkIOSCMakePackage {
     actual_xcrun_set="$NIX_BUILD_TOP/${packageSpec.name}-xcrun.actual"
     printf '%s\n' \
       '-sdk iphoneos --show-sdk-path' \
-      '--sdk iphoneos --show-sdk-version' \
-      'xcodebuild -version' \
       | LC_ALL=C sort > "$expected_xcrun_set"
     LC_ALL=C sort -u "$xcrun_log" > "$actual_xcrun_set"
     if ! cmp -s "$expected_xcrun_set" "$actual_xcrun_set"; then
