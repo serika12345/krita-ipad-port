@@ -13,6 +13,7 @@
         versionsFile = ./packaging/ios/versions.env;
         dependencyManifestFile = ./packaging/ios/deps/dependencies.json;
         qtManifestFile = ./packaging/ios/qt/modules.json;
+        frameworkManifestFile = ./packaging/ios/frameworks/frameworks.json;
       };
     in
     {
@@ -68,7 +69,18 @@
           harfbuzz-ios
           host-kconfig-compiler
           immer-ios
+          ios-base-dependencies
           ios-dependencies
+          kcodecs-ios
+          kcolorscheme-ios
+          kcompletion-ios
+          kconfig-ios
+          kcoreaddons-ios
+          kf6-consumer-check
+          kf6-ios-dependencies
+          kguiaddons-ios
+          ki18n-ios
+          kitemviews-ios
           lager-ios
           lcms2-ios
           kf6-host-tooling
@@ -77,6 +89,7 @@
           libunibreak-ios
           libpng-ios
           qt5compat-ios
+          qt-ios-dependencies
           qtbase-ios
           qtsvg-ios
           qt-xcrun-shim
@@ -85,6 +98,7 @@
           xsimd-ios
           zlib-ios
           zug-ios
+          kwidgetsaddons-ios
           ;
       };
 
@@ -107,6 +121,18 @@
           host-kconfig-compiler
           immer-consumer-check
           immer-ios
+          ios-base-dependencies
+          ios-dependencies
+          kcodecs-ios
+          kcolorscheme-ios
+          kcompletion-ios
+          kconfig-ios
+          kcoreaddons-ios
+          kf6-consumer-check
+          kf6-ios-dependencies
+          kguiaddons-ios
+          ki18n-ios
+          kitemviews-ios
           lager-consumer-check
           lager-ios
           lcms2-ios
@@ -119,6 +145,7 @@
           libunibreak-ios
           libpng-ios
           qt5compat-ios
+          qt-ios-dependencies
           qtbase-ios
           qtsvg-ios
           qttools-host-contract-check
@@ -128,6 +155,7 @@
           zlib-ios
           zug-consumer-check
           zug-ios
+          kwidgetsaddons-ios
           ;
       };
 

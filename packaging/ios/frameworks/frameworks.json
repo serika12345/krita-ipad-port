@@ -46,6 +46,10 @@
         "nixpkgs_attr": "gettext",
         "version": "1.0"
       },
+      "kconfig": {
+        "flake_attr": "kf6-host-tooling",
+        "version": "6.28.0"
+      },
       "python3": {
         "nixpkgs_attr": "python3",
         "version": "3.14.6"
@@ -433,6 +437,7 @@
         ],
         "native_tools": [
           "ecm",
+          "kconfig",
           "qtbase",
           "qttools"
         ]
@@ -553,7 +558,35 @@
             "python_bindings",
             "qml",
             "udev"
-          ]
+          ],
+          "evidence": {
+            "cache_booleans": {
+              "dbus": "USE_DBUS",
+              "inotify": "ENABLE_INOTIFY",
+              "python_bindings": "BUILD_PYTHON_BINDINGS",
+              "qml": "KCOREADDONS_USE_QML"
+            },
+            "disabled_dependency_gates": {
+              "libmount": {
+                "path": "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake",
+                "dependencies": [
+                  "LibMount"
+                ]
+              },
+              "procstat": {
+                "path": "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake",
+                "dependencies": [
+                  "Procstat"
+                ]
+              },
+              "udev": {
+                "path": "lib/cmake/KF6CoreAddons/KF6CoreAddonsConfig.cmake",
+                "dependencies": [
+                  "UDev"
+                ]
+              }
+            }
+          }
         }
       },
       "artifact_contract": {
@@ -643,7 +676,31 @@
             "python_bindings",
             "wayland",
             "x11"
-          ]
+          ],
+          "evidence": {
+            "cache_booleans": {
+              "dbus": "USE_DBUS",
+              "geo_scheme_handler": "BUILD_GEO_SCHEME_HANDLER",
+              "python_bindings": "BUILD_PYTHON_BINDINGS"
+            },
+            "disabled_dependency_gates": {
+              "wayland": {
+                "path": "lib/cmake/KF6GuiAddons/KF6GuiAddonsConfig.cmake",
+                "dependencies": [
+                  "Wayland",
+                  "Qt6WaylandClient",
+                  "QtWaylandScanner"
+                ]
+              },
+              "x11": {
+                "path": "lib/cmake/KF6GuiAddons/KF6GuiAddonsConfig.cmake",
+                "dependencies": [
+                  "X11",
+                  "XCB"
+                ]
+              }
+            }
+          }
         }
       },
       "artifact_contract": {
@@ -744,7 +801,17 @@
           "disabled": [
             "embedded_iso_codes_cache",
             "qml"
-          ]
+          ],
+          "evidence": {
+            "cache_booleans": {
+              "embedded_iso_codes_cache": "KI18N_EMBEDDED_ISO_CODES_CACHE",
+              "qml": "BUILD_WITH_QML"
+            },
+            "artifact_contract": [
+              "libintl",
+              "translations"
+            ]
+          }
         }
       },
       "artifact_contract": {
@@ -838,7 +905,12 @@
         "feature_locks": {
           "disabled": [
             "designer_plugin"
-          ]
+          ],
+          "evidence": {
+            "cache_booleans": {
+              "designer_plugin": "BUILD_DESIGNERPLUGIN"
+            }
+          }
         }
       },
       "artifact_contract": {
@@ -904,6 +976,7 @@
         "native_tools": [
           "ecm",
           "gettext",
+          "kconfig",
           "python3",
           "qtbase"
         ]
@@ -929,7 +1002,15 @@
           ],
           "disabled": [
             "designer_plugin"
-          ]
+          ],
+          "evidence": {
+            "cache_booleans": {
+              "designer_plugin": "BUILD_DESIGNERPLUGIN"
+            },
+            "artifact_contract": [
+              "translations"
+            ]
+          }
         }
       },
       "artifact_contract": {

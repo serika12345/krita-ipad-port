@@ -227,6 +227,7 @@ let
   kf6HostTooling =
     pkgs.runCommand "krita-kf6-host-tooling-${kfVersion}"
       {
+        version = kfVersion;
         passthru = {
           inherit
             hostEcm

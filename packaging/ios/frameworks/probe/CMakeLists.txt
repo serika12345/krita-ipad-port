@@ -32,6 +32,7 @@ target_link_libraries(
         KF6::CoreAddons
         KF6::GuiAddons
         KF6::I18n
+        KF6::I18nLocaleData
         KF6::ItemViews
         KF6::ColorScheme
         ${ICONV_LIBRARY}
@@ -42,3 +43,5 @@ set_target_properties(
         MACOSX_BUNDLE_GUI_IDENTIFIER org.krita.ios.frameworks-probe
         XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO
 )
+
+install(TARGETS KritaIOSFrameworksProbe BUNDLE DESTINATION bin)

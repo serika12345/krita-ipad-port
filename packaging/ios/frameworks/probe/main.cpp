@@ -4,6 +4,7 @@
 #include <KCharsets>
 #include <KColorScheme>
 #include <KCompletion>
+#include <KCountry>
 #include <KLocalizedString>
 #include <KStandardGuiItem>
 #include <KTreeWidgetSearchLine>
@@ -26,6 +27,7 @@ int main(int argc, char **argv)
     const QString completed = completion.makeCompletion(QStringLiteral("Kr"));
     const QString translated = i18n("Krita iOS Frameworks Probe");
     const QString codec = KCharsets::charsets()->encodingForName(QStringLiteral("UTF-8"));
+    const KCountry country = KCountry::fromAlpha2("JP");
     const KGuiItem guiItem = KStandardGuiItem::ok();
     const KColorScheme colors(QPalette::Active, KColorScheme::View);
 
@@ -34,7 +36,7 @@ int main(int argc, char **argv)
     search.setText(completed);
 
     return settings.probeEnabled() && !translated.isEmpty() && !codec.isEmpty()
-        && !guiItem.text().isEmpty() && colors.foreground().color().isValid()
+        && country.isValid() && !guiItem.text().isEmpty() && colors.foreground().color().isValid()
         ? 0
         : 1;
 }

@@ -3,6 +3,7 @@
   versionsFile,
   dependencyManifestFile,
   qtManifestFile,
+  frameworkManifestFile,
 }:
 
 let
@@ -32,12 +33,39 @@ let
   versions = parseEnv versionsFile;
   dependencyManifest = builtins.fromJSON (builtins.readFile dependencyManifestFile);
   qtManifest = builtins.fromJSON (builtins.readFile qtManifestFile);
-  dependencyByName = builtins.listToAttrs (
-    map (package: {
-      name = package.name;
-      value = package;
-    }) dependencyManifest.packages
-  );
+  frameworkManifest = builtins.fromJSON (builtins.readFile frameworkManifestFile);
+  dependencyPackageNames = map (package: package.name) dependencyManifest.packages;
+  dependencyByName =
+    assert lib.assertMsg (dependencyManifest.schema == 1) "unsupported iOS dependency manifest schema";
+    assert lib.assertMsg (
+      dependencyPackageNames == [
+        "zlib"
+        "expat"
+        "libpng"
+        "libjpeg-turbo"
+        "boost"
+        "immer"
+        "zug"
+        "lager"
+        "eigen"
+        "xsimd"
+        "lcms2"
+        "exiv2"
+        "freetype"
+        "harfbuzz"
+        "libunibreak"
+        "fontconfig"
+        "libintl"
+        "fribidi"
+        "quazip"
+      ]
+    ) "iOS dependency manifest must contain exactly the pinned package sequence";
+    builtins.listToAttrs (
+      map (package: {
+        name = package.name;
+        value = package;
+      }) dependencyManifest.packages
+    );
   qtModuleNames = map (module: module.name) qtManifest.modules;
   qtModuleByName =
     assert lib.assertMsg (qtManifest.schema == 1) "unsupported iOS Qt manifest schema";
@@ -322,35 +350,157 @@ let
     packageSpec = dependencyByName.lcms2;
   };
 
-  ios-dependencies = pkgs.symlinkJoin {
-    name = "krita-ios-dependencies-bootstrap";
-    paths = [
-      zlib-ios
-      expat-ios
-      libpng-ios
-      freetype-ios
-      harfbuzz-ios
-      fontconfig-ios
-      lcms2-ios
-      eigen-ios
-      xsimd-ios
-      libunibreak-ios
-      libjpeg-turbo-ios
-      exiv2-ios
-      boost-ios
-      immer-ios
-      zug-ios
-      lager-ios
-      libintl-ios
-      fribidi-ios
-    ];
-    postBuild = ''
-      mkdir -p "$out/nix-support"
-      rm -f "$out/nix-support/propagated-build-inputs"
-      echo ${zlib-ios} ${expat-ios} ${libpng-ios} ${freetype-ios} ${harfbuzz-ios} ${fontconfig-ios} ${lcms2-ios} ${eigen-ios} ${xsimd-ios} ${libunibreak-ios} ${libjpeg-turbo-ios} ${exiv2-ios} ${boost-ios} ${immer-ios} ${zug-ios} ${lager-ios} ${libintl-ios} ${fribidi-ios} > "$out/nix-support/propagated-build-inputs"
-    '';
+  mkIOSKFPackage = pkgs.callPackage ./mk-ios-kf-package.nix {
+    frameworkDefaults = frameworkManifest.target_defaults;
+    inherit mkIOSCMakePackage qtbase-ios toolchain;
+    kfHostTooling = kfHostTooling;
+    qtXcrunShim = qt-xcrun-shim;
   };
+
+  kfPackages = import ./kf-packages.nix {
+    inherit
+      frameworkManifest
+      libintl-ios
+      mkIOSKFPackage
+      pkgs
+      versions
+      ;
+  };
+
+  inherit (kfPackages)
+    kcodecs-ios
+    kcolorscheme-ios
+    kcompletion-ios
+    kconfig-ios
+    kcoreaddons-ios
+    kguiaddons-ios
+    ki18n-ios
+    kitemviews-ios
+    kwidgetsaddons-ios
+    ;
+
+  kf6-consumer-check = pkgs.callPackage ./tests/kf-consumer.nix {
+    hostEcm = kfHostTooling.hostEcm;
+    hostQt = kfHostTooling.hostQt;
+    hostQtTools = kfHostTooling.hostQtTools;
+    kf6HostTooling = kf6-host-tooling;
+    qtXcrunShim = qt-xcrun-shim;
+    inherit
+      kcodecs-ios
+      kcolorscheme-ios
+      kcompletion-ios
+      kconfig-ios
+      kcoreaddons-ios
+      kguiaddons-ios
+      ki18n-ios
+      kitemviews-ios
+      kwidgetsaddons-ios
+      mkIOSCMakePackage
+      qtbase-ios
+      toolchain
+      ;
+  };
+
+  baseIOSPackages = [
+    zlib-ios
+    expat-ios
+    libpng-ios
+    freetype-ios
+    harfbuzz-ios
+    fontconfig-ios
+    lcms2-ios
+    eigen-ios
+    xsimd-ios
+    libunibreak-ios
+    libjpeg-turbo-ios
+    exiv2-ios
+    boost-ios
+    immer-ios
+    zug-ios
+    lager-ios
+    libintl-ios
+    fribidi-ios
+  ];
+
+  qtIOSPackages = [
+    qtbase-ios
+    qtsvg-ios
+    qt5compat-ios
+    quazip-ios
+  ];
+
+  kfIOSPackages = [
+    kconfig-ios
+    kwidgetsaddons-ios
+    kcodecs-ios
+    kcompletion-ios
+    kcoreaddons-ios
+    kguiaddons-ios
+    ki18n-ios
+    kitemviews-ios
+    kcolorscheme-ios
+  ];
+
+  allIOSPackages = baseIOSPackages ++ qtIOSPackages ++ kfIOSPackages;
+
+  mkIOSAggregate =
+    name: paths:
+    pkgs.symlinkJoin {
+      inherit name paths;
+      passthru.iosAggregateMembers = paths;
+      postBuild = ''
+        mkdir -p "$out/nix-support"
+        rm -f "$out/nix-support/propagated-build-inputs"
+        printf '%s ' ${lib.escapeShellArgs (map toString paths)} \
+          > "$out/nix-support/propagated-build-inputs"
+        printf '\n' >> "$out/nix-support/propagated-build-inputs"
+      '';
+    };
+
+  ios-base-dependencies = mkIOSAggregate "krita-ios-base-dependencies" baseIOSPackages;
+  qt-ios-dependencies = mkIOSAggregate "krita-qt-ios-dependencies" (baseIOSPackages ++ qtIOSPackages);
+  ios-dependencies = mkIOSAggregate "krita-ios-dependencies-bootstrap" allIOSPackages;
+  kf6-ios-dependencies = ios-dependencies;
 in
+assert lib.assertMsg (
+  builtins.length allIOSPackages == 31
+  && builtins.length (lib.unique (map toString allIOSPackages)) == 31
+) "final iOS dependency aggregate must contain exactly 31 unique outputs";
+assert lib.assertMsg (
+  map (package: package.pname) allIOSPackages == [
+    "zlib-ios"
+    "expat-ios"
+    "libpng-ios"
+    "freetype-ios"
+    "harfbuzz-ios"
+    "fontconfig-ios"
+    "lcms2-ios"
+    "eigen-ios"
+    "xsimd-ios"
+    "libunibreak-ios"
+    "libjpeg-turbo-ios"
+    "exiv2-ios"
+    "boost-ios"
+    "immer-ios"
+    "zug-ios"
+    "lager-ios"
+    "libintl-ios"
+    "fribidi-ios"
+    "qtbase-ios"
+    "qtsvg-ios"
+    "qt5compat-ios"
+    "quazip-ios"
+    "kconfig-ios"
+    "kwidgetsaddons-ios"
+    "kcodecs-ios"
+    "kcompletion-ios"
+    "kcoreaddons-ios"
+    "kguiaddons-ios"
+    "ki18n-ios"
+    "kitemviews-ios"
+    "kcolorscheme-ios"
+  ]
+) "final iOS dependency aggregate package order changed";
 {
   inherit
     boost-consumer-check
@@ -364,17 +514,28 @@ in
     fontconfig-consumer-check
     fontconfig-ios
     freetype-consumer-check
-    ios-dependencies
     freetype-ios
     harfbuzz-consumer-check
     harfbuzz-ios
     host-kconfig-compiler
+    ios-base-dependencies
+    ios-dependencies
     immer-consumer-check
     immer-ios
     lager-consumer-check
     lager-ios
     lcms2-ios
     kf6-host-tooling
+    kf6-consumer-check
+    kf6-ios-dependencies
+    kcodecs-ios
+    kcolorscheme-ios
+    kcompletion-ios
+    kconfig-ios
+    kcoreaddons-ios
+    kguiaddons-ios
+    ki18n-ios
+    kitemviews-ios
     libintl-consumer-check
     libintl-ios
     libjpeg-turbo-consumer-check
@@ -383,6 +544,7 @@ in
     libunibreak-ios
     libpng-ios
     qt5compat-ios
+    qt-ios-dependencies
     qtbase-ios
     qtsvg-ios
     qt-xcrun-shim
@@ -394,5 +556,6 @@ in
     zlib-ios
     zug-consumer-check
     zug-ios
+    kwidgetsaddons-ios
     ;
 }

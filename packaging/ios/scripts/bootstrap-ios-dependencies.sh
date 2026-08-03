@@ -8,7 +8,8 @@ usage: $0 --confirm-pinning-complete
 Run this once, after every iOS dependency recipe has been pinned and committed.
 It releases only the known repository-local legacy GC roots, performs a full
 Nix GC, builds the final .#ios-dependencies aggregate from the normal Git flake,
-and roots that aggregate only after the build succeeds.
+runs the complete KF6 link/code-generation check, and roots that aggregate only
+after both builds succeed.
 EOF
     exit 2
 }
@@ -27,10 +28,6 @@ if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
     echo "error: commit or remove all visible worktree changes before the clean bootstrap" >&2
     exit 1
 fi
-
-echo "checking the committed Git flake without building..."
-nix flake check --no-build
-nix eval --raw .#ios-dependencies.drvPath >/dev/null
 
 nix_roots="$repo_root/build-ios/nix-roots"
 
@@ -125,6 +122,10 @@ done
 echo "collecting all Nix store paths not protected by external GC roots..."
 nix-store --gc
 
+echo "checking the committed Git flake without building..."
+nix flake check --no-build
+nix eval --raw .#ios-dependencies.drvPath >/dev/null
+
 echo "bootstrapping the final iOS dependency aggregate..."
 aggregate_list="$(mktemp "${TMPDIR:-/tmp}/krita-ios-bootstrap-aggregate.XXXXXX")"
 trap 'rm -f "$aggregate_list"' EXIT
@@ -144,6 +145,12 @@ fi
 aggregate="${aggregate_paths[0]}"
 if [[ "$aggregate" != /nix/store/* ]] || ! nix-store --check-validity "$aggregate"; then
     echo "error: bootstrap returned an invalid aggregate path: $aggregate" >&2
+    exit 1
+fi
+
+echo "checking the bootstrapped KF6 target closure with a complete iOS link..."
+if ! nix build --no-link .#kf6-consumer-check; then
+    echo "error: KF6 integration check failed; no aggregate root was created" >&2
     exit 1
 fi
 
