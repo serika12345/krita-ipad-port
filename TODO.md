@@ -256,11 +256,11 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Layer追加・削除・並べ替え・可視性・opacity・blend mode。
 - [ ] **P0** Undo/Redo、selection、move、transform、crop、fill、gradient、textの基本動作。
 - [x] **P0** KRA/ORA/PNG/JPEG import/export（基本的な保存・再読み込みをビルド`20260802150920`で実機確認済み。KRA内の任意フィルター互換性は次項で継続する）。
-- [ ] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（`invert`を含むテストKRAは、現行の静的プラグイン構成ではファイルへ到達後にレイヤー読込エラーとなる）。
+- [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと、SeExprを除く6 generatorをiOS静的プロファイルへ追加。arm64リンク・登録・ランタイムデータ検査と、`invert`を含む実機KRAの保存・再起動・再読込を確認済み）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
 - [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール。
-- [ ] **P1** 基本フィルタとgenerator。
+- [x] **P1** 基本フィルタとgenerator（33 filterとSeExprを除く6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み）。
 - [ ] **P1** resource bundleのimport/export。
 - [ ] **P1** Bluetooth/USBキーボード操作。
 - [ ] **P2** アニメーションUI。ただし動画・音声exportは対象外。
