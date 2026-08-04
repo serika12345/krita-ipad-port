@@ -56,6 +56,13 @@ for document_key in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace; do
         exit 1
     fi
 done
+document_types="$(plutil -extract CFBundleDocumentTypes xml1 -o - "$app_path/Info.plist" 2>/dev/null || true)"
+for document_type in org.krita.kra org.krita.openraster public.png public.jpeg; do
+    if ! grep -Fq "$document_type" <<<"$document_types"; then
+        echo "error: iPadOS document type is missing from Info.plist: $document_type" >&2
+        exit 1
+    fi
+done
 
 if ! pgrep -x AltServer >/dev/null; then
     echo "error: AltServer is not running" >&2

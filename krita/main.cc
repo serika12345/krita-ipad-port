@@ -55,10 +55,12 @@
 
 #ifdef Q_OS_IOS
 #include <QAction>
+#include <QPointer>
 #include <QWindow>
 #include <KoToolManager.h>
 #include <kactioncollection.h>
 
+#include "KisIOSLifecycleHandler.h"
 #include "KisIOSMemoryWarningHandler.h"
 #include "KisIOSPencilInteraction.h"
 #endif
@@ -142,6 +144,32 @@ namespace
 void installTranslators(KisApplication &app);
 
 #ifdef Q_OS_IOS
+void handleKisIOSBackgroundTransition()
+{
+    if (!KisPart::exists()) {
+        return;
+    }
+
+    qInfo() << "iPadOS is moving Krita to the background; writing autosave recovery files";
+
+    KisPart *kisPart = KisPart::instance();
+    QList<QPointer<KisDocument>> documents = kisPart->documents();
+    for (const QPointer<KisDocument> &document : documents) {
+        if (document) {
+            document->autoSaveOnPause();
+        }
+    }
+
+    // Keep the same successful-canvas marker used by Android. This lets the
+    // normal startup path distinguish a suspended app from a prior GL failure.
+    const QString configPath = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    if (!configPath.isEmpty()) {
+        QSettings displayConfig(configPath + QStringLiteral("/kritadisplayrc"), QSettings::IniFormat);
+        displayConfig.setValue("canvasState", "OPENGL_SUCCESS");
+        displayConfig.sync();
+    }
+}
+
 void handleKisIOSPencilTap(KisIOSPencilTapAction tapAction)
 {
     // A double tap proves that the Pencil is active even when it has not
@@ -700,6 +728,14 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
         qWarning() << "Could not initialize the iOS Documents directory:" << documentsPath;
     }
 
+    // Recovery files are private app state, not user documents. Do not place
+    // them in Documents, Caches, tmp, or the system-managed Inbox directory.
+    const QString autosavePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/krita-autosave");
+    if (autosavePath.isEmpty() || !QDir().mkpath(autosavePath)) {
+        qWarning() << "Could not initialize the iOS autosave directory:" << autosavePath;
+    }
+
     // Persist the safe iPad ceiling if an older build stored a larger value.
     KisImageConfig memoryConfig(false);
     memoryConfig.setMemoryHardLimitPercent(memoryConfig.memoryHardLimitPercent());
@@ -925,6 +961,7 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     QWindow *window = mainWindow ? mainWindow->windowHandle() : nullptr;
     void *nativeView = window ? reinterpret_cast<void *>(window->winId()) : nullptr;
     installKisIOSPencilInteraction(nativeView, handleKisIOSPencilTap);
+    installKisIOSLifecycleHandler(handleKisIOSBackgroundTransition);
     installKisIOSMemoryWarningHandler();
 #endif
 

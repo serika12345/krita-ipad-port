@@ -4,6 +4,57 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Krita document</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>org.krita.kra</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>OpenRaster image</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>org.krita.openraster</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>PNG image</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.png</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>JPEG image</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.jpeg</string>
+            </array>
+        </dict>
+    </array>
     <key>CFBundleDisplayName</key>
     <string>Krita</string>
     <key>CFBundleExecutable</key>
@@ -30,6 +81,8 @@
     <true/>
     <key>MinimumOSVersion</key>
     <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
+    <key>UISupportsDocumentBrowser</key>
+    <true/>
     <key>UIFileSharingEnabled</key>
     <true/>
     <key>UIDeviceFamily</key>
@@ -41,6 +94,52 @@
     <key>UIRequiredDeviceCapabilities</key>
     <array>
         <string>arm64</string>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.content</string>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>Krita document</string>
+            <key>UTTypeIdentifier</key>
+            <string>org.krita.kra</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>kra</string>
+                </array>
+                <key>public.mime-type</key>
+                <string>application/x-krita</string>
+            </dict>
+        </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.content</string>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>OpenRaster image</string>
+            <key>UTTypeIdentifier</key>
+            <string>org.krita.openraster</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>ora</string>
+                </array>
+                <key>public.mime-type</key>
+                <string>image/openraster</string>
+            </dict>
+        </dict>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>

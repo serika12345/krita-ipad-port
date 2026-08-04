@@ -224,7 +224,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [x] **P0** Qt iOSの`UIDocumentPicker`をKritaのopen/saveダイアログとして有効化し、実機でopen/saveの両方を確認する（ビルド`20260802143848`でFilesから`Untitled.kra`を開き、`NativeSaveTest.kra`をFilesへ保存して確認済み）。
 - [ ] **P0** open/import/export/save/save-asの動線をiPadOS向けに整理する。
-- [ ] **P0** security-scoped URLの開始、終了、bookmark保持を実装する。
+- [x] **P0** security-scoped URLの開始、終了、bookmark保持をQt iOSの標準file engineへ委譲する。`UIDocumentPicker`とFilesからの`QFileOpenEvent`が同じengineにURLを登録し、Qt 6.11.1がアクセス期間と永続bookmarkを管理する。
 - [x] **P0** ユーザーファイルの既定位置を現在のアプリコンテナの`Documents`へ固定し、AltStore再インストール後の古い絶対パスから自動回復する。
 - [x] **P0** `UIFileSharingEnabled`と`LSSupportsOpeningDocumentsInPlace`を有効化し、デプロイ時に両設定を機械検査する。
 - [ ] **P0** inbox、temporary、Documents、cacheの用途を完全に分離する。
@@ -233,11 +233,11 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** ネイティブSaveで保存したKRAをUSBで回収し、全ZIPエントリが破損していないことを検証する（ビルド`20260802143848`、`NativeSaveTest.kra`、13エントリ）。
 - [x] **P0** PNGをネイティブSaveで`Documents`へ保存し、USBで回収後に2480×3508、8-bit RGBAとしてデコード・目視確認し、FilesからKritaへ再読み込みする（ビルド`20260802143848`、`NativeSaveTest.png`）。
 - [x] **P0** JPEG保存後のサムネイル生成でQt同梱版と外部版の静的libjpegが衝突するクラッシュを、iOSではQt同梱版へ統一して修正する。JPEGの保存・再読み込み、USB回収後の外部デコード、クラッシュレポート非生成を確認する（ビルド`20260802150920`、`NativeSaveTest2.jpg`）。
-- [ ] **P0** background移行前の保存・journal処理を実装する。
+- [x] **P0** background移行前に全変更documentのrecovery autosaveとcanvas状態markerを同期し、UIKit background task内で完了を待つ。
 - [ ] **P0** foreground復帰時にcanvas/GPU/resourceを復元する。
 - [x] **P0** `UIApplicationDidReceiveMemoryWarningNotification`を受け、使用中でないtileをswapへ退避してtile allocatorとQt pixmapのcacheを解放する。
 - [ ] **P0** 強制終了後のautosave recoveryを検証する。
-- [ ] **P1** Filesから「共有/開く」でKritaへ渡すDocument Typeを設定する。
+- [ ] **P1** Filesから「共有/開く」でKritaへ渡すDocument Type（KRA/ORA/PNG/JPEG）を設定し、実機でcold/warm launchの双方を確認する（実装済み、実機確認待ち）。
 - [ ] **P1** iCloud Drive上のファイルで競合・遅延を検証する。
 
 ### 完了条件

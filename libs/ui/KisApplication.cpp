@@ -453,7 +453,7 @@ void KisApplication::addResourceTypes()
 bool KisApplication::event(QEvent *event)
 {
 
-    #ifdef Q_OS_MACOS
+    #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (event->type() == QEvent::FileOpen) {
         QFileOpenEvent *openEvent = static_cast<QFileOpenEvent *>(event);
         fileOpenRequested(openEvent->file());

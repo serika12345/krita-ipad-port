@@ -282,6 +282,15 @@ QString KisAutoSaveRecoveryDialog::autoSaveLocation()
         QDir().mkpath(path);
     }
     return path;
+#elif defined(Q_OS_IOS)
+    // Keep recovery data private to the app. Documents is intentionally
+    // reserved for user-visible work and Caches/tmp may be removed by iPadOS.
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        .append("/krita-autosave");
+    if (!QDir(path).exists()) {
+        QDir().mkpath(path);
+    }
+    return path;
 #else
     // On Linux, use a temp file in $HOME then. Mark it with the pid so two instances don't overwrite each other's
     // autosave file

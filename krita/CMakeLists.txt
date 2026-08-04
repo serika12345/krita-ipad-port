@@ -18,6 +18,7 @@ if (IOS)
     set_source_files_properties(${KRITA_IOS_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     list(APPEND krita_SRCS
         ${KRITA_IOS_ICON}
+        KisIOSLifecycleHandler.mm
         KisIOSMemoryWarningHandler.mm
         KisIOSPencilInteraction.mm
     )
