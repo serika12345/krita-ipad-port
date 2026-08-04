@@ -11,6 +11,25 @@
     "kritajpegexport",
     "kritaoraimport",
     "kritaoraexport",
+    "kritacsvimport",
+    "kritacsvexport",
+    "kritasvgimport",
+    "kritaqimageioimport",
+    "kritaqimageioexport",
+    "kritaxcfimport",
+    "kritapsdimport",
+    "kritapsdexport",
+    "kritaqmlexport",
+    "kritatgaimport",
+    "kritatgaexport",
+    "kritaheightmapimport",
+    "kritaheightmapexport",
+    "kritabrushimport",
+    "kritabrushexport",
+    "kritaspriterexport",
+    "kritakrzexport",
+    "kritargbeimport",
+    "kritargbeexport",
     "kritadefaultpaintops",
     "kritacolorsmudgepaintop",
     "kritacurvepaintop",
@@ -104,7 +123,29 @@
     "kritasnapshotdocker",
     "kritawgcolorselector",
     "kritabrushhud",
-    "kritalcmsengine"
+    "kritalcmsengine",
+    "krita_colorspaces_extensions",
+    "krita_shape_image",
+    "krita_shape_paths",
+    "kritaexif",
+    "kritaiptc",
+    "kritaxmp",
+    "kritaimagesplit",
+    "kritaclonesarray",
+    "kritacolorrange",
+    "kritacolorspaceconversion",
+    "kritametadataeditor",
+    "kritamodifyselection",
+    "kritaoffsetimage",
+    "kritarotateimage",
+    "kritaseparatechannels",
+    "kritashearimage",
+    "kritalayergroupswitcher",
+    "kritaresourcemanager",
+    "kritalayersplit",
+    "kritawaveletdecompose",
+    "kritasamplescreencolor",
+    "kritadbexplorer"
   ],
   "excluded": [
     {
@@ -122,6 +163,10 @@
     {
       "feature": "Recorder video export and Composition animation export",
       "reason": "They require QProcess/FFmpeg; snapshot recording and image composition export remain available."
+    },
+    {
+      "feature": "Python/PyQt, G'MIC, and the external bug-report workflow",
+      "reason": "They are explicitly outside the self-contained iPadOS profile."
     }
   ]
 }

@@ -13,7 +13,7 @@
 
 #include "ora_converter.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(ImportFactory, "krita_ora_import.json", registerPlugin<OraImport>();)
+K_PLUGIN_FACTORY_WITH_JSON(KisOraImportFactory, "krita_ora_import.json", registerPlugin<OraImport>();)
 
 OraImport::OraImport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -35,4 +35,3 @@ KisImportExportErrorCode OraImport::convert(KisDocument *document, QIODevice *io
 }
 
 #include <ora_import.moc>
-

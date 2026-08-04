@@ -29,7 +29,7 @@
 
 class KisExternalLayer;
 
-K_PLUGIN_FACTORY_WITH_JSON(ExportFactory, "krita_ora_export.json", registerPlugin<OraExport>();)
+K_PLUGIN_FACTORY_WITH_JSON(KisOraExportFactory, "krita_ora_export.json", registerPlugin<OraExport>();)
 
 OraExport::OraExport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -103,4 +103,3 @@ QString OraExport::verify(const QString &fileName) const
 
 
 #include <ora_export.moc>
-
