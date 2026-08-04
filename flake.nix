@@ -38,6 +38,7 @@
         dependencyManifestFile = ./packaging/ios/deps/dependencies.json;
         qtManifestFile = ./packaging/ios/qt/modules.json;
         frameworkManifestFile = ./packaging/ios/frameworks/frameworks.json;
+        pluginProfileFile = ./packaging/ios/manifests/initial-plugin-profile.json;
         kritaSource = kritaBuildSource;
       };
     in

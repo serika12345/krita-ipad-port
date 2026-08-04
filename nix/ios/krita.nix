@@ -12,6 +12,7 @@
   ki18n-ios,
   kitemviews-ios,
   kritaSource,
+  pluginProfileFile,
   kwidgetsaddons-ios,
   lib,
   mkIOSCMakePackage,
@@ -84,9 +85,7 @@ let
     kcolorscheme-ios
   ];
 
-  pluginProfile = builtins.fromJSON (
-    builtins.readFile (kritaSource + "/packaging/ios/manifests/initial-plugin-profile.json")
-  );
+  pluginProfile = builtins.fromJSON (builtins.readFile pluginProfileFile);
 in
 assert lib.assertMsg (
   builtins.length targetDependencies == 31
@@ -261,6 +260,14 @@ mkIOSCMakePackage {
         grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' <<<"$build_metadata"
         grep -Eq 'minos[[:space:]]+${toolchain.deploymentTarget}([[:space:]]|$)' <<<"$build_metadata"
         grep -Eq 'sdk[[:space:]]+${toolchain.sdkVersion}([[:space:]]|$)' <<<"$build_metadata"
+
+        binary_symbols="$(${toolchain.nm} "$binary")"
+        for qt_svg_plugin in QSvgIconPlugin QSvgPlugin; do
+          if ! grep -Fq "qt_static_plugin_$qt_svg_plugin" <<<"$binary_symbols"; then
+            echo "error: Krita omits the static Qt SVG plugin $qt_svg_plugin" >&2
+            exit 1
+          fi
+        done
 
         ${python3}/bin/python3 - "$app/Info.plist" <<'PY'
     import plistlib

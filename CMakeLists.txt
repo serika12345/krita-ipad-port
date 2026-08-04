@@ -613,6 +613,20 @@ if (QT_MAJOR_VERSION STREQUAL "6")
         SvgWidgets
     )
 
+    if(IOS)
+        # Qt SVG installs its image-format and icon-engine plugins as members
+        # of QtGui. When QtBase and QtSvg use separate prefixes, QtGui's
+        # automatic plugin scan cannot see them, so import them explicitly.
+        find_package(Qt6QSvgIconPlugin ${MIN_QT_VERSION} REQUIRED CONFIG
+            PATHS "${Qt6Svg_DIR}/../Qt6Gui"
+            NO_DEFAULT_PATH
+        )
+        find_package(Qt6QSvgPlugin ${MIN_QT_VERSION} REQUIRED CONFIG
+            PATHS "${Qt6Svg_DIR}/../Qt6Gui"
+            NO_DEFAULT_PATH
+        )
+    endif()
+
     find_package(Qt${QT_MAJOR_VERSION} ${MIN_QT_VERSION}
         OPTIONAL_COMPONENTS
         WaylandClient

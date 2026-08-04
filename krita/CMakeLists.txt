@@ -175,6 +175,14 @@ target_link_libraries(krita
                       Qt${QT_MAJOR_VERSION}::Xml
                       Qt${QT_MAJOR_VERSION}::Network
                       Qt${QT_MAJOR_VERSION}::Svg)
+if(IOS AND QT_MAJOR_VERSION STREQUAL "6")
+    target_link_libraries(krita PRIVATE
+        Qt6::QSvgIconPlugin
+        Qt6::QSvgIconPlugin_init
+        Qt6::QSvgPlugin
+        Qt6::QSvgPlugin_init
+    )
+endif()
 if(IOS AND KRITA_IOS_BUILD_PLUGINS)
     krita_ios_target_static_plugins(krita)
 endif()

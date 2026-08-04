@@ -4,6 +4,7 @@
   dependencyManifestFile,
   qtManifestFile,
   frameworkManifestFile,
+  pluginProfileFile,
   kritaSource,
 }:
 
@@ -468,6 +469,7 @@ let
       ki18n-ios
       kitemviews-ios
       kritaSource
+      pluginProfileFile
       kwidgetsaddons-ios
       lager-ios
       lcms2-ios
