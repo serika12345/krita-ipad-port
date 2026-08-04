@@ -4,8 +4,23 @@ add_subdirectory( libpaintop )
 add_subdirectory( defaultpaintops )
 
 if(IOS)
-    # The initial iPadOS profile contains only the Pixel Brush/eraser/clone
-    # engine. Add the remaining paint-op families incrementally.
+    # MyPaint has its own optional target dependency. The remaining built-in
+    # paint-op families are dependency-free and can be statically registered.
+    if(KRITA_IOS_PLUGIN_EXTENDED_PAINTOPS)
+        add_subdirectory( hairy )
+        add_subdirectory( deform )
+        add_subdirectory( curvebrush )
+        add_subdirectory( spray )
+        add_subdirectory( filterop )
+        add_subdirectory( experiment )
+        add_subdirectory( particle )
+        add_subdirectory( gridbrush )
+        add_subdirectory( hatching )
+        add_subdirectory( sketch )
+        add_subdirectory( colorsmudge )
+        add_subdirectory( roundmarker )
+        add_subdirectory( tangentnormal )
+    endif()
     return()
 endif()
 

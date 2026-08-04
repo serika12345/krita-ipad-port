@@ -259,7 +259,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと、SeExprを除く6 generatorをiOS静的プロファイルへ追加。arm64リンク・登録・ランタイムデータ検査と、`invert`を含む実機KRAの保存・再起動・再読込を確認済み）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
-- [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール。
+- [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール（MyPaintを除く13 paintopを静的プロファイルへ追加し、arm64リンク・登録・画像リソースを機械検査済み。Color Smudge、Spray、Hatching、Filter Brush（Invert）を含む主要engineの実機描画を確認済み。Colorizeは継続）。
 - [x] **P1** 基本フィルタとgenerator（33 filterとSeExprを除く6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み）。
 - [ ] **P1** resource bundleのimport/export。
 - [ ] **P1** Bluetooth/USBキーボード操作。
