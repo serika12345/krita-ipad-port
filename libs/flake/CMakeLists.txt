@@ -290,9 +290,9 @@ target_link_libraries(kritaflake
         Boost::boost
         Freetype::Freetype
         HarfBuzz::HarfBuzz
+        Fontconfig::Fontconfig
     PRIVATE
         Raqm::Raqm
-        Fontconfig::Fontconfig
         libunibreak::libunibreak
 )
 

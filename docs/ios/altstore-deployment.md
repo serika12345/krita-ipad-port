@@ -39,6 +39,19 @@ packaging/ios/scripts/deploy-altstore.sh --skip-build \
   216CE849-760C-5BFF-8835-CF7C6A1AD431
 ```
 
+To generate only the reproducible unsigned IPA for selection in AltStore or a
+compatible sideloading store, use:
+
+```sh
+nix build .#krita-ios-ipa \
+  --out-link build-ios/nix-results/krita-ios-ipa
+```
+
+Select
+`build-ios/nix-results/krita-ios-ipa/Krita-iPad-unsigned.ipa`. The archive is
+deliberately unsigned; AltStore supplies the development signature required by
+iPadOS at installation time.
+
 The script performs these operations in order:
 
 1. Configure and build Krita inside `nix develop` unless `--skip-build` is set.

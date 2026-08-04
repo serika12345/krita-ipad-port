@@ -109,10 +109,32 @@ rebuild deterministically. At the next migration checkpoint, the resulting
 18-package aggregate and its complete 19-path target closure were restored into
 an empty local store solely from the binary cache.
 
-All dependency packages in the current profile are now represented by the Nix
-aggregate. The existing `build-ios/` builders remain in the device deployment
-path until Krita itself and the unsigned IPA are moved into derivations; they
-are not part of the clean dependency-bootstrap proof.
+All dependency packages in the current profile are represented by the Nix
+aggregate. Krita itself and the deterministic unsigned IPA are separate final
+derivations on top of that aggregate. Build rooted outputs with:
+
+```sh
+nix build .#krita-ios-app \
+  --out-link build-ios/nix-results/krita-ios-app
+nix build .#krita-ios-ipa \
+  --out-link build-ios/nix-results/krita-ios-ipa
+```
+
+The artifacts are
+`build-ios/nix-results/krita-ios-app/krita.app` and
+`build-ios/nix-results/krita-ios-ipa/Krita-iPad-unsigned.ipa`. The app
+derivation builds the 50-target initial static-plugin profile, installs the
+runtime resource tree into the bundle, and rejects the wrong architecture,
+Apple platform, deployment target, SDK, bundle metadata, signing state, or a
+temporary build/Xcode path leak. The IPA derivation normalizes timestamps and
+entry order, omits signing and Finder metadata, and tests the completed ZIP.
+
+Nix expressions, generated outputs, port documentation, and `TODO.md` are
+excluded from the filtered Krita compilation source. Changing those files can
+invalidate the relevant recipe or IPA layer without rebuilding Krita; changing
+Krita/CMake source still invalidates the app as intended. The legacy
+`build-ios/` builders remain available for device deployment during the
+transition but are no longer required to produce the unsigned app or IPA.
 
 To validate an actual source build rather than a binary-cache substitution:
 

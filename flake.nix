@@ -8,12 +8,37 @@
     let
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
+      kritaBuildSource = pkgs.lib.cleanSourceWith {
+        name = "krita-ios-source";
+        src = ./.;
+        filter =
+          path: _type:
+          let
+            relativePath = pkgs.lib.removePrefix "${toString ./.}/" (toString path);
+            topLevel = builtins.head (pkgs.lib.splitString "/" relativePath);
+          in
+          !(builtins.elem topLevel [
+            ".cache"
+            ".git"
+            ".github"
+            ".gitlab"
+            "AGENTS.md"
+            "TODO.md"
+            "build-ios"
+            "docs"
+            "flake.lock"
+            "flake.nix"
+            "logs"
+            "nix"
+          ]);
+      };
       iosPackages = import ./nix/ios {
         inherit pkgs;
         versionsFile = ./packaging/ios/versions.env;
         dependencyManifestFile = ./packaging/ios/deps/dependencies.json;
         qtManifestFile = ./packaging/ios/qt/modules.json;
         frameworkManifestFile = ./packaging/ios/frameworks/frameworks.json;
+        kritaSource = kritaBuildSource;
       };
     in
     {
@@ -81,6 +106,8 @@
           kguiaddons-ios
           ki18n-ios
           kitemviews-ios
+          krita-ios-app
+          krita-ios-ipa
           lager-ios
           lcms2-ios
           kf6-host-tooling

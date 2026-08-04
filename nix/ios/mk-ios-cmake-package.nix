@@ -23,6 +23,7 @@
   enableFullAppleToolchain ? false,
   enableTargetPkgConfig ? false,
   inspectAllAppleObjects ? false,
+  installScripts ? [ ],
   nativeBuildInputs ? [ ],
   nativeInstallCheckInputs ? [ ],
   passthru ? { },
@@ -336,6 +337,12 @@ assert lib.assertMsg (lib.isBool enableTargetPkgConfig)
   "iOS CMake enableTargetPkgConfig must be a boolean";
 assert lib.assertMsg (lib.isBool inspectAllAppleObjects)
   "iOS CMake inspectAllAppleObjects must be a boolean";
+assert lib.assertMsg (lib.all (
+  script:
+  lib.isString script
+  && !(lib.hasPrefix "/" script)
+  && builtins.match "(^|.*/)\.\.(/.*|$)" script == null
+) installScripts) "iOS CMake install scripts must be relative paths below the build directory";
 assert lib.assertMsg (
   !inspectAllAppleObjects || staticArchives == [ ]
 ) "iOS CMake inspectAllAppleObjects cannot be combined with explicit staticArchives";
@@ -625,6 +632,22 @@ stdenvNoCC.mkDerivation (
     }
     // meta;
   }
+  // lib.optionalAttrs (installScripts != [ ]) {
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p "$out"
+      for install_script in ${lib.escapeShellArgs installScripts}; do
+        if ! test -f "$install_script"; then
+          echo "error: CMake install script is missing: $install_script" >&2
+          exit 1
+        fi
+        cmake -DCMAKE_INSTALL_PREFIX="$out" -P "$install_script"
+      done
+
+      runHook postInstall
+    '';
+  }
   // removeAttrs args [
     "appleSdkResolver"
     "cmakeFlags"
@@ -632,6 +655,7 @@ stdenvNoCC.mkDerivation (
     "enableFullAppleToolchain"
     "enableTargetPkgConfig"
     "inspectAllAppleObjects"
+    "installScripts"
     "meta"
     "nativeBuildInputs"
     "nativeInstallCheckInputs"

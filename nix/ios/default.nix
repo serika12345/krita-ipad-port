@@ -4,6 +4,7 @@
   dependencyManifestFile,
   qtManifestFile,
   frameworkManifestFile,
+  kritaSource,
 }:
 
 let
@@ -447,6 +448,51 @@ let
 
   allIOSPackages = baseIOSPackages ++ qtIOSPackages ++ kfIOSPackages;
 
+  krita-ios-app = pkgs.callPackage ./krita.nix {
+    inherit
+      boost-ios
+      eigen-ios
+      exiv2-ios
+      expat-ios
+      fontconfig-ios
+      freetype-ios
+      fribidi-ios
+      harfbuzz-ios
+      immer-ios
+      kcodecs-ios
+      kcolorscheme-ios
+      kcompletion-ios
+      kconfig-ios
+      kcoreaddons-ios
+      kguiaddons-ios
+      ki18n-ios
+      kitemviews-ios
+      kritaSource
+      kwidgetsaddons-ios
+      lager-ios
+      lcms2-ios
+      libintl-ios
+      libjpeg-turbo-ios
+      libpng-ios
+      libunibreak-ios
+      mkIOSCMakePackage
+      qt5compat-ios
+      qtbase-ios
+      qtsvg-ios
+      quazip-ios
+      toolchain
+      xsimd-ios
+      zlib-ios
+      zug-ios
+      ;
+    kfHostTooling = kfHostTooling;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
+  krita-ios-ipa = pkgs.callPackage ./ipa.nix {
+    inherit krita-ios-app;
+  };
+
   mkIOSAggregate =
     name: paths:
     pkgs.symlinkJoin {
@@ -540,6 +586,8 @@ assert lib.assertMsg (
     kguiaddons-ios
     ki18n-ios
     kitemviews-ios
+    krita-ios-app
+    krita-ios-ipa
     libintl-consumer-check
     libintl-ios
     libjpeg-turbo-consumer-check

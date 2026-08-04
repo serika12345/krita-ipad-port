@@ -344,7 +344,10 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] FriBidiを共通Meson sandboxの最初の`fribidi-ios` derivationへ移し、7個のnative macOS generatorと18-object iOS runtimeの分離、deprecated API互換、Kritaの`FindFriBidi.cmake`を使うconsumer、決定的再ビルド、binary cache復元を検証する。
   - [x] 残るC/C++依存をパッケージ単位のderivationへ移し、18個の基礎依存を`ios-dependencies`で統合する。
   - [x] Qt 6/QuaZipの4 derivationと必須KF6の9 derivationを段階化し、31依存aggregateへ統合する。
-  - [ ] Krita本体と未署名IPAを段階的なderivationへ移す。
+  - [x] Krita本体と未署名IPAを段階的なderivationへ移す。
+    - [x] 固定済み31依存の上で、初期静的プラグイン50 targetとruntime dataを含むarm64/iOS 17.0アプリを`krita-ios-app`として構築し、SDK 26.5、plist、未署名状態、リソース、build/Xcode path非混入を検査する。
+    - [x] timestampとentry順を正規化した`krita-ios-ipa`を追加し、ZIP整合性、必須ファイル、署名/Finder metadata非混入を検査して87 MiBのIPA生成を確認する。
+    - [x] Nix recipe、生成物、移植文書、TODOをKrita compilation sourceから除外し、IPA/文書変更がKrita本体の再ビルドへ波及しないcache境界を固定する。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
   - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
