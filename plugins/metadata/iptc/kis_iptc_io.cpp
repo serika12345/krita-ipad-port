@@ -29,32 +29,40 @@ struct IPTCToKMD {
     QString name;
 };
 
-static const IPTCToKMD mappings[] = {
-    {"Iptc.Application2.City", KisMetaData::Schema::PhotoshopSchemaUri, "City"},
-    {"Iptc.Application2.Copyright", KisMetaData::Schema::DublinCoreSchemaUri, "rights"},
-    {"Iptc.Application2.CountryName", KisMetaData::Schema::PhotoshopSchemaUri, "Country"},
-    {"Iptc.Application2.CountryCode", KisMetaData::Schema::IPTCSchemaUri, "CountryCode"},
-    {"Iptc.Application2.Byline", KisMetaData::Schema::DublinCoreSchemaUri, "creator"},
-    {"Iptc.Application2.BylineTitle", KisMetaData::Schema::PhotoshopSchemaUri, "AuthorsPosition"},
-    {"Iptc.Application2.DateCreated", KisMetaData::Schema::PhotoshopSchemaUri, "DateCreated"},
-    {"Iptc.Application2.Caption", KisMetaData::Schema::DublinCoreSchemaUri, "description"},
-    {"Iptc.Application2.Writer", KisMetaData::Schema::PhotoshopSchemaUri, "CaptionWriter"},
-    {"Iptc.Application2.Headline", KisMetaData::Schema::PhotoshopSchemaUri, "Headline"},
-    {"Iptc.Application2.SpecialInstructions", KisMetaData::Schema::PhotoshopSchemaUri, "Instructions"},
-    {"Iptc.Application2.ObjectAttribute", KisMetaData::Schema::IPTCSchemaUri, "IntellectualGenre"},
-    {"Iptc.Application2.TransmissionReference", KisMetaData::Schema::PhotoshopSchemaUri, "JobID"},
-    {"Iptc.Application2.Keywords", KisMetaData::Schema::DublinCoreSchemaUri, "subject"},
-    {"Iptc.Application2.SubLocation", KisMetaData::Schema::IPTCSchemaUri, "Location"},
-    {"Iptc.Application2.Credit", KisMetaData::Schema::PhotoshopSchemaUri, "Credit"},
-    {"Iptc.Application2.ProvinceState", KisMetaData::Schema::PhotoshopSchemaUri, "State"},
-    {"Iptc.Application2.Source", KisMetaData::Schema::PhotoshopSchemaUri, "Source"},
-    {"Iptc.Application2.Subject", KisMetaData::Schema::IPTCSchemaUri, "SubjectCode"},
-    {"Iptc.Application2.ObjectName", KisMetaData::Schema::DublinCoreSchemaUri, "title"},
-    {"Iptc.Application2.Urgency", KisMetaData::Schema::PhotoshopSchemaUri, "Urgency"},
-    {"Iptc.Application2.Category", KisMetaData::Schema::PhotoshopSchemaUri, "Category"},
-    {"Iptc.Application2.SuppCategory", KisMetaData::Schema::PhotoshopSchemaUri, "SupplementalCategory"},
-    {"", "", ""} // indicates the end of the array
-};
+static const IPTCToKMD *iptcMappings()
+{
+    // The schema URIs are QString objects defined in another translation unit.
+    // Initialize this table on first use so static builds do not depend on the
+    // unspecified initialization order of those objects.
+    static const IPTCToKMD mappings[] = {
+        {"Iptc.Application2.City", KisMetaData::Schema::PhotoshopSchemaUri, "City"},
+        {"Iptc.Application2.Copyright", KisMetaData::Schema::DublinCoreSchemaUri, "rights"},
+        {"Iptc.Application2.CountryName", KisMetaData::Schema::PhotoshopSchemaUri, "Country"},
+        {"Iptc.Application2.CountryCode", KisMetaData::Schema::IPTCSchemaUri, "CountryCode"},
+        {"Iptc.Application2.Byline", KisMetaData::Schema::DublinCoreSchemaUri, "creator"},
+        {"Iptc.Application2.BylineTitle", KisMetaData::Schema::PhotoshopSchemaUri, "AuthorsPosition"},
+        {"Iptc.Application2.DateCreated", KisMetaData::Schema::PhotoshopSchemaUri, "DateCreated"},
+        {"Iptc.Application2.Caption", KisMetaData::Schema::DublinCoreSchemaUri, "description"},
+        {"Iptc.Application2.Writer", KisMetaData::Schema::PhotoshopSchemaUri, "CaptionWriter"},
+        {"Iptc.Application2.Headline", KisMetaData::Schema::PhotoshopSchemaUri, "Headline"},
+        {"Iptc.Application2.SpecialInstructions", KisMetaData::Schema::PhotoshopSchemaUri, "Instructions"},
+        {"Iptc.Application2.ObjectAttribute", KisMetaData::Schema::IPTCSchemaUri, "IntellectualGenre"},
+        {"Iptc.Application2.TransmissionReference", KisMetaData::Schema::PhotoshopSchemaUri, "JobID"},
+        {"Iptc.Application2.Keywords", KisMetaData::Schema::DublinCoreSchemaUri, "subject"},
+        {"Iptc.Application2.SubLocation", KisMetaData::Schema::IPTCSchemaUri, "Location"},
+        {"Iptc.Application2.Credit", KisMetaData::Schema::PhotoshopSchemaUri, "Credit"},
+        {"Iptc.Application2.ProvinceState", KisMetaData::Schema::PhotoshopSchemaUri, "State"},
+        {"Iptc.Application2.Source", KisMetaData::Schema::PhotoshopSchemaUri, "Source"},
+        {"Iptc.Application2.Subject", KisMetaData::Schema::IPTCSchemaUri, "SubjectCode"},
+        {"Iptc.Application2.ObjectName", KisMetaData::Schema::DublinCoreSchemaUri, "title"},
+        {"Iptc.Application2.Urgency", KisMetaData::Schema::PhotoshopSchemaUri, "Urgency"},
+        {"Iptc.Application2.Category", KisMetaData::Schema::PhotoshopSchemaUri, "Category"},
+        {"Iptc.Application2.SuppCategory", KisMetaData::Schema::PhotoshopSchemaUri, "SupplementalCategory"},
+        {"", "", ""} // indicates the end of the array
+    };
+
+    return mappings;
+}
 
 struct KisIptcIO::Private {
     QHash<QString, IPTCToKMD> iptcToKMD;
@@ -77,13 +85,19 @@ void KisIptcIO::initMappingsTable() const
 {
     // For some reason, initializing the tables in the constructor makes the it crash
     if (d->iptcToKMD.size() == 0) {
+        const IPTCToKMD *mappings = iptcMappings();
         for (int i = 0; !mappings[i].exivTag.isEmpty(); i++) {
+            const KisMetaData::Schema *schema =
+                KisMetaData::SchemaRegistry::instance()->schemaFromUri(mappings[i].namespaceUri);
+            if (!schema) {
+                warnKrita << "Skipping IPTC mapping for unavailable metadata schema" << mappings[i].namespaceUri;
+                continue;
+            }
+
             dbgKrita << "mapping[i] = " << mappings[i].exivTag << " " << mappings[i].namespaceUri << " "
                      << mappings[i].name;
             d->iptcToKMD[mappings[i].exivTag] = mappings[i];
-            d->kmdToIPTC[KisMetaData::SchemaRegistry::instance()
-                             ->schemaFromUri(mappings[i].namespaceUri)
-                             ->generateQualifiedName(mappings[i].name)] = mappings[i];
+            d->kmdToIPTC[schema->generateQualifiedName(mappings[i].name)] = mappings[i];
         }
     }
 }
@@ -181,6 +195,10 @@ bool KisIptcIO::loadFrom(KisMetaData::Store *store, QIODevice *ioDevice) const
             const IPTCToKMD &iptcToKMd = d->iptcToKMD[it->key().c_str()];
             const KisMetaData::Schema *schema =
                 KisMetaData::SchemaRegistry::instance()->schemaFromUri(iptcToKMd.namespaceUri);
+            if (!schema) {
+                warnKrita << "Skipping IPTC entry for unavailable metadata schema" << iptcToKMd.namespaceUri;
+                continue;
+            }
             KisMetaData::Value value;
             if (iptcToKMd.exivTag == "Iptc.Application2.Keywords") {
                 Q_ASSERT(it->getValue()->typeId() == Exiv2::string);
