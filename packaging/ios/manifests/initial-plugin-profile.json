@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "profile": "android-equivalent-ui",
-  "policy": "Static internal plugin set built, installed, and verified on an iPad. External extensions and unavailable platform dependencies remain excluded.",
+  "policy": "Static internal plugin set targeted by the iPadOS build. Build and real-device verification status is tracked separately in TODO.md; external extensions and unavailable platform dependencies remain excluded.",
   "targets": [
     "kritakraimport",
     "kritakraexport",
@@ -37,6 +37,14 @@
     "kritajp2import",
     "kritawebpimport",
     "kritawebpexport",
+    "kritagifimport",
+    "kritagifexport",
+    "kritaheifimport",
+    "kritaheifexport",
+    "kritajxlimport",
+    "kritajxlexport",
+    "krita_raw_import",
+    "kritapdfimport",
     "kritadefaultpaintops",
     "kritamypaintop",
     "kritacolorsmudgepaintop",
@@ -91,6 +99,7 @@
     "kritapatterngenerator",
     "kritascreentonegenerator",
     "kritasimplexnoisegenerator",
+    "kritaseexprgenerator",
     "kritaassistanttool",
     "kritadefaulttools",
     "krita_flaketools",
@@ -131,6 +140,7 @@
     "kritasnapshotdocker",
     "kritawgcolorselector",
     "kritabrushhud",
+    "kritalutdocker",
     "kritalcmsengine",
     "krita_colorspaces_extensions",
     "krita_shape_image",
@@ -158,15 +168,15 @@
   "excluded": [
     {
       "feature": "SVG Text tool and Text Properties docker",
-      "reason": "Qt Quick/QML is not part of the current iPadOS Qt profile."
+      "reason": "Their Qt Quick/QML static integration and iOS platform enablement require Krita changes beyond dependency resolution and linking."
     },
     {
       "feature": "Storyboard docker",
-      "reason": "Qt PrintSupport is unavailable in the current iPadOS Qt profile."
+      "reason": "Its unconditional Qt PrintSupport use must be separated in Krita code; dependency resolution and linking alone are insufficient."
     },
     {
-      "feature": "LUT and Small Color Selector dockers",
-      "reason": "OpenColorIO is not part of the current dependency profile."
+      "feature": "Small Color Selector docker",
+      "reason": "This OpenEXR-based docker is also excluded by Krita's Android build configuration."
     },
     {
       "feature": "Recorder video export and Composition animation export",

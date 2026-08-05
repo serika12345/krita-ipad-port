@@ -49,11 +49,15 @@ mark_as_advanced(libheif_DIR)
 # if we found the libheif CMake package then we are done, and
 # can print what we found and return.
 if(libheif_FOUND)
-    if (TARGET heif AND NOT TARGET HEIF::heif)
+    if (TARGET libheif::heif AND NOT TARGET HEIF::heif)
+        add_library(HEIF::heif ALIAS libheif::heif)
+    elseif (TARGET heif AND NOT TARGET HEIF::heif)
         add_library(HEIF::heif ALIAS heif)
+    elseif (TARGET HEIF::HEIF AND NOT TARGET HEIF::heif)
+        add_library(HEIF::heif ALIAS HEIF::HEIF)
     endif()
 
-    if (TARGET HEIF::HEIF)
+    if (TARGET HEIF::heif)
         set(HEIF_FOUND ON)
     else ()
         set(HEIF_FOUND OFF)

@@ -51,6 +51,13 @@
   lager-ios,
   libintl-ios,
   fribidi-ios,
+  giflib-ios,
+  kseexpr-ios,
+  libheif-ios,
+  libjxl-ios,
+  libkdcraw-ios,
+  opencolorio-ios,
+  poppler-ios,
 }:
 
 let
@@ -86,6 +93,13 @@ let
     lager-ios
     libintl-ios
     fribidi-ios
+    giflib-ios
+    libheif-ios
+    libjxl-ios
+    libkdcraw-ios
+    opencolorio-ios
+    poppler-ios
+    kseexpr-ios
     qtbase-ios
     qtsvg-ios
     qt5compat-ios
@@ -104,11 +118,13 @@ let
   pluginProfile = builtins.fromJSON (builtins.readFile pluginProfileFile);
 in
 assert lib.assertMsg (
-  builtins.length targetDependencies == 39
-) "Krita iOS must consume the complete 39-package target dependency set";
+  builtins.length targetDependencies == 46
+  && builtins.length (lib.unique (map toString targetDependencies)) == 46
+) "Krita iOS must consume the complete 46-package direct target dependency set";
 assert lib.assertMsg (pluginProfile.schema == 1) "unsupported Krita iOS plugin profile schema";
 assert lib.assertMsg (
-  builtins.length pluginProfile.targets == 151
+  builtins.length pluginProfile.targets == 161
+  && builtins.length (lib.unique pluginProfile.targets) == 161
 ) "Krita iOS initial plugin target inventory changed";
 mkIOSCMakePackage {
   pname = "krita-ios-app";
@@ -146,14 +162,7 @@ mkIOSCMakePackage {
     "-DBUILD_WITH_QT6:BOOL=ON"
     "-DCMAKE_DISABLE_FIND_PACKAGE_GSL:BOOL=TRUE"
     "-DCMAKE_DISABLE_FIND_PACKAGE_FFTW3:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_GIF:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_HEIF:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_JPEGXL:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_KDcrawQt6:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_KSeExpr:BOOL=TRUE"
     "-DCMAKE_DISABLE_FIND_PACKAGE_Mlt7:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_OpenColorIO:BOOL=TRUE"
-    "-DCMAKE_DISABLE_FIND_PACKAGE_Poppler:BOOL=TRUE"
     "-DCMAKE_DISABLE_FIND_PACKAGE_Qt6Quick:BOOL=TRUE"
     "-DCMAKE_DISABLE_FIND_PACKAGE_Qt6QuickWidgets:BOOL=TRUE"
     "-DCMAKE_DISABLE_FIND_PACKAGE_Qt6WaylandClient:BOOL=TRUE"
@@ -175,6 +184,8 @@ mkIOSCMakePackage {
     "-DKRITA_IOS_PLUGIN_CODEC_IMPEX:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_DEFAULT_PAINTOPS:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_MYPAINT:BOOL=ON"
+    "-DKRITA_IOS_PLUGIN_OPTIONAL_IMPEX:BOOL=ON"
+    "-DKRITA_IOS_PLUGIN_SEEXPR_GENERATOR:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_JPEG:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_KRA:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_LAYER_DOCKER:BOOL=ON"

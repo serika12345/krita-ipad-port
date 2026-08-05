@@ -361,6 +361,7 @@ if(IOS)
     option(KRITA_IOS_PLUGIN_SEEXPR_GENERATOR "Build the KSeExpr generator plugin for iOS" OFF)
     option(KRITA_IOS_PLUGIN_EXTENDED_IMPEX "Build dependency-free Android image import/export plugins for iOS" ON)
     option(KRITA_IOS_PLUGIN_CODEC_IMPEX "Build TIFF, OpenEXR, JPEG 2000, and WebP plugins for iOS" OFF)
+    option(KRITA_IOS_PLUGIN_OPTIONAL_IMPEX "Build GIF, HEIF, JPEG XL, RAW, and PDF plugins for iOS" OFF)
     option(KRITA_IOS_PLUGIN_EXTENSIONS "Build dependency-free Android image operation extensions for iOS" ON)
     option(KRITA_IOS_PLUGIN_FLAKE "Build Android vector shape plugins for iOS" ON)
     option(KRITA_IOS_PLUGIN_METADATA "Build Android metadata plugins for iOS" ON)
@@ -1685,6 +1686,30 @@ test_big_endian(CMAKE_WORDS_BIGENDIAN)
 ## Test for qt-poppler
 ##
 find_package(Poppler COMPONENTS Qt${QT_MAJOR_VERSION})
+if(IOS AND QT_MAJOR_VERSION STREQUAL "6" AND Poppler_Qt6_FOUND)
+    # ECM's imported Poppler targets only retain the regular pkg-config link
+    # set.  A static iOS build also needs the private codec, font, and color
+    # dependencies recorded by pkg-config.
+    if(TARGET Poppler::Core)
+        set(_poppler_core_static_links ${PKG_Poppler_Core_STATIC_LINK_LIBRARIES})
+        list(REMOVE_ITEM _poppler_core_static_links "${Poppler_Core_LIBRARY}" poppler)
+        set_property(TARGET Poppler::Core APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "${_poppler_core_static_links}")
+        set_property(TARGET Poppler::Core APPEND PROPERTY
+            INTERFACE_LINK_OPTIONS "${PKG_Poppler_Core_STATIC_LDFLAGS_OTHER}")
+        unset(_poppler_core_static_links)
+    endif()
+    if(TARGET Poppler::Qt6)
+        set(_poppler_qt6_static_links ${PKG_Poppler_Qt6_STATIC_LINK_LIBRARIES})
+        list(REMOVE_ITEM _poppler_qt6_static_links
+            "${Poppler_Qt6_LIBRARY}" "${Poppler_Core_LIBRARY}" poppler-qt6 poppler)
+        set_property(TARGET Poppler::Qt6 APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "Poppler::Core;${_poppler_qt6_static_links}")
+        set_property(TARGET Poppler::Qt6 APPEND PROPERTY
+            INTERFACE_LINK_OPTIONS "${PKG_Poppler_Qt6_STATIC_LDFLAGS_OTHER}")
+        unset(_poppler_qt6_static_links)
+    endif()
+endif()
 set_package_properties(Poppler PROPERTIES
     DESCRIPTION "A PDF rendering library"
     URL "https://poppler.freedesktop.org/"

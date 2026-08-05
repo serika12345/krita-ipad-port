@@ -70,6 +70,22 @@ let
         "fontconfig"
         "libintl"
         "fribidi"
+        "giflib"
+        "brotli"
+        "libhwy"
+        "libde265"
+        "x265"
+        "libaom"
+        "libheif"
+        "libjxl"
+        "libraw"
+        "yaml-cpp"
+        "pystring"
+        "minizip-ng"
+        "opencolorio"
+        "poppler"
+        "libkdcraw"
+        "kseexpr"
         "quazip"
       ]
     ) "iOS dependency manifest must contain exactly the pinned package sequence";
@@ -383,6 +399,89 @@ let
     inherit fribidi-ios mkIOSCMakePackage toolchain;
   };
 
+  giflib-ios = pkgs.callPackage ./packages/giflib.nix {
+    inherit mkIOSAutotoolsPackage;
+    packageSpec = dependencyByName.giflib;
+  };
+
+  brotli-ios = pkgs.callPackage ./packages/brotli.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.brotli;
+  };
+
+  libhwy-ios = pkgs.callPackage ./packages/libhwy.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.libhwy;
+  };
+
+  libde265-ios = pkgs.callPackage ./packages/libde265.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.libde265;
+  };
+
+  x265-ios = pkgs.callPackage ./packages/x265.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.x265;
+  };
+
+  libaom-ios = pkgs.callPackage ./packages/libaom.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.libaom;
+  };
+
+  libheif-ios = pkgs.callPackage ./packages/libheif.nix {
+    inherit
+      libaom-ios
+      libde265-ios
+      mkIOSCMakePackage
+      x265-ios
+      ;
+    packageSpec = dependencyByName.libheif;
+  };
+
+  libjxl-ios = pkgs.callPackage ./packages/libjxl.nix {
+    inherit
+      brotli-ios
+      lcms2-ios
+      libhwy-ios
+      mkIOSCMakePackage
+      ;
+    packageSpec = dependencyByName.libjxl;
+  };
+
+  libraw-ios = pkgs.callPackage ./packages/libraw.nix {
+    inherit lcms2-ios mkIOSAutotoolsPackage;
+    packageSpec = dependencyByName.libraw;
+  };
+
+  yaml-cpp-ios = pkgs.callPackage ./packages/yaml-cpp.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName."yaml-cpp";
+  };
+
+  pystring-ios = pkgs.callPackage ./packages/pystring.nix {
+    inherit mkIOSMesonPackage;
+    packageSpec = dependencyByName.pystring;
+  };
+
+  minizip-ng-ios = pkgs.callPackage ./packages/minizip-ng.nix {
+    inherit mkIOSCMakePackage zlib-ios;
+    packageSpec = dependencyByName."minizip-ng";
+  };
+
+  opencolorio-ios = pkgs.callPackage ./packages/opencolorio.nix {
+    inherit
+      expat-ios
+      imath-ios
+      minizip-ng-ios
+      mkIOSCMakePackage
+      pystring-ios
+      yaml-cpp-ios
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.opencolorio;
+  };
+
   qtbase-ios = pkgs.callPackage ./packages/qtbase.nix {
     inherit
       freetype-ios
@@ -425,6 +524,36 @@ let
     qtXcrunShim = qt-xcrun-shim;
   };
 
+  poppler-ios = pkgs.callPackage ./packages/poppler.nix {
+    inherit
+      boost-ios
+      fontconfig-ios
+      freetype-ios
+      kfHostTooling
+      lcms2-ios
+      libintl-ios
+      libjpeg-turbo-ios
+      mkIOSCMakePackage
+      openjpeg-ios
+      qtbase-ios
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.poppler;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
+  libkdcraw-ios = pkgs.callPackage ./packages/libkdcraw.nix {
+    inherit
+      kfHostTooling
+      libraw-ios
+      mkIOSCMakePackage
+      qtbase-ios
+      ;
+    libkdcraw = pkgs.kdePackages.libkdcraw;
+    packageSpec = dependencyByName.libkdcraw;
+    qtXcrunShim = qt-xcrun-shim;
+  };
+
   lcms2-ios = pkgs.callPackage ./packages/lcms2.nix {
     inherit mkIOSCMakePackage toolchain;
     packageSpec = dependencyByName.lcms2;
@@ -458,6 +587,17 @@ let
     kitemviews-ios
     kwidgetsaddons-ios
     ;
+
+  kseexpr-ios = pkgs.callPackage ./packages/kseexpr.nix {
+    inherit
+      kfHostTooling
+      ki18n-ios
+      mkIOSCMakePackage
+      qtbase-ios
+      ;
+    packageSpec = dependencyByName.kseexpr;
+    qtXcrunShim = qt-xcrun-shim;
+  };
 
   kf6-consumer-check = pkgs.callPackage ./tests/kf-consumer.nix {
     hostEcm = kfHostTooling.hostEcm;
@@ -515,6 +655,19 @@ let
     lager-ios
     libintl-ios
     fribidi-ios
+    giflib-ios
+    brotli-ios
+    libhwy-ios
+    libde265-ios
+    x265-ios
+    libaom-ios
+    libheif-ios
+    libjxl-ios
+    libraw-ios
+    yaml-cpp-ios
+    pystring-ios
+    minizip-ng-ios
+    opencolorio-ios
   ];
 
   qtIOSPackages = [
@@ -536,7 +689,13 @@ let
     kcolorscheme-ios
   ];
 
-  allIOSPackages = baseIOSPackages ++ qtIOSPackages ++ kfIOSPackages;
+  featureIOSPackages = [
+    poppler-ios
+    libkdcraw-ios
+    kseexpr-ios
+  ];
+
+  allIOSPackages = baseIOSPackages ++ qtIOSPackages ++ kfIOSPackages ++ featureIOSPackages;
 
   krita-ios-app = pkgs.callPackage ./krita.nix {
     inherit
@@ -563,6 +722,8 @@ let
       lager-ios
       lcms2-ios
       libdeflate-ios
+      giflib-ios
+      libheif-ios
       libintl-ios
       libjpeg-turbo-ios
       libmypaint-ios
@@ -571,10 +732,14 @@ let
       libtiff-ios
       libunibreak-ios
       libwebp-ios
+      libjxl-ios
+      libkdcraw-ios
       mkIOSCMakePackage
       imath-ios
       openexr-ios
       openjpeg-ios
+      opencolorio-ios
+      poppler-ios
       qt5compat-ios
       qtbase-ios
       qtsvg-ios
@@ -583,6 +748,7 @@ let
       xsimd-ios
       zlib-ios
       zug-ios
+      kseexpr-ios
       ;
     kfHostTooling = kfHostTooling;
     qtXcrunShim = qt-xcrun-shim;
@@ -630,9 +796,9 @@ let
   kf6-ios-dependencies = ios-dependencies;
 in
 assert lib.assertMsg (
-  builtins.length allIOSPackages == 42
-  && builtins.length (lib.unique (map toString allIOSPackages)) == 42
-) "final iOS dependency aggregate must contain exactly 42 unique outputs";
+  builtins.length allIOSPackages == 58
+  && builtins.length (lib.unique (map toString allIOSPackages)) == 58
+) "final iOS dependency aggregate must contain exactly 58 unique outputs";
 assert lib.assertMsg (
   map (package: package.pname) allIOSPackages == [
     "zlib-ios"
@@ -664,6 +830,19 @@ assert lib.assertMsg (
     "lager-ios"
     "libintl-ios"
     "fribidi-ios"
+    "giflib-ios"
+    "brotli-ios"
+    "libhwy-ios"
+    "libde265-ios"
+    "x265-ios"
+    "libaom-ios"
+    "libheif-ios"
+    "libjxl-ios"
+    "libraw-ios"
+    "yaml-cpp-ios"
+    "pystring-ios"
+    "minizip-ng-ios"
+    "opencolorio-ios"
     "qtbase-ios"
     "qtsvg-ios"
     "qt5compat-ios"
@@ -677,18 +856,25 @@ assert lib.assertMsg (
     "ki18n-ios"
     "kitemviews-ios"
     "kcolorscheme-ios"
+    "poppler-ios"
+    "libkdcraw-ios"
+    "kseexpr-ios"
   ]
 ) "final iOS dependency aggregate package order changed";
 {
+  kseexpr-source = pkgs.kseexpr.src;
+
   inherit
     boost-consumer-check
     boost-ios
+    brotli-ios
     eigen-ios
     exiv2-consumer-check
     exiv2-ios
     expat-ios
     fribidi-consumer-check
     fribidi-ios
+    giflib-ios
     fontconfig-consumer-check
     fontconfig-ios
     freetype-consumer-check
@@ -718,13 +904,24 @@ assert lib.assertMsg (
     krita-ios-app
     krita-ios-incremental-env
     krita-ios-ipa
+    kseexpr-ios
+    libaom-ios
+    libde265-ios
+    libheif-ios
+    libhwy-ios
     openexr-ios
     openjpeg-ios
+    opencolorio-ios
+    poppler-ios
+    pystring-ios
     libintl-consumer-check
     libintl-ios
     libdeflate-ios
     libjpeg-turbo-consumer-check
     libjpeg-turbo-ios
+    libjxl-ios
+    libkdcraw-ios
+    libraw-ios
     libtiff-ios
     libunibreak-consumer-check
     libunibreak-ios
@@ -737,9 +934,12 @@ assert lib.assertMsg (
     qt-xcrun-shim
     qttools-host-contract-check
     quazip-ios
+    minizip-ng-ios
     toolchain
     xsimd-consumer-check
     xsimd-ios
+    x265-ios
+    yaml-cpp-ios
     zlib-ios
     zug-consumer-check
     zug-ios

@@ -14,6 +14,15 @@
 # SPDX-FileCopyrightText: 2021 L. E. Segovia <amy@amyspark.me>
 # SPDX-License-Identifier: BSD-3-Clause
 
+find_package(OpenColorIO CONFIG QUIET NO_MODULE)
+if(OpenColorIO_FOUND AND TARGET OpenColorIO::OpenColorIO)
+    set(OPENCOLORIO_FOUND TRUE)
+    set(OPENCOLORIO_VERSION ${OpenColorIO_VERSION})
+    set(OPENCOLORIO_LIBRARIES OpenColorIO::OpenColorIO)
+    get_target_property(OPENCOLORIO_INCLUDES OpenColorIO::OpenColorIO INTERFACE_INCLUDE_DIRECTORIES)
+    return()
+endif()
+
 include (FindPackageHandleStandardArgs)
 include (FindPackageMessage)
 
@@ -101,4 +110,3 @@ if (OpenColorIO_FOUND AND LINKSTATIC)
         set (OPENCOLORIO_LIBRARIES "${OPENCOLORIO_LIBRARIES};${LCMS2_LIBRARY}" CACHE STRING "" FORCE)
     endif ()
 endif ()
-

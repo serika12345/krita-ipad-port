@@ -21,6 +21,7 @@
   configureFlags ? [ ],
   configureCache ? { },
   configureScript ? "./configure",
+  skipConfigure ? false,
   makeTargets ? [ [ ] ],
   installTargets ? [ [ "install" ] ],
   nativeBuildInputs ? [ ],
@@ -212,6 +213,10 @@ assert lib.assertMsg (overriddenProtectedAttrs == [ ])
   "iOS Autotools packages may not override protected derivation attributes: ${lib.concatStringsSep ", " overriddenProtectedAttrs}";
 assert lib.assertMsg (lib.all lib.isString configureFlags)
   "Autotools configureFlags must all be strings";
+assert lib.assertMsg (lib.isBool skipConfigure) "Autotools skipConfigure must be a boolean";
+assert lib.assertMsg (
+  !skipConfigure || (configureFlags == [ ] && configureCache == { })
+) "configure-less iOS packages may not declare configure flags or cache values";
 assert lib.assertMsg (reservedConfigureFlags == [ ])
   "iOS Autotools packages may not override reserved configure options: ${lib.concatStringsSep ", " reservedConfigureFlags}";
 assert lib.assertMsg (lib.all validArgumentList makeTargets)
@@ -359,14 +364,16 @@ stdenvNoCC.mkDerivation (
 
       runHook preConfigure
 
-      ${lib.escapeShellArg configureScript} \
-        --build=${stdenvNoCC.buildPlatform.config} \
-        --host=${toolchain.autotoolsHost} \
-        --prefix="$out" \
-        --libdir="$out/lib" \
-        --disable-shared \
-        --enable-static \
-        ${lib.escapeShellArgs configureFlags}
+      ${lib.optionalString (!skipConfigure) ''
+        ${lib.escapeShellArg configureScript} \
+          --build=${stdenvNoCC.buildPlatform.config} \
+          --host=${toolchain.autotoolsHost} \
+          --prefix="$out" \
+          --libdir="$out/lib" \
+          --disable-shared \
+          --enable-static \
+          ${lib.escapeShellArgs configureFlags}
+      ''}
 
       runHook postConfigure
     '';
@@ -457,6 +464,7 @@ stdenvNoCC.mkDerivation (
     "passthru"
     "preConfigure"
     "requiredPaths"
+    "skipConfigure"
     "staticArchives"
     "targetDependencies"
   ]

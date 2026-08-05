@@ -14,7 +14,7 @@ import subprocess
 import sys
 from typing import Any
 
-BUILDER_SCHEMA = 4
+BUILDER_SCHEMA = 5
 
 
 def run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> None:
@@ -447,6 +447,54 @@ def main() -> int:
             for target in install_targets:
                 run(["make", *target, f"DESTDIR={stage}"], cwd=build_dir, env=autotools_environment)
             merge_staged_install(stage, prefix, build_dir)
+        elif build_system == "make":
+            build_dir.mkdir(parents=True)
+            sdk_path = capture(["xcrun", "--sdk", sdk, "--show-sdk-path"])
+            minimum_flag = "-miphoneos-version-min=17.0" if args.mode == "device" else "-mios-simulator-version-min=17.0"
+            target_flags = f"-arch arm64 -isysroot {sdk_path} {minimum_flag}"
+            make_environment = environment.copy()
+            make_environment.update(
+                {
+                    "CC": capture(["xcrun", "--sdk", sdk, "--find", "clang"]),
+                    "CXX": capture(["xcrun", "--sdk", sdk, "--find", "clang++"]),
+                    "AR": capture(["xcrun", "--sdk", sdk, "--find", "ar"]),
+                    "RANLIB": capture(["xcrun", "--sdk", sdk, "--find", "ranlib"]),
+                    "STRIP": capture(["xcrun", "--sdk", sdk, "--find", "strip"]),
+                    "CFLAGS": target_flags,
+                    "CXXFLAGS": target_flags,
+                    "CPPFLAGS": f"-I{prefix}/include",
+                    "LDFLAGS": f"{target_flags} -L{prefix}/lib",
+                    "SDKROOT": sdk_path,
+                    "ZERO_AR_DATE": "1",
+                }
+            )
+            make_environment.update(package.get("make_environment", {}))
+            for target in package.get("make_targets", [[]]):
+                run(
+                    ["make", f"-j{os.cpu_count() or 1}", *target],
+                    cwd=source_dir,
+                    env=make_environment,
+                )
+
+            installed: list[str] = []
+            for entry in package.get("make_install_files", []):
+                source_file = (source_dir / entry["source"]).resolve()
+                destination = (prefix / entry["destination"]).resolve()
+                try:
+                    source_file.relative_to(source_dir.resolve())
+                    destination.relative_to(prefix.resolve())
+                except ValueError as error:
+                    raise SystemExit(
+                        f"refusing make install path outside its allowed root: {entry}"
+                    ) from error
+                if not source_file.is_file():
+                    raise SystemExit(f"make output is missing: {source_file}")
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source_file, destination)
+                installed.append(str(destination))
+            if not installed:
+                raise SystemExit(f"{name} make build has no make_install_files")
+            (build_dir / "install_manifest.txt").write_text("\n".join(installed) + "\n")
         else:
             raise SystemExit(f"unsupported build system for {name}: {build_system}")
 

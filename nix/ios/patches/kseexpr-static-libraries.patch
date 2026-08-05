@@ -1,0 +1,59 @@
+diff --git a/src/KSeExpr/CMakeLists.txt b/src/KSeExpr/CMakeLists.txt
+index 8aca566..03280d7 100644
+--- a/src/KSeExpr/CMakeLists.txt
++++ b/src/KSeExpr/CMakeLists.txt
+@@ -67,14 +67,9 @@ check_cxx_source_compiles("
+-
++
+ BuildParserScanner(KSeExpr ExprParserLex ExprParser SeExpr parser_cpp)
+-
++
+-if (NOT WIN32)
+-    add_library(KSeExpr SHARED ${KSeExpr_SOURCES} ${parser_cpp})
+-    if (NOT APPLE)
+-        set_source_files_properties(interpreter.cpp PROPERTIES COMPILE_OPTIONS "-rdynamic")
+-    endif()
+-    target_link_libraries(KSeExpr "dl")
+-else()
+-    add_library(KSeExpr STATIC ${KSeExpr_SOURCES} ${parser_cpp})
++add_library(KSeExpr ${KSeExpr_SOURCES} ${parser_cpp})
++if (NOT WIN32 AND NOT APPLE)
++    set_source_files_properties(interpreter.cpp PROPERTIES COMPILE_OPTIONS "-rdynamic")
+ endif()
+-
++
+ target_include_directories(KSeExpr
+diff --git a/src/KSeExprUI/CMakeLists.txt b/src/KSeExprUI/CMakeLists.txt
+index 671c25d..bba4214 100644
+--- a/src/KSeExprUI/CMakeLists.txt
++++ b/src/KSeExprUI/CMakeLists.txt
+@@ -83,13 +83,8 @@ if (TARGET Qt6::Widgets)
+         endif()
+     endif()
+-
++
+-    if (NOT WIN32)
+-        add_library(KSeExprUI SHARED ${EDITOR_CPPS} ${EDITOR_MOC_SRCS}
+-                    ${editor_parser_cpp})
+-    else ()
+-        add_library(KSeExprUI STATIC ${EDITOR_CPPS} ${EDITOR_MOC_SRCS}
+-                ${editor_parser_cpp})
+-    endif ()
++    add_library(KSeExprUI ${EDITOR_CPPS} ${EDITOR_MOC_SRCS}
++                ${editor_parser_cpp})
+-
++
+     set_property(TARGET KSeExprUI PROPERTY VERSION ${KSeExpr_VERSION})
+     set_property(TARGET KSeExprUI PROPERTY SOVERSION ${KSeExpr_VERSION_MAJOR})
+diff --git a/cmake/kseexpr-config.cmake b/cmake/kseexpr-config.cmake
+index ed740fd..2c64af5 100644
+--- a/cmake/kseexpr-config.cmake
++++ b/cmake/kseexpr-config.cmake
+@@ -6,3 +6,6 @@
+ @PACKAGE_INIT@
+-
++include(CMakeFindDependencyMacro)
++find_dependency(Qt6 COMPONENTS Core Gui Widgets)
++find_dependency(KF6I18n 6.2.0)
++
+ set(KSeExpr_VERSION @KSeExpr_VERSION@)

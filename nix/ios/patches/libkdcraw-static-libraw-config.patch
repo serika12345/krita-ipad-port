@@ -1,0 +1,61 @@
+diff --git a/cmake/modules/FindLibRaw.cmake b/cmake/modules/FindLibRaw.cmake
+index 5a1e2d0..51f6606 100644
+--- a/cmake/modules/FindLibRaw.cmake
++++ b/cmake/modules/FindLibRaw.cmake
+@@ -84,4 +84,15 @@ if(LibRaw_FOUND AND NOT TARGET LibRaw::LibRaw)
+         INTERFACE_COMPILE_OPTIONS "${LibRaw_DEFINITIONS}"
+         INTERFACE_INCLUDE_DIRECTORIES "${LibRaw_INCLUDE_DIR}"
+     )
++    if("${LibRaw_LIBRARIES}" MATCHES "\\${CMAKE_STATIC_LIBRARY_SUFFIX}$")
++        set(_LibRaw_STATIC_LINK_LIBRARIES ${PC_LIBRAW_STATIC_LINK_LIBRARIES})
++        list(REMOVE_ITEM _LibRaw_STATIC_LINK_LIBRARIES "${LibRaw_LIBRARIES}")
++        set_property(TARGET LibRaw::LibRaw PROPERTY
++            INTERFACE_LINK_LIBRARIES "${_LibRaw_STATIC_LINK_LIBRARIES}")
++        set_property(TARGET LibRaw::LibRaw PROPERTY
++            INTERFACE_LINK_OPTIONS "${PC_LIBRAW_STATIC_LDFLAGS_OTHER}")
++        set_property(TARGET LibRaw::LibRaw PROPERTY
++            INTERFACE_COMPILE_OPTIONS "${PC_LIBRAW_STATIC_CFLAGS_OTHER}")
++        unset(_LibRaw_STATIC_LINK_LIBRARIES)
++    endif()
+ endif()
+diff --git a/cmake/templates/KDcrawConfig.cmake.in b/cmake/templates/KDcrawConfig.cmake.in
+index 624b95c..82a252d 100644
+--- a/cmake/templates/KDcrawConfig.cmake.in
++++ b/cmake/templates/KDcrawConfig.cmake.in
+@@ -6,5 +6,7 @@ find_dependency(Qt6Gui @QT_MIN_VERSION@)
+-
++
+ if (NOT @BUILD_SHARED_LIBS@)
++    set(_KDcraw_saved_module_path "${CMAKE_MODULE_PATH}")
++    list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+     find_package(LibRaw ${LIBRAW_MIN_VERSION} QUIET)
+     if (NOT LibRaw_FOUND)
+         message(FATAL_ERROR
+@@ -14,6 +16,8 @@ if (NOT @BUILD_SHARED_LIBS@)
+             "or add libkdcraw/cmake/modules to CMAKE_MODULE_PATH."
+         )
+     endif()
++    set(CMAKE_MODULE_PATH "${_KDcraw_saved_module_path}")
++    unset(_KDcraw_saved_module_path)
+ endif()
+-
++
+ include("${CMAKE_CURRENT_LIST_DIR}/@KDCRAW_CMAKECONFIG_NAME@Targets.cmake")
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index f0d59e5..509c7ec 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -109,6 +109,12 @@ install(FILES
+     COMPONENT   Devel
+ )
+-
++
++install(FILES
++    "${CMAKE_SOURCE_DIR}/cmake/modules/FindLibRaw.cmake"
++    DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
++    COMPONENT   Devel
++)
++
+ install(EXPORT KDcrawTargets
+     DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
+     FILE        ${KDCRAW_CMAKECONFIG_NAME}Targets.cmake

@@ -75,6 +75,22 @@
         source-harfbuzz = pkgs.harfbuzz.src;
         source-fontconfig = pkgs.fontconfig.src;
         source-fribidi = pkgs.fribidi.src;
+        source-giflib = pkgs.giflib.src;
+        source-brotli = pkgs.brotli.src;
+        source-libhwy = pkgs.libhwy.src;
+        source-libde265 = pkgs.libde265.src;
+        source-x265 = pkgs.x265.src;
+        source-libaom = pkgs.libaom.src;
+        source-libheif = pkgs.libheif.src;
+        source-libjxl = pkgs.libjxl.src;
+        source-libraw = pkgs.libraw.src;
+        source-yaml-cpp = pkgs.yaml-cpp.src;
+        source-pystring = pkgs.pystring.src;
+        source-minizip-ng = pkgs.minizip-ng.src;
+        source-opencolorio = pkgs.opencolorio.src;
+        source-poppler = pkgs.poppler.src;
+        source-libkdcraw = pkgs.kdePackages.libkdcraw.src;
+        source-kseexpr = iosPackages.kseexpr-source;
         source-gettext = pkgs.gettext.src;
         source-libunibreak = pkgs.libunibreak.src;
         source-qtbase = pkgs.qt6Packages.qtbase.src;
@@ -98,7 +114,16 @@
         inherit (iosPackages)
           glib-ios
           json-c-ios
+          brotli-ios
+          giflib-ios
           libffi-ios
+          libaom-ios
+          libde265-ios
+          libheif-ios
+          libhwy-ios
+          libjxl-ios
+          libkdcraw-ios
+          libraw-ios
           libmypaint-ios
           pcre2-ios
           boost-ios
@@ -138,6 +163,9 @@
           libwebp-ios
           openexr-ios
           openjpeg-ios
+          opencolorio-ios
+          poppler-ios
+          pystring-ios
           libpng-ios
           qt5compat-ios
           qt-ios-dependencies
@@ -146,7 +174,11 @@
           qt-xcrun-shim
           qttools-host-contract-check
           quazip-ios
+          kseexpr-ios
+          minizip-ng-ios
           xsimd-ios
+          x265-ios
+          yaml-cpp-ios
           zlib-ios
           zug-ios
           kwidgetsaddons-ios
@@ -157,7 +189,16 @@
         inherit (iosPackages)
           glib-ios
           json-c-ios
+          brotli-ios
+          giflib-ios
           libffi-ios
+          libaom-ios
+          libde265-ios
+          libheif-ios
+          libhwy-ios
+          libjxl-ios
+          libkdcraw-ios
+          libraw-ios
           libmypaint-ios
           pcre2-ios
           boost-consumer-check
@@ -205,6 +246,9 @@
           libwebp-ios
           openexr-ios
           openjpeg-ios
+          opencolorio-ios
+          poppler-ios
+          pystring-ios
           libpng-ios
           qt5compat-ios
           qt-ios-dependencies
@@ -212,8 +256,12 @@
           qtsvg-ios
           qttools-host-contract-check
           quazip-ios
+          kseexpr-ios
+          minizip-ng-ios
           xsimd-consumer-check
           xsimd-ios
+          x265-ios
+          yaml-cpp-ios
           zlib-ios
           zug-consumer-check
           zug-ios

@@ -105,7 +105,7 @@
 - [x] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
 - [x] **P1** JPEGを追加する。
 - [x] **P1** WebP/TIFFを追加する（依存をNixで固定し、iOS静的プラグインのリンクと実機保存を確認済み。TIFFはJPEG圧縮での保存・再読み込みも確認済み）。
-- [ ] **P2** OpenEXR/HEIF/JPEG XL/RAW/Popplerを個別に再評価する（OpenEXRは依存固定・静的プラグイン同梱まで完了。残る形式と形式別の実機確認を継続する）。
+- [ ] **P2** OpenEXR/GIF/HEIF/JPEG XL/RAW/Poppler/OpenColorIO/KSeExprを個別に再評価する（OpenEXRは依存固定・静的プラグイン同梱まで完了。残る7機能向けに16個の個別derivation、静的リンク契約、161件のプラグインprofileを追加し、`nix flake check --no-build`を通過。commit後の58依存bootstrap、arm64最終リンク、形式別の実機確認を継続する）。
 
 ### 完了条件
 
@@ -256,12 +256,13 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Layer追加・削除・並べ替え・可視性・opacity・blend mode。
 - [ ] **P0** Undo/Redo、selection、move、transform、crop、fill、gradient、textの基本動作。
 - [x] **P0** KRA/ORA/PNG/JPEG import/export（基本的な保存・再読み込みをビルド`20260802150920`で実機確認済み。KRA内の任意フィルター互換性は次項で継続する）。
-- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（WebP、TIFF、JPEG 2000、OpenEXRを追加し、arm64リンク・151件の静的登録・ランタイムデータ検査まで完了。PSDとTIFFのJPEG圧縮保存・再読み込みは実機確認済み、残る形式は実機確認待ち）。
-- [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと、SeExprを除く6 generatorをiOS静的プロファイルへ追加。arm64リンク・登録・ランタイムデータ検査と、`invert`を含む実機KRAの保存・再起動・再読込を確認済み）。
+- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（WebP、TIFF、JPEG 2000、OpenEXRを追加し、arm64リンク・151件の静的登録・ランタイムデータ検査まで完了。さらにGIF、HEIF、JPEG XL、RAW、PDFを161件の静的profileへ追加し、依存・リンク構成のビルドなし評価まで完了。PSDとTIFFのJPEG圧縮保存・再読み込みは実機確認済み、新規5形式を含む残りはbootstrap・実機確認待ち）。
+- [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと6 generatorはarm64リンク・登録・ランタイムデータ検査、および`invert`を含む実機KRAの保存・再起動・再読込を確認済み。7番目のSeExpr generatorはKSeExpr依存と静的profileへ追加し、bootstrap・実機確認待ち）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
 - [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール（MyPaintを含む14 paintopを静的プロファイルへ追加し、arm64リンク・登録・画像リソースを機械検査済み。MyPaint presetはクリーンインストール後の登録を実機確認済み。Color Smudge、Spray、Hatching、Filter Brush（Invert）を含む主要engineの実機描画を確認済み。Colorize Toolの実機機能確認を継続）。
-- [x] **P1** 基本フィルタとgenerator（33 filterとSeExprを除く6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み）。
+- [ ] **P1** 基本フィルタとgenerator（33 filterと従来の6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み。SeExpr generatorは依存・リンク構成のビルドなし評価まで完了し、実機確認待ち）。
+- [ ] **P1** OpenColorIO依存のLUT Dockerを静的profileへ追加する（OpenColorIOと推移依存の個別derivation、config-mode検索、静的リンク設定を追加し、ビルドなし評価まで完了。bootstrap・実機確認待ち）。
 - [ ] **P1** resource bundleのimport/export（Android相当のResource ManagerをiOS静的プロファイルへ追加し、実機確認待ち）。
 - [ ] **P1** Bluetooth/USBキーボード操作。
 - [ ] **P2** アニメーションUI。ただし動画・音声exportは対象外。
@@ -345,6 +346,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] FriBidiを共通Meson sandboxの最初の`fribidi-ios` derivationへ移し、7個のnative macOS generatorと18-object iOS runtimeの分離、deprecated API互換、Kritaの`FindFriBidi.cmake`を使うconsumer、決定的再ビルド、binary cache復元を検証する。
   - [x] 残るC/C++依存をパッケージ単位のderivationへ移し、18個の基礎依存を`ios-dependencies`で統合する。
   - [x] Qt 6/QuaZipの4 derivationと必須KF6の9 derivationを段階化し、31依存aggregateへ統合する。
+  - [ ] GIF、HEIF、JPEG XL、RAW、PDF、OpenColorIO、KSeExpr向けの16 derivationを追加し、58依存aggregateへ統合する（exact-set、source lock、推移依存、161件の静的profileを純粋評価済み。commit後の`bootstrap-ios-dependencies.sh --confirm-pinning-complete`と最終リンクを継続する）。
   - [x] Krita本体と未署名IPAを段階的なderivationへ移す。
     - [x] 固定済み31依存の上で、初期静的プラグイン50 targetとruntime dataを含むarm64/iOS 17.0アプリを`krita-ios-app`として構築し、SDK 26.5、plist、未署名状態、リソース、build/Xcode path非混入を検査する。
     - [x] 分離したQtSvg prefixから`QSvgPlugin`と`QSvgIconPlugin`をKritaへ明示リンクし、旧実機ビルドと同じ59個の静的プラグイン集合をNix install checkで保証する。
@@ -400,7 +402,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - bug reportの外部process起動
 - Qt Designer plugin
 - X11/Wayland/Windows/macOS/Android固有platform plugin
-- RAW、PDF、HEIF、JPEG XL等の優先度が低いI/O
+- SVG Text Tool／Text PropertiesとStoryboard（依存追加とリンクだけでは成立せず、Krita本体側のplatform対応・PrintSupport分離が必要）
 - 外部実行ファイルに依存する機能
 
 ## 横断的な完了基準
