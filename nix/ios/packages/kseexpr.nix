@@ -1,6 +1,7 @@
 {
   bison,
   flex,
+  gettext,
   kfHostTooling,
   ki18n-ios,
   kseexpr,
@@ -37,10 +38,13 @@ mkIOSCMakePackage {
   nativeBuildInputs = [
     bison
     flex
+    gettext
   ];
   cmakeFlags = packageSpec.cmake_args ++ [
     "-DCMAKE_FIND_PACKAGE_PREFER_CONFIG=TRUE"
     "-DECM_DIR:PATH=${kfHostTooling.hostEcm}/share/ECM/cmake"
+    "-DGETTEXT_MSGFMT_EXECUTABLE:FILEPATH=${gettext}/bin/msgfmt"
+    "-DGETTEXT_MSGMERGE_EXECUTABLE:FILEPATH=${gettext}/bin/msgmerge"
     "-DQT_APPLE_SDK=iphoneos"
     "-DQT_HOST_PATH:PATH=${hostQt}"
     "-DQT_HOST_PATH_CMAKE_DIR:PATH=${hostQt}/lib/cmake"
