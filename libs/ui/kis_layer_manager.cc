@@ -18,6 +18,8 @@
 #include <QClipboard>
 #include <QMimeData>
 
+#include <memory>
+
 #include <kactioncollection.h>
 #include <klocalizedstring.h>
 #include <QMessageBox>
@@ -793,6 +795,51 @@ KisNodeSP KisLayerManager::addGeneratorLayer(KisNodeSP activeNode)
     KisSelectionSP selection = m_view->selection();
     QColor currentForeground = m_view->canvasResourceProvider()->fgColor().toQColor();
 
+#ifdef Q_OS_IOS
+    auto applicator = std::make_shared<KisProcessingApplicator>(
+        image, KisNodeSP(), KisProcessingApplicator::NONE, KisImageSignalVector(), kundo2_i18n("Add Layer"));
+
+    KisGeneratorLayerSP node = addGeneratorLayer(activeNode, QString(), nullptr, selection, applicator.get());
+
+    auto *dlg = new KisDlgGeneratorLayer(image->nextLayerName(i18n("Fill Layer")),
+                                         m_view,
+                                         m_view->mainWindow(),
+                                         node,
+                                         nullptr,
+                                         applicator->getStroke());
+    KisFilterConfigurationSP defaultConfig = dlg->configuration();
+    defaultConfig->setProperty("color", currentForeground);
+    dlg->setConfiguration(defaultConfig);
+
+    auto completed = std::make_shared<bool>(false);
+
+    connect(dlg, &QDialog::accepted, dlg, [dlg, node, applicator, completed]() mutable {
+        if (*completed) {
+            return;
+        }
+
+        *completed = true;
+        node->setFilter(dlg->configuration()->cloneWithResourcesSnapshot());
+        applicator->applyCommand(new KisNodeRenameCommand(node, node->name(), dlg->layerName()));
+        applicator->end();
+    });
+    connect(dlg, &QDialog::rejected, dlg, [applicator, completed]() {
+        if (!*completed) {
+            *completed = true;
+            applicator->cancel();
+        }
+    });
+    connect(dlg, &QObject::destroyed, qApp, [applicator, completed]() {
+        if (!*completed) {
+            *completed = true;
+            applicator->cancel();
+        }
+    });
+
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->open();
+    return node;
+#else
     KisProcessingApplicator applicator(image, 0, KisProcessingApplicator::NONE, KisImageSignalVector(), kundo2_i18n("Add Layer"));
 
     KisGeneratorLayerSP node = addGeneratorLayer(activeNode, QString(), nullptr, selection, &applicator);
@@ -811,6 +858,7 @@ KisNodeSP KisLayerManager::addGeneratorLayer(KisNodeSP activeNode)
         applicator.cancel();
         return nullptr;
     }
+#endif
 }
 
 void KisLayerManager::flattenImage()
@@ -1106,4 +1154,3 @@ void KisLayerManager::layerStyle()
         image->postExecutionUndoAdapter()->addCommand(command);
     }
 }
-
