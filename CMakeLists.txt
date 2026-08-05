@@ -1160,10 +1160,14 @@ macro(kis_add_library)
             endif()
         endforeach()
 
+        string(MAKE_C_IDENTIFIER "${_kis_ios_plugin_target}_factory" _kis_ios_plugin_factory)
         if(_kis_ios_explicit_plugin_factory)
-            set(_kis_ios_plugin_factory "${_kis_ios_explicit_plugin_factory}")
-        else()
-            string(MAKE_C_IDENTIFIER "${_kis_ios_plugin_target}_factory" _kis_ios_plugin_factory)
+            # Shared plugins may reuse generic factory names such as ImportFactory.
+            # Rewrite those identifiers per target when the plugins are linked into
+            # one iOS executable so their Qt static-plugin symbols remain unique.
+            target_compile_definitions(${_kis_ios_plugin_target} PRIVATE
+                "${_kis_ios_explicit_plugin_factory}=${_kis_ios_plugin_factory}"
+            )
         endif()
         target_compile_definitions(${_kis_ios_plugin_target} PRIVATE
             QT_STATICPLUGIN
