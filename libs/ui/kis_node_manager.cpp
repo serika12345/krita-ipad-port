@@ -389,8 +389,17 @@ void KisNodeManager::setup(KisKActionCollection * actionCollection, KisActionMan
 
     NEW_LAYER_ACTION("add_new_selection_mask", "KisSelectionMask");
 
+#ifdef Q_OS_IOS
+    // A layer action can be activated by a synthesized Pencil mouse release.
+    // Opening a modal layer-properties dialog before that release returns can
+    // corrupt Qt's active gesture-recognizer state. Defer creation
+    // until the input event returns.
+    connect(&m_d->nodeCreationSignalMapper, SIGNAL(mapped(QString)),
+            this, SLOT(createNode(QString)), Qt::QueuedConnection);
+#else
     connect(&m_d->nodeCreationSignalMapper, SIGNAL(mapped(QString)),
             this, SLOT(createNode(QString)));
+#endif
 
     CONVERT_NODE_ACTION("convert_to_paint_layer", "KisPaintLayer");
 

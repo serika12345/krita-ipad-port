@@ -1,0 +1,8 @@
+--- a/src/kdcraw_p.cpp
++++ b/src/kdcraw_p.cpp
+@@ -13,0 +14 @@
++#include <memory>
+@@ -159 +160,2 @@ bool KDcrawPrivate::loadFromLibraw(const QString& filePath, QByteArray& imageData,
+-    LibRaw raw;
++    std::unique_ptr<LibRaw> rawStorage(new LibRaw);
++    LibRaw& raw = *rawStorage;

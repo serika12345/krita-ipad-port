@@ -24,7 +24,10 @@ mkIOSCMakePackage {
   pname = "libkdcraw-ios";
   inherit (packageSpec) version;
   src = libkdcraw.src;
-  patches = [ ../patches/libkdcraw-static-libraw-config.patch ];
+  patches = [
+    ../patches/libkdcraw-static-libraw-config.patch
+    ../patches/libkdcraw-heap-libraw-decoder.patch
+  ];
 
   targetDependencies = [
     libraw-ios
