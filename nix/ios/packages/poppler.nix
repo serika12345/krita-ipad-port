@@ -10,6 +10,7 @@
   mkIOSCMakePackage,
   openjpeg-ios,
   packageSpec,
+  pkg-config,
   poppler,
   qt6Packages,
   qtbase-ios,
@@ -46,6 +47,7 @@ mkIOSCMakePackage {
   enableFullAppleToolchain = true;
   enableTargetPkgConfig = true;
   tryCompileTargetType = null;
+  nativeBuildInputs = [ pkg-config ];
 
   cmakeFlags = packageSpec.cmake_args ++ [
     "-DCMAKE_FIND_PACKAGE_PREFER_CONFIG=TRUE"
