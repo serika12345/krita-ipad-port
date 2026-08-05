@@ -16,6 +16,9 @@ mkIOSCMakePackage {
   pname = "libhwy-ios";
   inherit (packageSpec) version;
   src = libhwy.src;
+  # Highway ships a Bazel file named BUILD. On the default case-insensitive
+  # macOS filesystem, CMake's default `build` directory collides with it.
+  cmakeBuildDir = "build-ios";
   cmakeFlags = packageSpec.cmake_args;
 
   requiredPaths = packageSpec.required_paths ++ packageSpec.artifacts;
