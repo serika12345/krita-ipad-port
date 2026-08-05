@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
+#if !defined(QT_OPENGL_ES_2)
 #include <QOpenGLFunctions_2_0>
 #include <QOpenGLFunctions_3_0>
 #include <QOpenGLFunctions_3_2_Core>
@@ -21,6 +22,7 @@
 #include <QOpenGLFunctions_2_0>
 #else
 #include <QOpenGLVersionFunctions>
+#endif
 #endif
 
 #include <cmath>
