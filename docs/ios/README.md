@@ -1,5 +1,9 @@
 # iPadOS port baseline
 
+The audit of Android code reuse, shared mobile behavior, and required iOS
+platform boundaries is recorded in the
+[Android reuse and platform-boundary audit](android-reuse-audit.md).
+
 ## Validated matrix
 
 | Component | Pinned value |
