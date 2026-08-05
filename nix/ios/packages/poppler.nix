@@ -52,6 +52,8 @@ mkIOSCMakePackage {
   cmakeFlags = packageSpec.cmake_args ++ [
     "-DCMAKE_FIND_PACKAGE_PREFER_CONFIG=TRUE"
     "-DECM_DIR:PATH=${kfHostTooling.hostEcm}/share/ECM/cmake"
+    "-DLCMS2_INCLUDE_DIR:PATH=${lcms2-ios}/include"
+    "-DLCMS2_LIBRARIES:FILEPATH=${lcms2-ios}/lib/liblcms2.a"
     "-DQT_APPLE_SDK=iphoneos"
     "-DQT_HOST_PATH:PATH=${hostQt}"
     "-DQT_HOST_PATH_CMAKE_DIR:PATH=${hostQt}/lib/cmake"
