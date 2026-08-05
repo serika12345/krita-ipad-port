@@ -5,27 +5,20 @@
 #pragma once
 
 #ifdef Q_OS_IOS
-// Desktop OpenGL extensions and OpenGL ES use different names for the same
-// sized texture formats. Keep the existing renderer code readable while the
-// iOS path is validated against the device's advertised extensions.
-#ifndef GL_RGBA16
-#define GL_RGBA16 0x805B
+// Krita's shared GLES renderer keeps its GLES 2 fallbacks compiled alongside
+// the GLES 3 path. Apple's controlled GLES 3 headers omit these GLES 2
+// extension tokens even though the fallback code is selected only after a
+// runtime version/extension check.
+#ifndef GL_HALF_FLOAT_OES
+#define GL_HALF_FLOAT_OES 0x8D61
 #endif
-#ifndef GL_RGBA16F_ARB
-#define GL_RGBA16F_ARB 0x881A
+#ifndef GL_RGBA32F_EXT
+#define GL_RGBA32F_EXT 0x8814
 #endif
-#ifndef GL_HALF_FLOAT_ARB
-#define GL_HALF_FLOAT_ARB 0x140B
-#endif
-#ifndef GL_RGBA_FLOAT16_ATI
-#define GL_RGBA_FLOAT16_ATI 0x881A
-#endif
-#ifndef GL_RGBA32F_ARB
-#define GL_RGBA32F_ARB 0x8814
-#endif
-#ifndef GL_RGBA_FLOAT32_ATI
-#define GL_RGBA_FLOAT32_ATI 0x8814
-#endif
+
+// GL_EXT_multisample_compatibility uses the desktop token, which is absent
+// from Apple's GLES headers even though QOpenGLContext can advertise the
+// extension at runtime.
 #ifndef GL_MULTISAMPLE_EXT
 #define GL_MULTISAMPLE_EXT 0x809D
 #endif

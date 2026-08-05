@@ -141,4 +141,8 @@ LibRawのheap化、plugin factory symbol、IPTC初期化、MyPaint登録、CMake
 ## 検証状態
 
 この棚卸しは実装境界の判定であり、実機検証の代替ではない。非同期Fill Layer、
-LUT Docker、SeExprの操作確認は引き続き`TODO.md`で追跡する。
+LUT Docker、SeExprの操作確認は引き続き`TODO.md`で追跡する。実機ビルド
+`20260805102358`でnode creationのqueued connectionだけを除くと、Pencil release中の
+`QGestureManager::getState()`でクラッシュが再現した。したがって、queued connectionは
+node／UI変更をtablet/mouse配送完了後へ送るために必要であり、nested event loopを除く
+非同期Fill Layer処理とは重複しない。

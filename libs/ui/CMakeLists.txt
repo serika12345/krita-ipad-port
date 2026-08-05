@@ -708,6 +708,17 @@ endif()
 
 kis_add_library(kritaui SHARED ${kritaui_HEADERS_MOC} ${kritaui_LIB_SRCS})
 
+if(IOS)
+    # Qt 6 exposes the GLES backend through QT_CONFIG(opengles2), while this
+    # renderer still selects its established GLES path with the legacy macro.
+    set_source_files_properties(
+        opengl/kis_opengl.cpp
+        opengl/kis_opengl_image_textures.cpp
+        opengl/kis_texture_tile.cpp
+        PROPERTIES COMPILE_DEFINITIONS QT_OPENGL_ES_2
+    )
+endif()
+
 target_sources(kritaui
   PRIVATE
     kis_abstract_resources.h
