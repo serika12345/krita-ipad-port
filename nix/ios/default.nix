@@ -588,6 +588,24 @@ let
     qtXcrunShim = qt-xcrun-shim;
   };
 
+  # Preserve the app derivation's exact native tools, target closure, CMake
+  # flags, and toolchain identity without retaining or building a Krita source
+  # snapshot. A recorded `nix develop --profile` of this derivation is the
+  # stable environment for the repository-local incremental Ninja tree.
+  krita-ios-incremental-env = krita-ios-app.overrideAttrs (_old: {
+    pname = "krita-ios-incremental-env";
+    version = "1";
+    src = null;
+    patches = [ ];
+    dontUnpack = true;
+    phases = [ "installPhase" ];
+    installPhase = ''
+      mkdir -p "$out"
+    '';
+    postInstall = "";
+    doInstallCheck = false;
+  });
+
   krita-ios-ipa = pkgs.callPackage ./ipa.nix {
     inherit krita-ios-app;
   };
@@ -698,6 +716,7 @@ assert lib.assertMsg (
     ki18n-ios
     kitemviews-ios
     krita-ios-app
+    krita-ios-incremental-env
     krita-ios-ipa
     openexr-ios
     openjpeg-ios

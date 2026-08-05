@@ -4,6 +4,16 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 ios_dir="$(cd "$script_dir/.." && pwd)"
 
+toolchain_only_strict=0
+if (( $# > 0 )) && [[ "$1" == "--toolchain-only-strict" ]]; then
+    toolchain_only_strict=1
+    shift
+fi
+if (( $# > 0 )); then
+    echo "usage: $0 [--toolchain-only-strict]" >&2
+    exit 2
+fi
+
 # shellcheck disable=SC1091
 source "$ios_dir/versions.env"
 
@@ -17,7 +27,11 @@ require_command() {
     fi
 }
 
-for command in nix cmake ninja python3 pkg-config xcodebuild xcrun file; do
+required_commands=(xcodebuild xcrun)
+if (( ! toolchain_only_strict )); then
+    required_commands+=(nix cmake ninja python3 pkg-config file)
+fi
+for command in "${required_commands[@]}"; do
     require_command "$command"
 done
 
@@ -25,20 +39,18 @@ if (( failures > 0 )); then
     exit 1
 fi
 
-xcode_version="$(xcodebuild -version | awk 'NR == 1 { print $2 }')"
-xcode_build_version="$(xcodebuild -version | awk 'NR == 2 { print $3 }')"
-sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
-sdk_build_version="$(xcrun --sdk iphoneos --show-sdk-build-version)"
-simulator_sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
-sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
-nix_version="$(nix --version | awk '{ print $3 }')"
-nix_config="$(nix config show)"
-nix_sandbox="$(awk -F ' = ' '$1 == "sandbox" { print $2; exit }' <<<"$nix_config")"
-nix_sandbox_fallback="$(awk -F ' = ' '$1 == "sandbox-fallback" { print $2; exit }' <<<"$nix_config")"
-nix_allowed_impure_host_deps="$(awk -F ' = ' '$1 == "allowed-impure-host-deps" { print $2; exit }' <<<"$nix_config")"
-nix_sandbox_paths="$(awk -F ' = ' '$1 == "sandbox-paths" { print $2; exit }' <<<"$nix_config")"
-cmake_version="$(cmake --version | awk 'NR == 1 { print $3 }')"
-clang_version="$(xcrun --sdk iphoneos clang --version | awk 'NR == 1 { print $0 }')"
+xcodebuild_command=xcodebuild
+xcrun_command=xcrun
+if (( toolchain_only_strict )); then
+    xcodebuild_command=/usr/bin/xcodebuild
+    xcrun_command=/usr/bin/xcrun
+fi
+
+xcode_version="$("$xcodebuild_command" -version | awk 'NR == 1 { print $2 }')"
+xcode_build_version="$("$xcodebuild_command" -version | awk 'NR == 2 { print $3 }')"
+sdk_version="$("$xcrun_command" --sdk iphoneos --show-sdk-version)"
+sdk_build_version="$("$xcrun_command" --sdk iphoneos --show-sdk-build-version)"
+clang_version="$("$xcrun_command" --sdk iphoneos clang --version | awk 'NR == 1 { print $0 }')"
 clang_marketing_version="$(sed -E 's/^Apple clang version ([^ ]+).*/\1/' <<<"$clang_version")"
 clang_build_version="$(sed -E 's/^.*\(clang-([^\)]+)\).*$/\1/' <<<"$clang_version")"
 
@@ -66,9 +78,27 @@ check_equal "Xcode" "$xcode_version" "$KRITA_IOS_XCODE_VERSION"
 check_equal "Xcode build" "$xcode_build_version" "$KRITA_IOS_XCODE_BUILD_VERSION"
 check_equal "iPhoneOS SDK" "$sdk_version" "$KRITA_IOS_SDK_VERSION"
 check_equal "iPhoneOS SDK build" "$sdk_build_version" "$KRITA_IOS_SDK_BUILD_VERSION"
-check_equal "iPhoneSimulator SDK" "$simulator_sdk_version" "$KRITA_IOS_SDK_VERSION"
 check_equal "Apple Clang" "$clang_marketing_version" "$KRITA_IOS_CLANG_VERSION"
 check_equal "Apple Clang build" "$clang_build_version" "$KRITA_IOS_CLANG_BUILD_VERSION"
+
+if (( toolchain_only_strict )); then
+    if (( failures > 0 )); then
+        exit 1
+    fi
+    exit 0
+fi
+
+simulator_sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
+sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
+nix_version="$(nix --version | awk '{ print $3 }')"
+nix_config="$(nix config show)"
+nix_sandbox="$(awk -F ' = ' '$1 == "sandbox" { print $2; exit }' <<<"$nix_config")"
+nix_sandbox_fallback="$(awk -F ' = ' '$1 == "sandbox-fallback" { print $2; exit }' <<<"$nix_config")"
+nix_allowed_impure_host_deps="$(awk -F ' = ' '$1 == "allowed-impure-host-deps" { print $2; exit }' <<<"$nix_config")"
+nix_sandbox_paths="$(awk -F ' = ' '$1 == "sandbox-paths" { print $2; exit }' <<<"$nix_config")"
+cmake_version="$(cmake --version | awk 'NR == 1 { print $3 }')"
+
+check_equal "iPhoneSimulator SDK" "$simulator_sdk_version" "$KRITA_IOS_SDK_VERSION"
 check_policy_equal "Nix sandbox" "$nix_sandbox" "true"
 check_policy_equal "Nix sandbox fallback" "$nix_sandbox_fallback" "false"
 

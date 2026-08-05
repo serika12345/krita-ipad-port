@@ -354,6 +354,12 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
   - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。
 - [x] **P0** 現在のビルドツリーからconfigure、build、検査、AltStore更新、起動、ログ取得を1コマンド化する。
+- [x] **P0** Nixで固定した依存・ツールチェーンを使う永続Ninjaツリーを追加し、通常のKritaソース変更を増分ビルドできるようにする。
+  - [x] ソース非依存の`krita-ios-incremental`環境を固定profileとして記録し、通常編集ごとのflake再評価と約575 MiBのKritaソースsnapshot生成をなくす。
+  - [x] 初回3370工程のbaseline構築後、無変更時0工程、単一pluginソース変更時は予定5工程・実行4工程（対象object、archive、最終app link）となり、無関係なarchiveが更新されないことを確認する。
+  - [x] 200工程を超える予期しない再ビルドを標準で拒否し、初回・構成変更時だけ明示的な`bootstrap`を要求する。純粋な`nix build .#krita-ios-ipa`はcheckpoint/release検証用として残す。
+  - [x] Nix app recipeと同じCMake cache契約を増分configureでも検査し、`KoConfig.h`のbuild pathを`/build`へ正規化してローカル絶対パスを最終binaryへ埋め込まない。既存baselineは一度だけ1958工程で補正し、以後は正規化後の内容が同じならheader timestampを維持して再configureによる再発を防ぐ。
+  - [x] デプロイ後のcache保守をdirty flakeの評価から分離し、CMake/Ninja graphが参照する53個のStore入力だけを検証・root化することで、編集後の実機更新でもKritaソースsnapshotを生成しない。
 - [x] **P0** 直近3件を残すIPA整理と、runtimeおよびcache-deployment closureをGC rootで保護した低容量時Nix GCを自動化する。
 - [ ] **P0** configure、build、development sign、install、log取得を個別コマンドにする。
 - [ ] **P0** Xcode/SDK更新時の検証手順を作る。

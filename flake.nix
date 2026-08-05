@@ -125,6 +125,7 @@
           ki18n-ios
           kitemviews-ios
           krita-ios-app
+          krita-ios-incremental-env
           krita-ios-ipa
           lager-ios
           lcms2-ios
@@ -220,35 +221,39 @@
           ;
       };
 
-      devShells.${system}.default = pkgs.mkShellNoCC {
-        packages = with pkgs; [
-          bash
-          cmake
-          coreutils
-          file
-          git
-          gnugrep
-          gnused
-          gnumake
-          gperf
-          gettext
-          jq
-          meson
-          ninja
-          nixfmt
-          pkg-config
-          python3
-          xz
-        ];
+      devShells.${system} = {
+        default = pkgs.mkShellNoCC {
+          packages = with pkgs; [
+            bash
+            cmake
+            coreutils
+            file
+            git
+            gnugrep
+            gnused
+            gnumake
+            gperf
+            gettext
+            jq
+            meson
+            ninja
+            nixfmt
+            pkg-config
+            python3
+            xz
+          ];
 
-        shellHook = ''
-          export KRITA_IOS_REPO_ROOT="$PWD"
-          export KRITA_IOS_BUILD_ROOT="$PWD/build-ios"
-          export KRITA_IOS_LOG_ROOT="$PWD/logs/ios"
-          echo "Krita iPadOS development shell"
-          echo "  host check: packaging/ios/scripts/check-host.sh"
-          echo "  smoke test: packaging/ios/scripts/build-smoke.sh device"
-        '';
+          shellHook = ''
+            export KRITA_IOS_REPO_ROOT="$PWD"
+            export KRITA_IOS_BUILD_ROOT="$PWD/build-ios"
+            export KRITA_IOS_LOG_ROOT="$PWD/logs/ios"
+            echo "Krita iPadOS development shell"
+            echo "  host check: packaging/ios/scripts/check-host.sh"
+            echo "  smoke test: packaging/ios/scripts/build-smoke.sh device"
+          '';
+        };
+
+        krita-ios-incremental = iosPackages.krita-ios-incremental-env;
       };
 
       formatter.${system} = pkgs.nixfmt;

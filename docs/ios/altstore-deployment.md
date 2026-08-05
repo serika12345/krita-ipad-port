@@ -2,10 +2,10 @@
 
 Date: 2026-08-02
 
-`packaging/ios/scripts/deploy-altstore.sh` automates the path from the current
-source tree to a launched physical-device build. The unsigned CMake product is
-never modified in place, and no signing identity or Apple credential is stored
-by this repository.
+`packaging/ios/scripts/build-krita-incremental.sh deploy` automates the path
+from the current source tree to a launched physical-device build. The unsigned
+CMake product is never modified in place, and no signing identity or Apple
+credential is stored by this repository.
 
 ## Prerequisites
 
@@ -21,22 +21,27 @@ App Store submission, or distribution profile is involved.
 ## One-command flow
 
 ```sh
-packaging/ios/scripts/deploy-altstore.sh
+packaging/ios/scripts/build-krita-incremental.sh deploy
 ```
 
 The first available CoreDevice is selected. An explicit identifier can be
 passed as the only positional argument:
 
 ```sh
-packaging/ios/scripts/deploy-altstore.sh \
+packaging/ios/scripts/build-krita-incremental.sh deploy \
   216CE849-760C-5BFF-8835-CF7C6A1AD431
 ```
 
-To package and reinstall an already successful build:
+If the build is already current, the same command plans zero compilation steps
+and proceeds directly to packaging and installation. Calling
+`deploy-altstore.sh` without options is an equivalent compatibility entry
+point. `deploy-altstore.sh --skip-build` is reserved for the helper's internal
+handoff because it requires the exact `KRITA_IOS_BUILD_DIR`.
+
+The first baseline for a new build configuration must be created once:
 
 ```sh
-packaging/ios/scripts/deploy-altstore.sh --skip-build \
-  216CE849-760C-5BFF-8835-CF7C6A1AD431
+packaging/ios/scripts/build-krita-incremental.sh bootstrap
 ```
 
 To generate only the reproducible unsigned IPA for selection in AltStore or a
@@ -54,7 +59,7 @@ iPadOS at installation time.
 
 The script performs these operations in order:
 
-1. Configure and build Krita inside `nix develop` unless `--skip-build` is set.
+1. Reuse the recorded source-independent Nix environment and build only the affected Ninja targets.
 2. Reject a binary with the wrong architecture, Apple platform, or deployment target.
 3. Compare every static archive's Qt resource initializers with the final executable.
 4. Generate Krita's declared install-time data tree and copy it into the staged app.
@@ -62,10 +67,12 @@ The script performs these operations in order:
 6. Generate and test a timestamp-versioned IPA under `build-ios/deploy/`.
 7. Open an AltStore install URL, wait for its download, and wait for the new bundle version on-device.
 8. Launch Krita and copy its startup log back to `build-ios/deploy/`.
+9. Root the Nix store inputs recorded by the active build graph without reevaluating the dirty flake, then run low-space maintenance if needed.
 
 Optional environment variables are `KRITA_IOS_DEVICE`,
 `KRITA_IOS_BUNDLE_VERSION`, `KRITA_IOS_DEPLOY_PORT`, and
-`KRITA_IOS_LAUNCH_SETTLE_SECONDS`.
+`KRITA_IOS_LAUNCH_SETTLE_SECONDS`. The incremental rebuild guard defaults to
+200 planned steps and can be adjusted with `KRITA_IOS_INCREMENTAL_MAX_STEPS`.
 
 ## Runtime data handling
 

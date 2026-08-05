@@ -173,34 +173,43 @@ nix develop --command packaging/ios/scripts/build-smoke.sh device
 nix develop --command packaging/ios/scripts/build-smoke.sh simulator
 ```
 
-Full Krita presets are available as `ios-device` and `ios-simulator`. Use the
-wrapper so the three target prefixes and pinned host translation tools are
-resolved consistently:
+For normal device development, use the source-independent Nix environment and
+its persistent Ninja tree. The first configuration needs one explicit
+baseline build:
 
 ```sh
-nix develop --command packaging/ios/scripts/configure-krita.sh device
-nix develop --command packaging/ios/scripts/configure-krita.sh device --build
+packaging/ios/scripts/build-krita-incremental.sh bootstrap
 ```
 
-The device result is an unsigned
-`build-ios/krita/device-ninja/bin/krita.app`. The iPadOS feature profile links
-the current minimum Krita plugins statically and excludes Python/PyQt,
-PrintSupport, process-launched FFmpeg features, and the updater.
+After that, inspect and execute only the affected Ninja steps:
+
+```sh
+packaging/ios/scripts/build-krita-incremental.sh plan
+packaging/ios/scripts/build-krita-incremental.sh build
+```
+
+The exact output directory is printed by `build-krita-incremental.sh path`.
+Normal builds refuse more than 200 planned steps, making an accidental broad
+rebuild visible before compilation begins. The pure
+`nix build .#krita-ios-ipa` path remains the clean checkpoint/release gate, not
+the source edit loop. The iPadOS feature profile links the required Krita
+plugins statically and excludes Python/PyQt, PrintSupport, process-launched
+FFmpeg features, and the updater.
 
 ## Install the current build with AltStore
 
 With AltServer running and AltStore installed on a connected iPad, one command
-configures, builds, validates, packages, installs, launches, and collects the
+incrementally builds, validates, packages, installs, launches, and collects the
 Krita startup log:
 
 ```sh
-packaging/ios/scripts/deploy-altstore.sh
+packaging/ios/scripts/build-krita-incremental.sh deploy [device-id]
 ```
 
-Pass a CoreDevice identifier when more than one device is available. Use
-`--skip-build` to repackage the current successful build. See
-`docs/ios/altstore-deployment.md` for prerequisites, validations, outputs, and
-the physical-device result.
+`deploy-altstore.sh` without options delegates to the same guarded workflow.
+Its `--skip-build` form is an internal handoff that requires the exact build
+directory selected by the helper. See `docs/ios/altstore-deployment.md` for
+prerequisites, validations, outputs, and the physical-device result.
 
 ## Build M2 dependencies
 
@@ -318,14 +327,13 @@ The clean bootstrap passed on 2026-08-03 from commit `e8ba4dc`. It removed
 from the normal committed Git flake, passed the complete KF6 iOS consumer link,
 and then created only `build-ios/nix-roots/ios-dependencies`.
 
-After the clean bootstrap, normal device deployment calls
-`packaging/ios/scripts/maintain-build-cache.sh --deployment`. This deployment-
-only maintenance roots both the current target aggregate and its Nix cache-
-deployment closure. The second root retains the derivations, sources, and
-existing build-time-only tool outputs needed for efficient incremental builds;
-rooting only the runtime aggregate is not sufficient for that later operational
-phase. Maintenance never builds a missing target aggregate and skips Nix GC
-when the current build closure cannot be protected safely.
+After the clean bootstrap, incremental device deployment passes its exact
+CMake/Ninja tree to `maintain-build-cache.sh`. Deployment maintenance extracts
+and roots the store inputs already recorded by that graph without evaluating
+the dirty Git flake, so an edit-and-deploy cycle does not create another full
+Krita source snapshot. The exact incremental tree is mandatory. Maintenance
+runs GC only below the free-space threshold (or when explicitly forced) and
+only after the current graph closure has been protected.
 
 The default repository is the ignored
 `build-ios/nix-binary-cache`. Set `KRITA_IOS_NIX_CACHE_URI` to a private,

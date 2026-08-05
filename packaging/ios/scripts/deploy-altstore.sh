@@ -15,13 +15,42 @@ if (( $# > 1 )); then
     usage
 fi
 
-repo_root="$(git rev-parse --show-toplevel)"
-scripts_dir="$repo_root/packaging/ios/scripts"
-build_dir="$repo_root/build-ios/krita/device-ninja"
+scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+repo_root="$(git -C "$scripts_dir" rev-parse --show-toplevel)"
+device_id="${1:-${KRITA_IOS_DEVICE:-}}"
+
+# The default entry point is the guarded persistent build. The helper calls
+# this script back with --skip-build after it has completed the exact tree.
+if (( ! skip_build )); then
+    if [[ -n "$device_id" ]]; then
+        exec "$scripts_dir/build-krita-incremental.sh" deploy "$device_id"
+    else
+        exec "$scripts_dir/build-krita-incremental.sh" deploy
+    fi
+fi
+
+if [[ -z "${KRITA_IOS_BUILD_DIR:-}" ]]; then
+    echo "error: --skip-build requires the exact KRITA_IOS_BUILD_DIR selected by the build workflow" >&2
+    echo "run this script without --skip-build for a guarded incremental build and deployment" >&2
+    exit 2
+fi
+
+build_dir="$KRITA_IOS_BUILD_DIR"
+if [[ "$build_dir" != /* ]]; then
+    build_dir="$repo_root/$build_dir"
+fi
+if [[ ! -d "$build_dir" ]]; then
+    echo "error: incremental build tree does not exist: $build_dir" >&2
+    exit 1
+fi
+build_dir="$(cd "$build_dir" && pwd -P)"
+if [[ ! -f "$build_dir/.krita-ios-incremental-config" ]]; then
+    echo "error: build tree is not owned by the incremental workflow: $build_dir" >&2
+    exit 1
+fi
 app_path="$build_dir/bin/krita.app"
 binary="$app_path/krita"
 archive_dir="$build_dir/lib"
-device_id="${1:-${KRITA_IOS_DEVICE:-}}"
 
 if [[ -z "$device_id" ]]; then
     device_id="$(xcrun devicectl list devices | awk '
@@ -38,13 +67,6 @@ fi
 if [[ -z "$device_id" ]]; then
     echo "error: no available CoreDevice found" >&2
     exit 1
-fi
-
-if (( ! skip_build )); then
-    (
-        cd "$repo_root"
-        nix develop --command "$scripts_dir/configure-krita.sh" device --build
-    )
 fi
 
 "$scripts_dir/inspect-apple-binary.sh" device "$binary"
@@ -224,4 +246,6 @@ else
     echo "warning: could not collect the Krita startup log" >&2
 fi
 
-"$scripts_dir/maintain-build-cache.sh" --deployment
+"$scripts_dir/maintain-build-cache.sh" \
+    --deployment \
+    --incremental-build-dir "$build_dir"
