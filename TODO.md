@@ -195,8 +195,8 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** 起動・ファイル表示直後から、ツールの再選択なしで最初のApple Pencilストロークを描画できることを実機検証する（初期Enter・Pencil入力デバイス切替を実装し、実機確認済み）。
 - [ ] **P0** Pencil描画と指ジェスチャーを分離する。
 - [ ] **P0** undo/redo、pan、zoom、rotateを実装・確認する。
-- [ ] **P0** 高DPI、Safe Area、画面回転を修正する。
-- [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する。
+- [ ] **P0** 高DPI、Safe Area、画面回転を修正する（キャンバスの高DPIは、iPad8,1実機でDPR 2と論理サイズの2倍の描画viewportを診断後、診断コードを除いたビルド`20260805122451`をインストールしてOpenGL ES 3.0動作と表示の鮮明化を確認済み。Safe Areaと回転後の再検証は未完了）。
+- [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する（AltStore起動時のsuspended状態ではprobeを延期し、active遷移後に作成できることをiPad8,1実機で確認済み。background/foreground時の破棄・再作成は未検証）。
 - [ ] **P1 Apple Pencilダブルタップ対応**: KritaのQt iOS viewへ`UIPencilInteraction`を登録し、ダブルタップを既存のKritaアクションへ橋渡しする（Qtソースpatch不要。最小ブリッジを実装し、消しゴム切り替えを実機確認済み）。
   - [ ] iPadOSの`preferredTapAction`を読み、少なくとも「消しゴム切り替え」「直前のプリセットへ切り替え」「カラーパレット表示」「何もしない」を対応する。
   - [x] 消しゴム切り替えを、ペン先／消しゴム側の別プリセットを保持する`eraser_preset_action`へ接続する（実機確認済み）。

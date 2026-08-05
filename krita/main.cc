@@ -56,9 +56,11 @@
 #ifdef Q_OS_IOS
 #include <QAction>
 #include <QPointer>
+#include <QTimer>
 #include <QWindow>
 #include <KoToolManager.h>
 #include <kactioncollection.h>
+#include <kis_config_notifier.h>
 
 #include "KisIOSLifecycleHandler.h"
 #include "KisIOSMemoryWarningHandler.h"
@@ -739,6 +741,30 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     // Persist the safe iPad ceiling if an older build stored a larger value.
     KisImageConfig memoryConfig(false);
     memoryConfig.setMemoryHardLimitPercent(memoryConfig.memoryHardLimitPercent());
+
+    // Installation through AltStore can briefly launch the process while it
+    // is still suspended. Retry the deferred OpenGL probe after UIKit and Qt
+    // have completed the foreground transition, then use Krita's normal
+    // configuration path to replace any temporary QPainter canvas.
+    QObject::connect(&app,
+                     &QGuiApplication::applicationStateChanged,
+                     &app,
+                     [](Qt::ApplicationState state) {
+        if (state != Qt::ApplicationActive) {
+            return;
+        }
+
+        QTimer::singleShot(0, qApp, [] {
+            static bool initialized = false;
+            if (initialized || !KisOpenGL::hasOpenGL()) {
+                return;
+            }
+
+            initialized = true;
+            KisConfigNotifier::instance()->notifyConfigChanged();
+            qInfo() << "iPadOS OpenGL canvas initialized after foreground activation";
+        });
+    });
 #endif
 
 #if defined Q_OS_WIN && QT_VERSION > QT_VERSION_CHECK(6, 0, 0)

@@ -138,6 +138,16 @@ void KisOpenGL::initialize()
 {
     if (openGLCheckResult) return;
 
+#ifdef Q_OS_IOS
+    // iPadOS forbids OpenGL ES calls while the application is suspended. An
+    // AltStore handoff can start Krita before it has reached the foreground,
+    // so leave the probe pending until applicationStateChanged() reports that
+    // graphics hardware is available again.
+    if (qGuiApp && QGuiApplication::applicationState() == Qt::ApplicationSuspended) {
+        return;
+    }
+#endif
+
     KIS_SAFE_ASSERT_RECOVER_NOOP(g_sanityDefaultFormatIsSet);
 
     KisOpenGL::RendererConfig config;
@@ -915,7 +925,7 @@ KisOpenGL::RendererConfig KisOpenGL::selectSurfaceConfig(KisOpenGL::OpenGLRender
     using Info = boost::optional<KisOpenGLModeProber::Result>;
 
     QHash<OpenGLRenderer, Info> renderersToTest;
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
     renderersToTest.insert(RendererDesktopGL, Info());
 #endif
     renderersToTest.insert(RendererOpenGLES, Info());
@@ -927,6 +937,24 @@ KisOpenGL::RendererConfig KisOpenGL::selectSurfaceConfig(KisOpenGL::OpenGLRender
     auto makeDefaultSurfaceFormatPair = [] () -> std::pair<KisSurfaceColorSpaceWrapper, int> {
         return {KisSurfaceColorSpaceWrapper::DefaultColorSpace, 8};
     };
+
+#ifdef Q_OS_IOS
+    // All arm64 devices in the iPadOS 17+ target support OpenGL ES 3. Avoid
+    // probing here: this function runs before the real KisApplication exists,
+    // when iPadOS may still consider the freshly launched process suspended.
+    // The actual context is validated lazily once the application is active.
+    overrideSupportedRenderers(RendererOpenGLES, RendererOpenGLES);
+    overrideOpenGLWarningString({});
+
+    if (preferredRenderer == RendererNone) {
+        return RendererConfig();
+    }
+
+    return generateSurfaceConfig(RendererOpenGLES,
+                                 makeDefaultSurfaceFormatPair(),
+                                 enableDebug,
+                                 false);
+#endif
 
 #if defined HAVE_HDR
     std::vector<std::pair<KisSurfaceColorSpaceWrapper, int>> formatSymbolPairs(
@@ -1209,5 +1237,10 @@ void KisOpenGL::setDefaultSurfaceConfig(const KisOpenGL::RendererConfig &config)
 
 bool KisOpenGL::hasOpenGL()
 {
+#ifdef Q_OS_IOS
+    initialize();
+    return openGLCheckResult && openGLCheckResult->isSupportedVersion();
+#else
     return openGLCheckResult->isSupportedVersion();
+#endif
 }
