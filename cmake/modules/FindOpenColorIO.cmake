@@ -20,6 +20,24 @@ if(OpenColorIO_FOUND AND TARGET OpenColorIO::OpenColorIO)
     set(OPENCOLORIO_VERSION ${OpenColorIO_VERSION})
     set(OPENCOLORIO_LIBRARIES OpenColorIO::OpenColorIO)
     get_target_property(OPENCOLORIO_INCLUDES OpenColorIO::OpenColorIO INTERFACE_INCLUDE_DIRECTORIES)
+
+    # OpenColorIO 2's package config exports the install-wide include directory,
+    # while Krita supports both OCIO 1 and 2 through the unprefixed
+    # <OpenColorIO.h> include. Add the header directory exposed by OCIO 2 when
+    # the package target does not already make that include form available.
+    set(_OPENCOLORIO_COMPAT_INCLUDES)
+    foreach(_OPENCOLORIO_INCLUDE IN LISTS OPENCOLORIO_INCLUDES)
+        if(NOT EXISTS "${_OPENCOLORIO_INCLUDE}/OpenColorIO.h" AND
+           EXISTS "${_OPENCOLORIO_INCLUDE}/OpenColorIO/OpenColorIO.h")
+            list(APPEND _OPENCOLORIO_COMPAT_INCLUDES "${_OPENCOLORIO_INCLUDE}/OpenColorIO")
+        endif()
+    endforeach()
+    if(_OPENCOLORIO_COMPAT_INCLUDES)
+        target_include_directories(OpenColorIO::OpenColorIO INTERFACE ${_OPENCOLORIO_COMPAT_INCLUDES})
+        list(APPEND OPENCOLORIO_INCLUDES ${_OPENCOLORIO_COMPAT_INCLUDES})
+    endif()
+    unset(_OPENCOLORIO_COMPAT_INCLUDES)
+    unset(_OPENCOLORIO_INCLUDE)
     return()
 endif()
 
