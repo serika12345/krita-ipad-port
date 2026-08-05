@@ -105,7 +105,7 @@
 - [x] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
 - [x] **P1** JPEGを追加する。
 - [x] **P1** WebP/TIFFを追加する（依存をNixで固定し、iOS静的プラグインのリンクと実機保存を確認済み。TIFFはJPEG圧縮での保存・再読み込みも確認済み）。
-- [ ] **P2** OpenEXR/GIF/HEIF/JPEG XL/RAW/Poppler/OpenColorIO/KSeExprを個別に再評価する（OpenEXRは依存固定・静的プラグイン同梱まで完了。残る7機能向けの16個の個別derivationを58依存aggregateへ統合し、KF6 consumer link、Krita arm64最終リンク、161件の静的登録、IPA検査、実機インストール・起動まで完了。形式別およびLUT Docker／SeExpr generatorの実機機能確認を継続する）。
+- [ ] **P2** OpenEXR/GIF/HEIF/JPEG XL/RAW/Poppler/OpenColorIO/KSeExprを個別に再評価する（OpenEXRは依存固定・静的プラグイン同梱まで完了。残る7機能向けの16個の個別derivationを58依存aggregateへ統合し、KF6 consumer link、Krita arm64最終リンク、161件の静的登録、IPA検査、実機インストール・起動まで完了。GIF、HEIF、JPEG XLの保存・再読込とPDF読込はビルド`20260805070711`で実機確認済み。Nikon Z7のNEFはlibkdcrawがスタック上に確保した`LibRaw`でスタック上限を超えたためヒープ化し、依存再bootstrap・決定的再ビルドと修正ビルド`20260805080339`の実機配備まで完了。NEF再読込、LUT Docker表示／適用、SeExpr generatorの実機再確認を継続する）。
 
 ### 完了条件
 
@@ -188,7 +188,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 
 - [x] **P0** AltStore/AltServerによるローカル開発署名を設定する。
 - [x] **P0** ビルド、検査、IPA生成、実機更新、起動、ログ取得をスクリプト化する。
-- [x] **P0** アプリ起動とmain window表示を確認する（追加依存16件と161件の静的プラグインを含むビルド`20260805070711`も実機インストール・起動・ログ取得済み）。
+- [x] **P0** アプリ起動とmain window表示を確認する（追加依存16件と161件の静的プラグインを含むビルド`20260805070711`を実機確認済み。NEFとFill Layerクラッシュ修正後の`20260805080339`（git `bcbd67f`）も実機インストール・起動・ログ取得済み）。
 - [ ] **P0** 正常終了と再起動を確認する。
 - [ ] **P0** 最小キャンバスを作成し、指でストロークを描く。
 - [x] **P0** Apple Pencilの位置、筆圧、傾き、方位、接触状態を記録・検証する（iPad8,1実機で`QTabletEvent`のpress/move/release、pressure、xTilt/yTiltを確認済み）。
@@ -256,13 +256,13 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Layer追加・削除・並べ替え・可視性・opacity・blend mode。
 - [ ] **P0** Undo/Redo、selection、move、transform、crop、fill、gradient、textの基本動作。
 - [x] **P0** KRA/ORA/PNG/JPEG import/export（基本的な保存・再読み込みをビルド`20260802150920`で実機確認済み。KRA内の任意フィルター互換性は次項で継続する）。
-- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（WebP、TIFF、JPEG 2000、OpenEXRを追加済み。GIF、HEIF、JPEG XL、RAW、PDFも161件の静的profileへ追加し、58依存bootstrap、arm64最終リンク、IPA検査、実機インストール・起動まで完了。PSDとTIFFのJPEG圧縮保存・再読み込みは実機確認済みで、新規5形式を含む残りは形式別の実機確認待ち）。
+- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（WebP、TIFF、JPEG 2000、OpenEXRを追加済み。GIF、HEIF、JPEG XL、RAW、PDFも161件の静的profileへ追加し、58依存bootstrap、arm64最終リンク、IPA検査、実機インストール・起動まで完了。PSDとTIFFのJPEG圧縮保存・再読込、GIF・HEIF・JPEG XLの保存・再読込、PDF読込は実機確認済み。NEF読込で発生したlibkdcrawのスタック上限超過を修正したビルド`20260805080339`は実機配備済みで、同一NEFの再読込確認待ち。その他形式の確認も継続する）。
 - [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと6 generatorはarm64リンク・登録・ランタイムデータ検査、および`invert`を含む実機KRAの保存・再起動・再読込を確認済み。7番目のSeExpr generatorもKSeExpr依存、静的登録、arm64最終リンク、実機起動まで完了し、generatorの実操作確認を残す）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
 - [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール（MyPaintを含む14 paintopを静的プロファイルへ追加し、arm64リンク・登録・画像リソースを機械検査済み。MyPaint presetはクリーンインストール後の登録を実機確認済み。Color Smudge、Spray、Hatching、Filter Brush（Invert）を含む主要engineの実機描画を確認済み。Colorize Toolの実機機能確認を継続）。
-- [ ] **P1** 基本フィルタとgenerator（33 filterと従来の6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み。SeExpr generatorもKSeExpr依存、静的登録、arm64最終リンク、実機起動まで完了し、generatorの実操作確認待ち）。
-- [ ] **P1** OpenColorIO依存のLUT Dockerを静的profileへ追加する（OpenColorIOと推移依存の個別derivation、config-mode検索、GLES経路、静的登録、arm64最終リンク、実機起動まで完了。Docker表示とLUT適用の実機確認待ち）。
+- [ ] **P1** 基本フィルタとgenerator（33 filterと従来の6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み。SeExpr generatorもKSeExpr依存、静的登録、arm64最終リンク、実機起動まで完了。PencilからFill Layerを作成する操作で、メニューのmouse release中にモーダルダイアログを開きQtの`QGestureManager::getState`でクラッシュすることを特定し、iOSのみノード作成をqueued connectionにしたビルド`20260805080339`を実機配備済み。Fill Layer作成、SeExpr選択、KRA save/reopenの再確認待ち）。
+- [ ] **P1** OpenColorIO依存のLUT Dockerを静的profileへ追加する（OpenColorIOと推移依存の個別derivation、config-mode検索、GLES経路、静的登録、arm64最終リンク、実機起動まで完了。実機の`設定 → ドッキングパネル → LUT Management`からDockerを表示できるか、LUTを適用できるかの確認待ち）。
 - [ ] **P1** resource bundleのimport/export（Android相当のResource ManagerをiOS静的プロファイルへ追加し、実機確認待ち）。
 - [ ] **P1** Bluetooth/USBキーボード操作。
 - [ ] **P2** アニメーションUI。ただし動画・音声exportは対象外。
@@ -346,7 +346,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
   - [x] FriBidiを共通Meson sandboxの最初の`fribidi-ios` derivationへ移し、7個のnative macOS generatorと18-object iOS runtimeの分離、deprecated API互換、Kritaの`FindFriBidi.cmake`を使うconsumer、決定的再ビルド、binary cache復元を検証する。
   - [x] 残るC/C++依存をパッケージ単位のderivationへ移し、18個の基礎依存を`ios-dependencies`で統合する。
   - [x] Qt 6/QuaZipの4 derivationと必須KF6の9 derivationを段階化し、31依存aggregateへ統合する。
-  - [x] GIF、HEIF、JPEG XL、RAW、PDF、OpenColorIO、KSeExpr向けの16 derivationを追加し、58依存aggregateへ統合する（exact-set、source lock、推移依存を検査し、`bootstrap-ios-dependencies.sh --confirm-pinning-complete`によるaggregate構築・root化、KF6 consumer link、161件の静的profileを含むKrita arm64最終リンクを完了）。
+  - [x] GIF、HEIF、JPEG XL、RAW、PDF、OpenColorIO、KSeExpr向けの16 derivationを追加し、58依存aggregateへ統合する（exact-set、source lock、推移依存を検査し、`bootstrap-ios-dependencies.sh --confirm-pinning-complete`によるaggregate構築・root化、KF6 consumer link、161件の静的profileを含むKrita arm64最終リンクを完了。NEFプレビュー用`LibRaw`のヒープ化patch追加後も、58依存aggregateの再bootstrap、KF6 consumer link、`libkdcraw-ios`の決定的再ビルド、Krita arm64最終リンクを再確認済み）。
   - [x] Krita本体と未署名IPAを段階的なderivationへ移す。
     - [x] 固定済み31依存の上で、初期静的プラグイン50 targetとruntime dataを含むarm64/iOS 17.0アプリを`krita-ios-app`として構築し、SDK 26.5、plist、未署名状態、リソース、build/Xcode path非混入を検査する。
     - [x] 分離したQtSvg prefixから`QSvgPlugin`と`QSvgIconPlugin`をKritaへ明示リンクし、旧実機ビルドと同じ59個の静的プラグイン集合をNix install checkで保証する。
