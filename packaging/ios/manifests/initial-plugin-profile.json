@@ -30,7 +30,15 @@
     "kritakrzexport",
     "kritargbeimport",
     "kritargbeexport",
+    "kritatiffimport",
+    "kritatiffexport",
+    "kritaexrimport",
+    "kritaexrexport",
+    "kritajp2import",
+    "kritawebpimport",
+    "kritawebpexport",
     "kritadefaultpaintops",
+    "kritamypaintop",
     "kritacolorsmudgepaintop",
     "kritacurvepaintop",
     "kritadeformpaintop",
@@ -158,7 +166,7 @@
     },
     {
       "feature": "LUT and Small Color Selector dockers",
-      "reason": "OpenColorIO and OpenEXR are not built for the current dependency profile."
+      "reason": "OpenColorIO is not part of the current dependency profile."
     },
     {
       "feature": "Recorder video export and Composition animation export",

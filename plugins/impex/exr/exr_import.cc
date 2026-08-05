@@ -15,7 +15,7 @@
 
 #include "exr_converter.h"
 
-K_PLUGIN_FACTORY_WITH_JSON(ImportFactory, "krita_exr_import.json", registerPlugin<exrImport>();)
+K_PLUGIN_FACTORY_WITH_JSON(KritaExrImportFactory, "krita_exr_import.json", registerPlugin<exrImport>();)
 
 exrImport::exrImport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -36,4 +36,3 @@ KisImportExportErrorCode exrImport::convert(KisDocument *document, QIODevice */*
 }
 
 #include <exr_import.moc>
-

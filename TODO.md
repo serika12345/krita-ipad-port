@@ -104,8 +104,8 @@
 - [x] **P0** `try_run()`、ホスト実行コード生成器、pkg-config誤検出を修正する。
 - [x] **P0** 各成果物を`file`、`lipo`、`otool`で検査し、iOS arm64以外を拒否する。
 - [x] **P1** JPEGを追加する。
-- [ ] **P1** 初期版に必要ならWebP/TIFFを追加する。
-- [ ] **P2** OpenEXR/HEIF/JPEG XL/RAW/Popplerを個別に再評価する。
+- [x] **P1** WebP/TIFFを追加する（依存をNixで固定し、iOS静的プラグインのリンクと実機保存を確認済み。TIFFはJPEG圧縮での保存・再読み込みも確認済み）。
+- [ ] **P2** OpenEXR/HEIF/JPEG XL/RAW/Popplerを個別に再評価する（OpenEXRは依存固定・静的プラグイン同梱まで完了。残る形式と形式別の実機確認を継続する）。
 
 ### 完了条件
 
@@ -256,11 +256,11 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Layer追加・削除・並べ替え・可視性・opacity・blend mode。
 - [ ] **P0** Undo/Redo、selection、move、transform、crop、fill、gradient、textの基本動作。
 - [x] **P0** KRA/ORA/PNG/JPEG import/export（基本的な保存・再読み込みをビルド`20260802150920`で実機確認済み。KRA内の任意フィルター互換性は次項で継続する）。
-- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（追加依存のないものを静的リンクし、arm64リンク・143件の静的登録・ランタイムデータ検査まで完了。PSDは実機で確認済み、残る形式は実機確認待ち）。
+- [ ] **P1** Android版の追加ファイル形式・メタデータ（CSV、SVG、XCF、PSD、QML、TGA、Heightmap、Brush、Spriter、KRZ、RGBE、EXIF/IPTC/XMP）を実機でopen/save/reopenする（WebP、TIFF、JPEG 2000、OpenEXRを追加し、arm64リンク・151件の静的登録・ランタイムデータ検査まで完了。PSDとTIFFのJPEG圧縮保存・再読み込みは実機確認済み、残る形式は実機確認待ち）。
 - [x] **P0** KRAが参照する調整レイヤー・フィルターを棚卸しし、Android版相当として残す内部フィルタープラグインを決める（追加依存なしで構築できる33 filterと、SeExprを除く6 generatorをiOS静的プロファイルへ追加。arm64リンク・登録・ランタイムデータ検査と、`invert`を含む実機KRAの保存・再起動・再読込を確認済み）。
 - [ ] **P0** Layer、Brush Presets、Tool Options、Advanced Color Selector Docker。
 - [ ] **P0** canvas-only modeまたはiPad向け省スペース配置。
-- [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール（MyPaintを除く13 paintopを静的プロファイルへ追加し、arm64リンク・登録・画像リソースを機械検査済み。Color Smudge、Spray、Hatching、Filter Brush（Invert）を含む主要engineの実機描画を確認済み。Colorize Toolも静的リンク済みで、実機機能確認を継続）。
+- [ ] **P1** Clone、Filter Brush、Colorize、Assistant等の主要ブラシ・ツール（MyPaintを含む14 paintopを静的プロファイルへ追加し、arm64リンク・登録・画像リソースを機械検査済み。MyPaint presetはクリーンインストール後の登録を実機確認済み。Color Smudge、Spray、Hatching、Filter Brush（Invert）を含む主要engineの実機描画を確認済み。Colorize Toolの実機機能確認を継続）。
 - [x] **P1** 基本フィルタとgenerator（33 filterとSeExprを除く6 generatorについて、構築設定・静的登録・パッケージデータ、および実機でのフィルター／generatorレイヤー作成とKRA open/save/reopenを確認済み）。
 - [ ] **P1** resource bundleのimport/export（Android相当のResource ManagerをiOS静的プロファイルへ追加し、実機確認待ち）。
 - [ ] **P1** Bluetooth/USBキーボード操作。
@@ -394,7 +394,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - bug reportの外部process起動
 - Qt Designer plugin
 - X11/Wayland/Windows/macOS/Android固有platform plugin
-- RAW、PDF、HEIF、JPEG XL、OpenEXR等の優先度が低いI/O
+- RAW、PDF、HEIF、JPEG XL等の優先度が低いI/O
 - 外部実行ファイルに依存する機能
 
 ## 横断的な完了基準

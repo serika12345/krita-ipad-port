@@ -26,7 +26,7 @@ function(check_libtiff_psd_support varname_read_tags varname_write_tags)
             TIFFGetField(img, TIFFTAG_PHOTOSHOP, &length, &data);
         }
     " ${varname_read_tags})
-    check_cxx_source_runs("
+    set(_krita_tiff_write_psd_tags_source "
         #include <array>
         #include <cstdint>
         #include <tiff.h>
@@ -48,7 +48,21 @@ function(check_libtiff_psd_support varname_read_tags varname_write_tags)
             TIFFClose(img);
             return 0;
         }
-    " ${varname_write_tags})
+    ")
+
+    if(CMAKE_CROSSCOMPILING)
+        # Target programs cannot run while configuring a cross build.  Keep
+        # the API/link check here; runtime semantics are validated on-device.
+        check_cxx_source_compiles(
+            "${_krita_tiff_write_psd_tags_source}"
+            ${varname_write_tags}
+        )
+    else()
+        check_cxx_source_runs(
+            "${_krita_tiff_write_psd_tags_source}"
+            ${varname_write_tags}
+        )
+    endif()
 endfunction(check_libtiff_psd_support)
 
 find_package(TIFF REQUIRED QUIET)

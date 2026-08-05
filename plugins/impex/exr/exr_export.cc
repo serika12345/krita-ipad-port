@@ -30,7 +30,7 @@
 
 class KisExternalLayer;
 
-K_PLUGIN_FACTORY_WITH_JSON(ExportFactory, "krita_exr_export.json", registerPlugin<EXRExport>();)
+K_PLUGIN_FACTORY_WITH_JSON(KritaExrExportFactory, "krita_exr_export.json", registerPlugin<EXRExport>();)
 
 EXRExport::EXRExport(QObject *parent, const QVariantList &) : KisImportExportFilter(parent)
 {
@@ -116,4 +116,3 @@ KisPropertiesConfigurationSP KisWdgOptionsExr::configuration() const
 }
 
 #include <exr_export.moc>
-

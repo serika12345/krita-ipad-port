@@ -13,7 +13,7 @@ if (TIFF_HAS_PSD_TAGS)
         VERSION ${GENERIC_KRITA_LIB_VERSION} SOVERSION ${GENERIC_KRITA_LIB_SOVERSION}
     )
 
-    target_link_libraries(kritatiffpsd kritapsd ${TIFF_LIBRARIES})
+    target_link_libraries(kritatiffpsd kritapsd TIFF::TIFF)
 
     install(TARGETS kritatiffpsd DESTINATION ${INSTALL_TARGETS_DEFAULT_ARGS})
 
@@ -35,7 +35,7 @@ target_link_libraries(kritatiffimport
     kritaexifcommon
     ${JPEG_TURBO_LIBRARIES}
     ${KRITATIFFPSD_LIBRARY}
-    ${TIFF_LIBRARIES}
+    TIFF::TIFF
     )
 
 install(TARGETS kritatiffimport  DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})
@@ -65,7 +65,7 @@ target_link_libraries(kritatiffexport
     LibExiv2::LibExiv2
     kritaexifcommon
     ${KRITATIFFPSD_LIBRARY}
-    ${TIFF_LIBRARIES}
+    TIFF::TIFF
     )
 
 install(TARGETS kritatiffexport  DESTINATION ${KRITA_PLUGIN_INSTALL_DIR})

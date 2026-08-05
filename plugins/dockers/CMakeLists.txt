@@ -1,6 +1,6 @@
 add_subdirectory(layerdocker)
 
-if(HAVE_OPENEXR AND NOT ANDROID)
+if(HAVE_OPENEXR AND NOT ANDROID AND NOT IOS)
     add_subdirectory(smallcolorselector)
 endif()
 add_subdirectory(specificcolorselector)
