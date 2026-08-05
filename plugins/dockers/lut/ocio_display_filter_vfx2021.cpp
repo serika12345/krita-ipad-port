@@ -34,11 +34,16 @@
 #include <qsurface.h>
 
 #if defined(QT_OPENGL_ES_2)
+#if QT_CONFIG(opengles3)
+#define GL_RGBA32F_ARB GL_RGBA32F
+#define GL_RGB32F_ARB GL_RGB32F
+#else
 #define GL_RGBA32F_ARB GL_RGBA32F_EXT
 #define GL_RGB32F_ARB GL_RGB32F_EXT
 #endif
+#endif
 
-#if defined(QT_OPENGL_ES_2) && !defined(QT_OPENGL_ES_3)
+#if defined(QT_OPENGL_ES_2) && !QT_CONFIG(opengles3)
 #define GL_R32F GL_R32F_EXT
 #define GL_RED GL_RED_EXT
 #define GL_TEXTURE_WRAP_R GL_TEXTURE_WRAP_R_OES
