@@ -18,6 +18,13 @@ kis_add_library(kritalutdocker_static STATIC ${kritalutdocker_static_SRCS})
 
 target_link_libraries(kritalutdocker_static PUBLIC kritaui OpenColorIO::OpenColorIO)
 
+if(IOS)
+    # Krita's OCIO display filter uses this compatibility define to select its
+    # existing OpenGL ES path. Qt 6 exposes the capability through QT_CONFIG
+    # but no longer defines this legacy platform macro for consumers.
+    target_compile_definitions(kritalutdocker_static PRIVATE QT_OPENGL_ES_2)
+endif()
+
 set(KRITA_LUTDOCKER_SOURCES
   lutdocker.cpp
 )
