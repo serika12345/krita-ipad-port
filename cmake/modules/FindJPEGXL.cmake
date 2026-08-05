@@ -114,7 +114,33 @@ if (JPEGXL_LIBRARY AND NOT TARGET JPEGXL::jxl)
     set(_JPEGXL_LINK_OPTIONS ${PC_JPEGXL_LDFLAGS_OTHER})
     set(_JPEGXL_TARGET_COMPILE_OPTIONS ${JPEGXL_COMPILE_OPTIONS})
     if("${JPEGXL_LIBRARY}" MATCHES "\\${CMAKE_STATIC_LIBRARY_SUFFIX}$")
-        set(_JPEGXL_LINK_LIBRARIES ${PC_JPEGXL_STATIC_LINK_LIBRARIES})
+        # FindPkgConfig does not always populate STATIC_LINK_LIBRARIES with
+        # absolute paths when cross-compiling. Resolve the library names from
+        # the target pkg-config search roots so that private static
+        # dependencies (Brotli, Highway, and the JXL CMS library) reach the
+        # final link.
+        set(_JPEGXL_LINK_LIBRARIES)
+        foreach(_JPEGXL_STATIC_LIBRARY IN LISTS PC_JPEGXL_STATIC_LIBRARIES)
+            if(_JPEGXL_STATIC_LIBRARY STREQUAL "jxl")
+                continue()
+            elseif(_JPEGXL_STATIC_LIBRARY STREQUAL "m" OR
+                   _JPEGXL_STATIC_LIBRARY STREQUAL "c++")
+                list(APPEND _JPEGXL_LINK_LIBRARIES ${_JPEGXL_STATIC_LIBRARY})
+            else()
+                string(MAKE_C_IDENTIFIER "${_JPEGXL_STATIC_LIBRARY}" _JPEGXL_STATIC_LIBRARY_ID)
+                find_library(_JPEGXL_STATIC_LIBRARY_${_JPEGXL_STATIC_LIBRARY_ID}
+                    NAMES ${_JPEGXL_STATIC_LIBRARY}
+                    HINTS ${PC_JPEGXL_STATIC_LIBRARY_DIRS}
+                    NO_DEFAULT_PATH
+                )
+                if(_JPEGXL_STATIC_LIBRARY_${_JPEGXL_STATIC_LIBRARY_ID})
+                    list(APPEND _JPEGXL_LINK_LIBRARIES
+                        ${_JPEGXL_STATIC_LIBRARY_${_JPEGXL_STATIC_LIBRARY_ID}})
+                else()
+                    list(APPEND _JPEGXL_LINK_LIBRARIES ${_JPEGXL_STATIC_LIBRARY})
+                endif()
+            endif()
+        endforeach()
         set(_JPEGXL_LINK_OPTIONS ${PC_JPEGXL_STATIC_LDFLAGS_OTHER})
         set(_JPEGXL_TARGET_COMPILE_OPTIONS ${PC_JPEGXL_STATIC_CFLAGS_OTHER})
     endif()
