@@ -32,10 +32,18 @@
   harfbuzz-ios,
   fontconfig-ios,
   lcms2-ios,
+  libdeflate-ios,
   eigen-ios,
   xsimd-ios,
   libunibreak-ios,
   libjpeg-turbo-ios,
+  json-c-ios,
+  libwebp-ios,
+  libtiff-ios,
+  libmypaint-ios,
+  openjpeg-ios,
+  imath-ios,
+  openexr-ios,
   exiv2-ios,
   boost-ios,
   immer-ios,
@@ -53,6 +61,7 @@ let
 
   targetDependencies = [
     zlib-ios
+    libdeflate-ios
     expat-ios
     libpng-ios
     freetype-ios
@@ -63,6 +72,13 @@ let
     xsimd-ios
     libunibreak-ios
     libjpeg-turbo-ios
+    json-c-ios
+    libwebp-ios
+    libtiff-ios
+    libmypaint-ios
+    openjpeg-ios
+    imath-ios
+    openexr-ios
     exiv2-ios
     boost-ios
     immer-ios
@@ -88,8 +104,8 @@ let
   pluginProfile = builtins.fromJSON (builtins.readFile pluginProfileFile);
 in
 assert lib.assertMsg (
-  builtins.length targetDependencies == 31
-) "Krita iOS must consume the complete 31-package target dependency set";
+  builtins.length targetDependencies == 39
+) "Krita iOS must consume the complete 39-package target dependency set";
 assert lib.assertMsg (pluginProfile.schema == 1) "unsupported Krita iOS plugin profile schema";
 assert lib.assertMsg (
   builtins.length pluginProfile.targets == 50

@@ -19,6 +19,7 @@ in
     ;
 
   architecture = versions.KRITA_IOS_ARCHITECTURE;
+  autotoolsHost = "aarch64-apple-darwin";
   deploymentTarget = versions.KRITA_IOS_DEPLOYMENT_TARGET;
   xcodeVersion = versions.KRITA_IOS_XCODE_VERSION;
   xcodeBuildVersion = versions.KRITA_IOS_XCODE_BUILD_VERSION;

@@ -48,8 +48,19 @@
       # validated external Xcode SDK as a narrowly defined host dependency.
       packages.${system} = {
         source-zlib = pkgs.zlib.src;
+        source-libdeflate = pkgs.libdeflate.src;
         source-libpng = pkgs.libpng.src;
         source-libjpeg-turbo = pkgs.libjpeg_turbo.src;
+        source-libwebp = pkgs.libwebp.src;
+        source-libtiff = pkgs.libtiff.src;
+        source-openjpeg = pkgs.openjpeg.src;
+        source-imath = pkgs.imath.src;
+        source-openexr = pkgs.openexr.src;
+        source-libffi = pkgs.libffiReal.src;
+        source-pcre2 = pkgs.pcre2.src;
+        source-glib = pkgs.glib.src;
+        source-json-c = pkgs.json_c.src;
+        source-libmypaint = pkgs.libmypaint.src;
         source-expat = pkgs.expat.src;
         source-boost = pkgs.boost.src;
         source-immer = pkgs.immer.src;
@@ -85,6 +96,11 @@
         host-ecm = pkgs.kdePackages.extra-cmake-modules;
 
         inherit (iosPackages)
+          glib-ios
+          json-c-ios
+          libffi-ios
+          libmypaint-ios
+          pcre2-ios
           boost-ios
           eigen-ios
           exiv2-ios
@@ -95,6 +111,7 @@
           harfbuzz-ios
           host-kconfig-compiler
           immer-ios
+          imath-ios
           ios-base-dependencies
           ios-dependencies
           kcodecs-ios
@@ -113,8 +130,13 @@
           lcms2-ios
           kf6-host-tooling
           libintl-ios
+          libdeflate-ios
           libjpeg-turbo-ios
+          libtiff-ios
           libunibreak-ios
+          libwebp-ios
+          openexr-ios
+          openjpeg-ios
           libpng-ios
           qt5compat-ios
           qt-ios-dependencies
@@ -132,6 +154,11 @@
 
       checks.${system} = {
         inherit (iosPackages)
+          glib-ios
+          json-c-ios
+          libffi-ios
+          libmypaint-ios
+          pcre2-ios
           boost-consumer-check
           boost-ios
           eigen-ios
@@ -149,6 +176,7 @@
           host-kconfig-compiler
           immer-consumer-check
           immer-ios
+          imath-ios
           ios-base-dependencies
           ios-dependencies
           kcodecs-ios
@@ -167,10 +195,15 @@
           kf6-host-tooling
           libintl-consumer-check
           libintl-ios
+          libdeflate-ios
           libjpeg-turbo-consumer-check
           libjpeg-turbo-ios
+          libtiff-ios
           libunibreak-consumer-check
           libunibreak-ios
+          libwebp-ios
+          openexr-ios
+          openjpeg-ios
           libpng-ios
           qt5compat-ios
           qt-ios-dependencies

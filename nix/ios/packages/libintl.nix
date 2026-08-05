@@ -75,12 +75,14 @@ mkIOSAutotoolsPackage {
   requiredPaths = [
     "include/libintl.h"
     "lib/libintl.a"
+    "lib/pkgconfig/intl.pc"
   ];
 
   staticArchives = [ "lib/libintl.a" ];
 
   postInstall = ''
     rm -f "$out/lib/libintl.la"
+    install -Dm644 ${../pkgconfig/intl.pc} "$out/lib/pkgconfig/intl.pc"
   '';
 
   postInstallCheck = ''
@@ -94,6 +96,23 @@ mkIOSAutotoolsPackage {
     \) -print -quit)"
     if test -n "$unexpected_library"; then
       echo "error: target-only libintl output contains an unexpected library: $unexpected_library" >&2
+      exit 1
+    fi
+
+    export PKG_CONFIG_DIR=
+    export PKG_CONFIG_PATH=
+    export PKG_CONFIG_LIBDIR="$out/lib/pkgconfig"
+    export PKG_CONFIG_SYSROOT_DIR=
+    if test "$(pkg-config --modversion intl)" != "1.0"; then
+      echo "error: libintl pkg-config metadata reports an unexpected version" >&2
+      exit 1
+    fi
+    pkg_config_libs="$(pkg-config --static --libs intl)"
+    if ! grep -Fq -- "-L$out/lib" <<<"$pkg_config_libs" \
+      || ! grep -Eq -- '(^|[[:space:]])-lintl([[:space:]]|$)' <<<"$pkg_config_libs" \
+      || ! grep -Eq -- '(^|[[:space:]])-liconv([[:space:]]|$)' <<<"$pkg_config_libs" \
+      || ! grep -Eq -- '(^|[[:space:]])CoreFoundation([[:space:]]|$)' <<<"$pkg_config_libs"; then
+      echo "error: libintl pkg-config metadata does not provide its complete target link interface" >&2
       exit 1
     fi
 

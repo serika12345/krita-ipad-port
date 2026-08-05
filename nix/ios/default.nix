@@ -42,9 +42,20 @@ let
     assert lib.assertMsg (
       dependencyPackageNames == [
         "zlib"
+        "libdeflate"
         "expat"
         "libpng"
         "libjpeg-turbo"
+        "libwebp"
+        "libtiff"
+        "openjpeg"
+        "imath"
+        "openexr"
+        "libffi"
+        "pcre2"
+        "glib"
+        "json-c"
+        "libmypaint"
         "boost"
         "immer"
         "zug"
@@ -123,6 +134,21 @@ let
   zlib-ios = pkgs.callPackage ./packages/zlib.nix {
     inherit mkIOSCMakePackage;
     packageSpec = dependencyByName.zlib;
+  };
+
+  libdeflate-ios = pkgs.callPackage ./packages/libdeflate.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.libdeflate;
+  };
+
+  libffi-ios = pkgs.callPackage ./packages/libffi.nix {
+    inherit mkIOSAutotoolsPackage toolchain;
+    packageSpec = dependencyByName.libffi;
+  };
+
+  pcre2-ios = pkgs.callPackage ./packages/pcre2.nix {
+    inherit mkIOSAutotoolsPackage;
+    packageSpec = dependencyByName.pcre2;
   };
 
   expat-ios = pkgs.callPackage ./packages/expat.nix {
@@ -210,6 +236,37 @@ let
     packageSpec = dependencyByName.libjpeg-turbo;
   };
 
+  libwebp-ios = pkgs.callPackage ./packages/libwebp.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.libwebp;
+  };
+
+  libtiff-ios = pkgs.callPackage ./packages/libtiff.nix {
+    inherit
+      libdeflate-ios
+      libjpeg-turbo-ios
+      mkIOSCMakePackage
+      toolchain
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.libtiff;
+  };
+
+  openjpeg-ios = pkgs.callPackage ./packages/openjpeg.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.openjpeg;
+  };
+
+  imath-ios = pkgs.callPackage ./packages/imath.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName.imath;
+  };
+
+  openexr-ios = pkgs.callPackage ./packages/openexr.nix {
+    inherit imath-ios libdeflate-ios mkIOSCMakePackage;
+    packageSpec = dependencyByName.openexr;
+  };
+
   libjpeg-turbo-consumer-check = pkgs.callPackage ./tests/libjpeg-turbo-consumer.nix {
     inherit libjpeg-turbo-ios mkIOSCMakePackage toolchain;
   };
@@ -294,6 +351,27 @@ let
 
   libintl-consumer-check = pkgs.callPackage ./tests/libintl-consumer.nix {
     inherit libintl-ios mkIOSCMakePackage toolchain;
+  };
+
+  glib-ios = pkgs.callPackage ./packages/glib.nix {
+    inherit
+      libffi-ios
+      libintl-ios
+      mkIOSMesonPackage
+      pcre2-ios
+      zlib-ios
+      ;
+    packageSpec = dependencyByName.glib;
+  };
+
+  json-c-ios = pkgs.callPackage ./packages/json-c.nix {
+    inherit mkIOSCMakePackage;
+    packageSpec = dependencyByName."json-c";
+  };
+
+  libmypaint-ios = pkgs.callPackage ./packages/libmypaint.nix {
+    inherit glib-ios json-c-ios mkIOSAutotoolsPackage;
+    packageSpec = dependencyByName.libmypaint;
   };
 
   fribidi-ios = pkgs.callPackage ./packages/fribidi.nix {
@@ -409,6 +487,7 @@ let
 
   baseIOSPackages = [
     zlib-ios
+    libdeflate-ios
     expat-ios
     libpng-ios
     freetype-ios
@@ -419,6 +498,16 @@ let
     xsimd-ios
     libunibreak-ios
     libjpeg-turbo-ios
+    libwebp-ios
+    libtiff-ios
+    openjpeg-ios
+    imath-ios
+    openexr-ios
+    libffi-ios
+    pcre2-ios
+    glib-ios
+    json-c-ios
+    libmypaint-ios
     exiv2-ios
     boost-ios
     immer-ios
@@ -473,11 +562,19 @@ let
       kwidgetsaddons-ios
       lager-ios
       lcms2-ios
+      libdeflate-ios
       libintl-ios
       libjpeg-turbo-ios
+      libmypaint-ios
+      json-c-ios
       libpng-ios
+      libtiff-ios
       libunibreak-ios
+      libwebp-ios
       mkIOSCMakePackage
+      imath-ios
+      openexr-ios
+      openjpeg-ios
       qt5compat-ios
       qtbase-ios
       qtsvg-ios
@@ -515,12 +612,13 @@ let
   kf6-ios-dependencies = ios-dependencies;
 in
 assert lib.assertMsg (
-  builtins.length allIOSPackages == 31
-  && builtins.length (lib.unique (map toString allIOSPackages)) == 31
-) "final iOS dependency aggregate must contain exactly 31 unique outputs";
+  builtins.length allIOSPackages == 42
+  && builtins.length (lib.unique (map toString allIOSPackages)) == 42
+) "final iOS dependency aggregate must contain exactly 42 unique outputs";
 assert lib.assertMsg (
   map (package: package.pname) allIOSPackages == [
     "zlib-ios"
+    "libdeflate-ios"
     "expat-ios"
     "libpng-ios"
     "freetype-ios"
@@ -531,6 +629,16 @@ assert lib.assertMsg (
     "xsimd-ios"
     "libunibreak-ios"
     "libjpeg-turbo-ios"
+    "libwebp-ios"
+    "libtiff-ios"
+    "openjpeg-ios"
+    "imath-ios"
+    "openexr-ios"
+    "libffi-ios"
+    "pcre2-ios"
+    "glib-ios"
+    "json-c-ios"
+    "libmypaint-ios"
     "exiv2-ios"
     "boost-ios"
     "immer-ios"
@@ -574,6 +682,7 @@ assert lib.assertMsg (
     ios-dependencies
     immer-consumer-check
     immer-ios
+    imath-ios
     lager-consumer-check
     lager-ios
     lcms2-ios
@@ -590,12 +699,17 @@ assert lib.assertMsg (
     kitemviews-ios
     krita-ios-app
     krita-ios-ipa
+    openexr-ios
+    openjpeg-ios
     libintl-consumer-check
     libintl-ios
+    libdeflate-ios
     libjpeg-turbo-consumer-check
     libjpeg-turbo-ios
+    libtiff-ios
     libunibreak-consumer-check
     libunibreak-ios
+    libwebp-ios
     libpng-ios
     qt5compat-ios
     qt-ios-dependencies
@@ -611,5 +725,10 @@ assert lib.assertMsg (
     zug-consumer-check
     zug-ios
     kwidgetsaddons-ios
+    glib-ios
+    json-c-ios
+    libffi-ios
+    libmypaint-ios
+    pcre2-ios
     ;
 }

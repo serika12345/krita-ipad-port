@@ -17,6 +17,7 @@ let
     "-DWITH_SIMD=ON"
     "-DREQUIRE_SIMD=ON"
     "-DWITH_TURBOJPEG=ON"
+    "-DWITH_JPEG8=ON"
     "-DBUILD=19800101"
   ];
 in
@@ -72,6 +73,7 @@ mkIOSCMakePackage {
     config_header="$out/include/jconfig.h"
     grep -Eq '^#define[[:space:]]+LIBJPEG_TURBO_VERSION[[:space:]]+3\.1\.4\.1([[:space:]]|$)' "$config_header"
     grep -Eq '^#define[[:space:]]+LIBJPEG_TURBO_VERSION_NUMBER[[:space:]]+3001004([[:space:]]|$)' "$config_header"
+    grep -Eq '^#define[[:space:]]+JPEG_LIB_VERSION[[:space:]]+80([[:space:]]|$)' "$config_header"
     grep -Eq '^#define[[:space:]]+WITH_SIMD[[:space:]]+1([[:space:]]|$)' "$config_header"
 
     targets="$out/lib/cmake/libjpeg-turbo/libjpeg-turboTargets.cmake"

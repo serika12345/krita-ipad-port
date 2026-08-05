@@ -26,6 +26,7 @@
   requiredPaths ? [ ],
   staticArchives ? [ ],
   targetDependencies ? [ ],
+  extraTargetLinkArgs ? [ ],
   passthru ? { },
   meta ? { },
   ...
@@ -57,9 +58,12 @@ let
     "${dependency}/lib/pkgconfig"
     "${dependency}/share/pkgconfig"
   ]) targetDependencyClosure;
+  targetIncludeArgs = map (dependency: "-I${dependency}/include") targetDependencyClosure;
+  targetLibraryArgs = map (dependency: "-L${dependency}/lib") targetDependencyClosure;
   targetCMakePrefixPaths = map (dependency: "${dependency}") targetDependencyClosure;
   effectiveTargetPkgConfigDirs =
     if targetPkgConfigDirs == [ ] then [ "$NIX_BUILD_TOP/empty-pkg-config" ] else targetPkgConfigDirs;
+  archiveInspectionHook = import ./inspect-ios-archive.nix { inherit gawk toolchain; };
   mesonString = value: "'${lib.replaceStrings [ "\\" "'" ] [ "\\\\" "\\'" ] value}'";
   mesonArray = values: "[${lib.concatStringsSep ", " (map mesonString values)}]";
   nativeToolCommand =
@@ -262,6 +266,8 @@ assert lib.assertMsg (lib.all lib.isString requiredPaths)
   "iOS Meson requiredPaths must all be strings";
 assert lib.assertMsg (lib.all lib.isString staticArchives)
   "iOS Meson staticArchives must all be strings";
+assert lib.assertMsg (lib.all lib.isString extraTargetLinkArgs)
+  "iOS Meson extraTargetLinkArgs must all be strings";
 assert lib.assertMsg (lib.isAttrs passthru) "iOS Meson passthru must be an attribute set";
 stdenvNoCC.mkDerivation (
   {
@@ -387,10 +393,10 @@ stdenvNoCC.mkDerivation (
       pkg_config_libdir = ${mesonArray effectiveTargetPkgConfigDirs}
 
       [built-in options]
-      c_args = ${mesonArray targetCompileArgs}
-      cpp_args = ${mesonArray targetCompileArgs}
-      c_link_args = ${mesonArray targetLinkArgs}
-      cpp_link_args = ${mesonArray targetLinkArgs}
+      c_args = ${mesonArray (targetCompileArgs ++ targetIncludeArgs)}
+      cpp_args = ${mesonArray (targetCompileArgs ++ targetIncludeArgs)}
+      c_link_args = ${mesonArray (targetLinkArgs ++ targetLibraryArgs ++ extraTargetLinkArgs)}
+      cpp_link_args = ${mesonArray (targetLinkArgs ++ targetLibraryArgs ++ extraTargetLinkArgs)}
       cmake_prefix_path = ${mesonArray targetCMakePrefixPaths}
       pkg_config_path = []
       EOF
@@ -464,8 +470,7 @@ stdenvNoCC.mkDerivation (
         fi
       done
 
-      inspection_root="$(mktemp -d)"
-      trap 'rm -rf "$inspection_root"' EXIT
+      ${archiveInspectionHook}
 
       archive_index=0
       for relative_archive in ${lib.escapeShellArgs staticArchives}; do
@@ -487,39 +492,7 @@ stdenvNoCC.mkDerivation (
           echo "error: $archive contains no object members" >&2
           exit 1
         fi
-
-        archive_dir="$inspection_root/archive-$archive_index"
-        mkdir -p "$archive_dir"
-        (
-          cd "$archive_dir"
-          ${toolchain.ar} -x "$archive"
-        )
-
-        extracted_count=0
-        while IFS= read -r -d "" member; do
-          extracted_count=$((extracted_count + 1))
-          member_architectures="$(${toolchain.lipo} -archs "$member")"
-          if test "$member_architectures" != "${toolchain.architecture}"; then
-            echo "error: $member contains '$member_architectures'; expected ${toolchain.architecture}" >&2
-            exit 1
-          fi
-          build_metadata="$(${toolchain.vtool} -show-build "$member")"
-          if ! grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member is not an iOS device object" >&2
-            exit 1
-          fi
-          if ! grep -Eq 'minos[[:space:]]+${toolchain.deploymentTarget}([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member does not target iOS ${toolchain.deploymentTarget}" >&2
-            exit 1
-          fi
-          if ! grep -Eq 'sdk[[:space:]]+${toolchain.sdkVersion}([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member was not built with SDK ${toolchain.sdkVersion}" >&2
-            exit 1
-          fi
-        done < <(find "$archive_dir" -type f ! -name '__.SYMDEF*' -print0)
-
-        if test "$extracted_count" -ne "$expected_member_count"; then
-          echo "error: inspected $extracted_count of $expected_member_count members; duplicate names are not allowed" >&2
+        if ! inspect_ios_archive_members "$archive" "$expected_member_count"; then
           exit 1
         fi
       done
@@ -556,5 +529,6 @@ stdenvNoCC.mkDerivation (
     "requiredPaths"
     "staticArchives"
     "targetDependencies"
+    "extraTargetLinkArgs"
   ]
 )

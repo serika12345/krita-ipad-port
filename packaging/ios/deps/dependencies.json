@@ -16,6 +16,23 @@
       ]
     },
     {
+      "name": "libdeflate",
+      "version": "1.25",
+      "source_flake_attr": "source-libdeflate",
+      "dependencies": [],
+      "cmake_args": [
+        "-DLIBDEFLATE_BUILD_SHARED_LIB=OFF",
+        "-DLIBDEFLATE_BUILD_GZIP=OFF",
+        "-DLIBDEFLATE_BUILD_TESTS=OFF"
+      ],
+      "artifacts": [
+        "lib/libdeflate.a"
+      ],
+      "required_paths": [
+        "include/libdeflate.h"
+      ]
+    },
+    {
       "name": "expat",
       "version": "2.8.2",
       "source_flake_attr": "source-expat",
@@ -67,6 +84,7 @@
         "-DWITH_SIMD=ON",
         "-DREQUIRE_SIMD=ON",
         "-DWITH_TURBOJPEG=ON",
+        "-DWITH_JPEG8=ON",
         "-DBUILD=19800101"
       ],
       "artifacts": [
@@ -76,6 +94,247 @@
       "required_paths": [
         "include/jpeglib.h",
         "lib/cmake/libjpeg-turbo/libjpeg-turboConfig.cmake"
+      ]
+    },
+    {
+      "name": "libwebp",
+      "version": "1.6.0",
+      "source_flake_attr": "source-libwebp",
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DWEBP_USE_THREAD=ON",
+        "-DWEBP_BUILD_CWEBP=OFF",
+        "-DWEBP_BUILD_DWEBP=OFF",
+        "-DWEBP_BUILD_GIF2WEBP=OFF",
+        "-DWEBP_BUILD_IMG2WEBP=OFF",
+        "-DWEBP_BUILD_VWEBP=OFF",
+        "-DWEBP_BUILD_WEBPINFO=OFF",
+        "-DWEBP_BUILD_WEBPMUX=OFF",
+        "-DWEBP_BUILD_ANIM_UTILS=OFF",
+        "-DWEBP_BUILD_EXTRAS=OFF",
+        "-DWEBP_BUILD_LIBWEBPMUX=ON"
+      ],
+      "artifacts": [
+        "lib/libwebp.a",
+        "lib/libwebpdemux.a",
+        "lib/libwebpmux.a",
+        "lib/libsharpyuv.a"
+      ],
+      "required_paths": [
+        "include/webp/decode.h",
+        "include/webp/encode.h"
+      ]
+    },
+    {
+      "name": "libtiff",
+      "version": "4.7.2",
+      "source_flake_attr": "source-libtiff",
+      "dependencies": [
+        "zlib",
+        "libjpeg-turbo",
+        "libdeflate"
+      ],
+    "cmake_args": [
+      "-DBUILD_SHARED_LIBS=OFF",
+      "-Dtiff-framework=OFF",
+      "-Dtiff-tools=OFF",
+      "-Dtiff-tests=OFF",
+      "-Dtiff-contrib=OFF",
+      "-Dtiff-docs=OFF",
+      "-Dtiff-cxx=OFF",
+        "-Dzlib=ON",
+        "-Djpeg=ON",
+        "-Dlibdeflate=ON",
+        "-Dlerc=OFF",
+        "-Dlzma=OFF",
+        "-Dwebp=OFF",
+        "-Dzstd=OFF"
+      ],
+      "artifacts": [
+        "lib/libtiff.a"
+      ],
+      "required_paths": [
+        "include/tiff.h",
+        "include/tiffio.h"
+      ]
+    },
+    {
+      "name": "openjpeg",
+      "version": "2.5.4",
+      "source_flake_attr": "source-openjpeg",
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DBUILD_CODEC=OFF",
+        "-DBUILD_THIRDPARTY=OFF",
+        "-DBUILD_JPIP=OFF",
+        "-DBUILD_JPIP_SERVER=OFF",
+        "-DBUILD_VIEWER=OFF",
+        "-DBUILD_JAVA=OFF",
+        "-DBUILD_TESTING=OFF"
+      ],
+      "artifacts": [
+        "lib/libopenjp2.a"
+      ],
+      "required_paths": [
+        "include/openjpeg-2.5/openjpeg.h"
+      ]
+    },
+    {
+      "name": "imath",
+      "version": "3.2.2",
+      "source_flake_attr": "source-imath",
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DIMATH_BUILD_TESTING=OFF",
+        "-DIMATH_BUILD_EXAMPLES=OFF"
+      ],
+      "artifacts": [
+        "lib/libImath-3_2.a"
+      ],
+      "required_paths": [
+        "include/Imath/ImathBox.h",
+        "lib/cmake/Imath/ImathConfig.cmake"
+      ]
+    },
+    {
+      "name": "openexr",
+      "version": "3.4.13",
+      "source_flake_attr": "source-openexr",
+      "dependencies": [
+        "imath",
+        "libdeflate"
+      ],
+      "cmake_args": [
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DOPENEXR_BUILD_TOOLS=OFF",
+        "-DOPENEXR_BUILD_EXAMPLES=OFF",
+        "-DOPENEXR_BUILD_TESTS=OFF"
+      ],
+      "artifacts": [
+        "lib/libOpenEXR-3_4.a"
+      ],
+      "required_paths": [
+        "include/OpenEXR/ImfRgbaFile.h",
+        "lib/cmake/OpenEXR/OpenEXRConfig.cmake"
+      ]
+    },
+    {
+      "name": "libffi",
+      "version": "3.7.1",
+      "source_flake_attr": "source-libffi",
+      "build_system": "autotools",
+      "dependencies": [],
+      "cmake_args": [],
+      "configure_args": [
+        "--with-gcc-arch=generic"
+      ],
+      "artifacts": [
+        "lib/libffi.a"
+      ],
+      "required_paths": [
+        "include/ffi.h",
+        "lib/pkgconfig/libffi.pc"
+      ]
+    },
+    {
+      "name": "pcre2",
+      "version": "10.47",
+      "source_flake_attr": "source-pcre2",
+      "build_system": "autotools",
+      "dependencies": [],
+      "cmake_args": [],
+      "configure_args": [
+        "--disable-pcre2-16",
+        "--disable-pcre2-32",
+        "--disable-jit",
+        "--disable-pcre2grep",
+        "--disable-pcre2test"
+      ],
+      "artifacts": [
+        "lib/libpcre2-8.a"
+      ],
+      "required_paths": [
+        "include/pcre2.h",
+        "lib/pkgconfig/libpcre2-8.pc"
+      ]
+    },
+    {
+      "name": "glib",
+      "version": "2.88.1",
+      "source_flake_attr": "source-glib",
+      "build_system": "meson",
+      "dependencies": [
+        "zlib",
+        "libffi",
+        "pcre2",
+        "libintl"
+      ],
+      "cmake_args": [],
+      "meson_args": [
+        "-Ddocumentation=false",
+        "-Dintrospection=disabled",
+        "-Dnls=disabled",
+        "-Dtests=false",
+        "-Dlibelf=disabled",
+        "-Ddtrace=false",
+        "-Dsystemtap=false",
+        "-Dsysprof=disabled",
+        "-Dxattr=false",
+        "-Dman=false"
+      ],
+      "artifacts": [
+        "lib/libglib-2.0.a",
+        "lib/libgobject-2.0.a",
+        "lib/libgmodule-2.0.a"
+      ],
+      "required_paths": [
+        "include/glib-2.0/glib.h",
+        "include/glib-2.0/gobject/gobject.h",
+        "lib/pkgconfig/glib-2.0.pc",
+        "lib/pkgconfig/gobject-2.0.pc"
+      ]
+    },
+    {
+      "name": "json-c",
+      "version": "0.18",
+      "source_flake_attr": "source-json-c",
+      "dependencies": [],
+      "cmake_args": [
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DBUILD_APPS=OFF",
+        "-DBUILD_TESTING=OFF",
+        "-DDISABLE_EXTRA_LIBS=ON"
+      ],
+      "artifacts": [
+        "lib/libjson-c.a"
+      ],
+      "required_paths": [
+        "include/json-c/json.h",
+        "lib/pkgconfig/json-c.pc"
+      ]
+    },
+    {
+      "name": "libmypaint",
+      "version": "1.6.1",
+      "source_flake_attr": "source-libmypaint",
+      "build_system": "autotools",
+      "dependencies": [
+        "glib",
+        "json-c"
+      ],
+      "cmake_args": [],
+      "configure_args": [
+        "--disable-i18n"
+      ],
+      "artifacts": [
+        "lib/libmypaint.a"
+      ],
+      "required_paths": [
+        "include/libmypaint/mypaint-brush.h",
+        "lib/pkgconfig/libmypaint.pc"
       ]
     },
     {
@@ -388,7 +647,8 @@
         "lib/libintl.a"
       ],
       "required_paths": [
-        "include/libintl.h"
+        "include/libintl.h",
+        "lib/pkgconfig/intl.pc"
       ]
     },
     {

@@ -70,6 +70,7 @@ let
   );
   targetPkgConfigLibDir =
     if targetPkgConfigPath == "" then "$NIX_BUILD_TOP/empty-pkg-config" else targetPkgConfigPath;
+  archiveInspectionHook = import ./inspect-ios-archive.nix { inherit gawk toolchain; };
   configureCacheExports = lib.concatStringsSep "\n" (
     lib.mapAttrsToList (name: value: "export ${name}=${lib.escapeShellArg value}") configureCache
   );
@@ -360,7 +361,7 @@ stdenvNoCC.mkDerivation (
 
       ${lib.escapeShellArg configureScript} \
         --build=${stdenvNoCC.buildPlatform.config} \
-        --host=arm-apple-darwin \
+        --host=${toolchain.autotoolsHost} \
         --prefix="$out" \
         --libdir="$out/lib" \
         --disable-shared \
@@ -393,8 +394,7 @@ stdenvNoCC.mkDerivation (
         fi
       done
 
-      inspection_root="$(mktemp -d)"
-      trap 'rm -rf "$inspection_root"' EXIT
+      ${archiveInspectionHook}
 
       archive_index=0
       for relative_archive in ${lib.escapeShellArgs staticArchives}; do
@@ -418,39 +418,7 @@ stdenvNoCC.mkDerivation (
           echo "error: $archive contains no object members" >&2
           exit 1
         fi
-
-        archive_dir="$inspection_root/archive-$archive_index"
-        mkdir -p "$archive_dir"
-        (
-          cd "$archive_dir"
-          ${toolchain.ar} -x "$archive"
-        )
-
-        extracted_count=0
-        while IFS= read -r -d "" member; do
-          extracted_count=$((extracted_count + 1))
-          member_architectures="$(${toolchain.lipo} -archs "$member")"
-          if test "$member_architectures" != "${toolchain.architecture}"; then
-            echo "error: $member contains '$member_architectures'; expected ${toolchain.architecture}" >&2
-            exit 1
-          fi
-          build_metadata="$(${toolchain.vtool} -show-build "$member")"
-          if ! grep -Eq 'platform[[:space:]]+IOS([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member is not an iOS device object" >&2
-            exit 1
-          fi
-          if ! grep -Eq 'minos[[:space:]]+${toolchain.deploymentTarget}([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member does not target iOS ${toolchain.deploymentTarget}" >&2
-            exit 1
-          fi
-          if ! grep -Eq 'sdk[[:space:]]+${toolchain.sdkVersion}([[:space:]]|$)' <<<"$build_metadata"; then
-            echo "error: $member was not built with SDK ${toolchain.sdkVersion}" >&2
-            exit 1
-          fi
-        done < <(find "$archive_dir" -type f ! -name '__.SYMDEF*' -print0)
-
-        if test "$extracted_count" -ne "$expected_member_count"; then
-          echo "error: inspected $extracted_count of $expected_member_count members; duplicate names are not allowed" >&2
+        if ! inspect_ios_archive_members "$archive" "$expected_member_count"; then
           exit 1
         fi
       done
