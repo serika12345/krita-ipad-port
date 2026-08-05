@@ -28,6 +28,7 @@ mkIOSCMakePackage {
   pname = "opencolorio-ios";
   inherit (packageSpec) version;
   src = opencolorio.src;
+  patches = (opencolorio.patches or [ ]) ++ [ ../patches/opencolorio-ios-system-monitor.patch ];
 
   targetDependencies = [
     expat-ios
