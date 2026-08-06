@@ -196,7 +196,7 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [ ] **P0** Pencil描画と指ジェスチャーを分離する。
 - [ ] **P0** undo/redo、pan、zoom、rotateを実装・確認する。
 - [ ] **P0** 高DPI、Safe Area、画面回転を修正する（キャンバスの高DPIは、iPad8,1実機でDPR 2と論理サイズの2倍の描画viewportを診断後、診断コードを除いたビルド`20260805122451`をインストールしてOpenGL ES 3.0動作と表示の鮮明化を確認済み。Safe Areaと回転後の再検証は未完了）。
-- [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する（AltStore起動時のsuspended状態ではprobeを延期し、active遷移後に作成できることをiPad8,1実機で確認済み。background/foreground時の破棄・再作成は未検証）。
+- [ ] **P0** OpenGL/描画surfaceの作成、破棄、再作成を検証する（AltStore起動時のsuspended状態ではprobeを延期し、active遷移後に作成できることをiPad8,1実機で確認済み。Issue #6対応として、非Active中のQOpenGLWidget resize／Show／DPR変更、描画、projection uploadを保留し、復帰後にcontextを検証してresize・設定・画像全体を再送するiOS専用guardを実装し、arm64最終リンクまで完了。ビルド`20260806104631`で変更済みKRAを開いたままHome→Procreate→Kritaを往復し、PID `6682`維持、キャンバス全面復帰、Pencil描画再開、復元確認なし、新規IPSなしを実機確認済み。画面回転と休止中に文書を閉じる境界は未検証）。
 - [ ] **P1 Apple Pencilダブルタップ対応**: KritaのQt iOS viewへ`UIPencilInteraction`を登録し、ダブルタップを既存のKritaアクションへ橋渡しする（Qtソースpatch不要。最小ブリッジを実装し、消しゴム切り替えを実機確認済み）。
   - [ ] iPadOSの`preferredTapAction`を読み、少なくとも「消しゴム切り替え」「直前のプリセットへ切り替え」「カラーパレット表示」「何もしない」を対応する。
   - [x] 消しゴム切り替えを、ペン先／消しゴム側の別プリセットを保持する`eraser_preset_action`へ接続する（実機確認済み）。
@@ -233,8 +233,8 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
 - [x] **P0** ネイティブSaveで保存したKRAをUSBで回収し、全ZIPエントリが破損していないことを検証する（ビルド`20260802143848`、`NativeSaveTest.kra`、13エントリ）。
 - [x] **P0** PNGをネイティブSaveで`Documents`へ保存し、USBで回収後に2480×3508、8-bit RGBAとしてデコード・目視確認し、FilesからKritaへ再読み込みする（ビルド`20260802143848`、`NativeSaveTest.png`）。
 - [x] **P0** JPEG保存後のサムネイル生成でQt同梱版と外部版の静的libjpegが衝突するクラッシュを、iOSではQt同梱版へ統一して修正する。JPEGの保存・再読み込み、USB回収後の外部デコード、クラッシュレポート非生成を確認する（ビルド`20260802150920`、`NativeSaveTest2.jpg`）。
-- [x] **P0** background移行前に全変更documentのrecovery autosaveとcanvas状態markerを同期し、UIKit background task内で完了を待つ。
-- [ ] **P0** foreground復帰時にcanvas/GPU/resourceを復元する。
+- [ ] **P0** background移行時に全変更documentのrecovery checkpointを非同期かつ直列に作成し、既存saveへの合流、保存中の追記、失敗、background task期限切れを処理する（Issue #6対応として同期`exportDocumentSync()`を完了signal型APIへ置換し、UIKitの4段階通知とbackground taskを実装してarm64最終リンクまで完了。ビルド`20260806104631`で文書0件の完了に加え、変更済みKRA 1件を`.Untitled.kra-autosave.kra`へ216,501 bytesで保存し、checkpoint `success: true`を実機確認済み。通常autosave中／保存中の追記／失敗・期限切れ／複数documentの実機検証待ち）。
+- [x] **P0** foreground復帰時にcanvas/GPU/resourceを復元する（OpenGL contextがcurrentになるまでqueued retryし、保留resize・renderer設定・全画像projectionを復元する実装と、iOS操作UIの非Active中layout抑止を追加。ビルド`20260806104631`で変更済みKRAを開いたままKrita→Home→Procreate→Kritaを往復し、PID `6682`維持、4段階通知、キャンバス全面復帰、Pencil描画再開、復元確認なし、新規IPSなしを実機確認済み）。
 - [x] **P0** `UIApplicationDidReceiveMemoryWarningNotification`を受け、使用中でないtileをswapへ退避してtile allocatorとQt pixmapのcacheを解放する。
 - [ ] **P0** 強制終了後のautosave recoveryを検証する。
 - [ ] **P1** Filesから「共有/開く」でKritaへ渡すDocument Type（KRA/ORA/PNG/JPEG）を設定し、実機でcold/warm launchの双方を確認する（実装済み、実機確認待ち）。

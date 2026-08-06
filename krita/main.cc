@@ -55,6 +55,8 @@
 
 #ifdef Q_OS_IOS
 #include <QAction>
+#include <QList>
+#include <QMetaObject>
 #include <QPointer>
 #include <QTimer>
 #include <QWindow>
@@ -146,22 +148,8 @@ namespace
 void installTranslators(KisApplication &app);
 
 #ifdef Q_OS_IOS
-void handleKisIOSBackgroundTransition()
+void persistKisIOSCanvasSuccessMarker()
 {
-    if (!KisPart::exists()) {
-        return;
-    }
-
-    qInfo() << "iPadOS is moving Krita to the background; writing autosave recovery files";
-
-    KisPart *kisPart = KisPart::instance();
-    QList<QPointer<KisDocument>> documents = kisPart->documents();
-    for (const QPointer<KisDocument> &document : documents) {
-        if (document) {
-            document->autoSaveOnPause();
-        }
-    }
-
     // Keep the same successful-canvas marker used by Android. This lets the
     // normal startup path distinguish a suspended app from a prior GL failure.
     const QString configPath = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
@@ -169,6 +157,186 @@ void handleKisIOSBackgroundTransition()
         QSettings displayConfig(configPath + QStringLiteral("/kritadisplayrc"), QSettings::IniFormat);
         displayConfig.setValue("canvasState", "OPENGL_SUCCESS");
         displayConfig.sync();
+    }
+}
+
+class KisIOSRecoverySaveCoordinator
+{
+public:
+    void start()
+    {
+        cancelPendingWork();
+        ++m_generation;
+        m_allSuccessful = true;
+
+        if (KisPart::exists()) {
+            m_documents = KisPart::instance()->documents();
+        }
+
+        qInfo() << "iPadOS recovery checkpoint queued for" << m_documents.size() << "documents";
+        KisUsageLogger::log(
+            QString("iPadOS recovery checkpoint queued for %1 document(s)")
+                .arg(m_documents.size()));
+
+        const quint64 generation = m_generation;
+        QTimer::singleShot(0, qApp, [this, generation] {
+            if (generation == m_generation) {
+                processNextDocument();
+            }
+        });
+    }
+
+    void expire()
+    {
+        if (!m_documents.isEmpty() || m_currentDocument) {
+            qWarning() << "iPadOS recovery checkpoint expired before all documents completed";
+            KisUsageLogger::log("iPadOS recovery checkpoint expired before all documents completed");
+        }
+        cancelPendingWork();
+        ++m_generation;
+    }
+
+private:
+    void processNextDocument()
+    {
+        while (!m_documents.isEmpty()) {
+            m_currentDocument = m_documents.takeFirst();
+            if (!m_currentDocument) {
+                continue;
+            }
+
+            const quint64 generation = m_generation;
+            const quint64 documentToken = ++m_documentToken;
+            KisDocument *document = m_currentDocument.data();
+
+            m_finishedConnection = QObject::connect(
+                document,
+                &KisDocument::sigRecoveryAutoSaveFinished,
+                qApp,
+                [this, generation, documentToken](const QString &filePath, bool success) {
+                    if (generation != m_generation || documentToken != m_documentToken) {
+                        return;
+                    }
+
+                    qInfo() << "iPadOS recovery checkpoint document finished:"
+                            << filePath << "success:" << success;
+                    KisUsageLogger::log(
+                        QString("iPadOS recovery checkpoint document finished: %1; success: %2")
+                            .arg(filePath, success ? QStringLiteral("true") : QStringLiteral("false")));
+                    m_allSuccessful = m_allSuccessful && success;
+                    finishCurrentDocument();
+                    processNextDocumentLater(generation);
+                });
+
+            m_destroyedConnection = QObject::connect(
+                document,
+                &QObject::destroyed,
+                qApp,
+                [this, generation, documentToken] {
+                    if (generation != m_generation || documentToken != m_documentToken) {
+                        return;
+                    }
+
+                    qWarning() << "Document closed while writing the iPadOS recovery checkpoint";
+                    m_allSuccessful = false;
+                    finishCurrentDocument();
+                    processNextDocumentLater(generation);
+                });
+
+            const KisDocument::RecoveryAutoSaveStartResult result =
+                document->requestRecoveryAutoSave();
+
+            if (result == KisDocument::RecoveryAutoSaveStartResult::Started
+                || result == KisDocument::RecoveryAutoSaveStartResult::AlreadySaving) {
+                return;
+            }
+
+            finishCurrentDocument();
+
+            if (result == KisDocument::RecoveryAutoSaveStartResult::Failed) {
+                qWarning() << "Could not start the iPadOS recovery checkpoint for a document";
+                m_allSuccessful = false;
+            }
+        }
+
+        qInfo() << "iPadOS recovery checkpoint completed; success:" << m_allSuccessful;
+        KisUsageLogger::log(
+            QString("iPadOS recovery checkpoint completed; success: %1")
+                .arg(m_allSuccessful ? QStringLiteral("true") : QStringLiteral("false")));
+        finishKisIOSBackgroundTask();
+    }
+
+    void processNextDocumentLater(quint64 generation)
+    {
+        QTimer::singleShot(0, qApp, [this, generation] {
+            if (generation == m_generation) {
+                processNextDocument();
+            }
+        });
+    }
+
+    void finishCurrentDocument()
+    {
+        QObject::disconnect(m_finishedConnection);
+        QObject::disconnect(m_destroyedConnection);
+        m_finishedConnection = {};
+        m_destroyedConnection = {};
+        m_currentDocument.clear();
+    }
+
+    void cancelPendingWork()
+    {
+        finishCurrentDocument();
+        m_documents.clear();
+    }
+
+    quint64 m_generation {0};
+    quint64 m_documentToken {0};
+    bool m_allSuccessful {true};
+    QList<QPointer<KisDocument>> m_documents;
+    QPointer<KisDocument> m_currentDocument;
+    QMetaObject::Connection m_finishedConnection;
+    QMetaObject::Connection m_destroyedConnection;
+};
+
+KisIOSRecoverySaveCoordinator s_iosRecoverySaveCoordinator;
+
+void handleKisIOSLifecycleTransition(KisIOSLifecycleEvent event)
+{
+    const char *eventName = "unknown";
+    switch (event) {
+    case KisIOSLifecycleEvent::WillResignActive:
+        eventName = "will-resign-active";
+        break;
+    case KisIOSLifecycleEvent::DidEnterBackground:
+        eventName = "did-enter-background";
+        break;
+    case KisIOSLifecycleEvent::WillEnterForeground:
+        eventName = "will-enter-foreground";
+        break;
+    case KisIOSLifecycleEvent::DidBecomeActive:
+        eventName = "did-become-active";
+        break;
+    case KisIOSLifecycleEvent::BackgroundTaskExpired:
+        eventName = "background-task-expired";
+        break;
+    }
+    KisUsageLogger::log(QString("iPadOS lifecycle: %1").arg(QString::fromLatin1(eventName)));
+
+    switch (event) {
+    case KisIOSLifecycleEvent::WillResignActive:
+        persistKisIOSCanvasSuccessMarker();
+        break;
+    case KisIOSLifecycleEvent::DidEnterBackground:
+        s_iosRecoverySaveCoordinator.start();
+        break;
+    case KisIOSLifecycleEvent::WillEnterForeground:
+        break;
+    case KisIOSLifecycleEvent::DidBecomeActive:
+        break;
+    case KisIOSLifecycleEvent::BackgroundTaskExpired:
+        s_iosRecoverySaveCoordinator.expire();
+        break;
     }
 }
 
@@ -742,6 +910,12 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     KisImageConfig memoryConfig(false);
     memoryConfig.setMemoryHardLimitPercent(memoryConfig.memoryHardLimitPercent());
 
+    // Observe UIKit before Krita creates its main window. AltStore may launch
+    // the process while it is still inactive, and lifecycle delivery must not
+    // depend on app.start() having completed already.
+    installKisIOSLifecycleHandler(handleKisIOSLifecycleTransition);
+    installKisIOSMemoryWarningHandler();
+
     // Installation through AltStore can briefly launch the process while it
     // is still suspended. Retry the deferred OpenGL probe after UIKit and Qt
     // have completed the foreground transition, then use Krita's normal
@@ -987,8 +1161,6 @@ if (!qEnvironmentVariableIsEmpty("KRITA_OPENGL_DEBUG")) {
     QWindow *window = mainWindow ? mainWindow->windowHandle() : nullptr;
     void *nativeView = window ? reinterpret_cast<void *>(window->winId()) : nullptr;
     installKisIOSPencilInteraction(nativeView, handleKisIOSPencilTap);
-    installKisIOSLifecycleHandler(handleKisIOSBackgroundTransition);
-    installKisIOSMemoryWarningHandler();
 #endif
 
     int state = KisApplication::exec();

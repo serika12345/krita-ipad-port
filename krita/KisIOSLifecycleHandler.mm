@@ -11,58 +11,105 @@
 
 namespace
 {
-KisIOSBackgroundHandler s_backgroundHandler = nullptr;
-id s_backgroundObserver = nil;
-id s_foregroundObserver = nil;
+KisIOSLifecycleHandler s_lifecycleHandler = nullptr;
+id s_willResignActiveObserver = nil;
+id s_didEnterBackgroundObserver = nil;
+id s_willEnterForegroundObserver = nil;
+id s_didBecomeActiveObserver = nil;
+UIBackgroundTaskIdentifier s_backgroundTask = UIBackgroundTaskInvalid;
 
-void saveRecoveryStateBeforeBackgrounding()
+void notifyLifecycleEvent(KisIOSLifecycleEvent event)
 {
-    if (!s_backgroundHandler) {
+    if (s_lifecycleHandler) {
+        s_lifecycleHandler(event);
+    }
+}
+
+void beginBackgroundTask()
+{
+    if (s_backgroundTask != UIBackgroundTaskInvalid) {
+        qWarning() << "iPadOS background task was already active";
         return;
     }
 
     UIApplication *application = UIApplication.sharedApplication;
-    UIBackgroundTaskIdentifier backgroundTask =
+    s_backgroundTask =
         [application beginBackgroundTaskWithName:@"Krita autosave recovery"
                                expirationHandler:^{
         qWarning() << "iPadOS background time expired while saving recovery data";
+        notifyLifecycleEvent(KisIOSLifecycleEvent::BackgroundTaskExpired);
+        finishKisIOSBackgroundTask();
     }];
 
-    s_backgroundHandler();
-
-    if (backgroundTask != UIBackgroundTaskInvalid) {
-        [application endBackgroundTask:backgroundTask];
+    if (s_backgroundTask == UIBackgroundTaskInvalid) {
+        qWarning() << "iPadOS did not grant background execution time for recovery autosave";
     }
 }
 }
 
-void installKisIOSLifecycleHandler(KisIOSBackgroundHandler backgroundHandler)
+void finishKisIOSBackgroundTask()
 {
-    if (s_backgroundObserver) {
+    void (^finishBlock)(void) = ^{
+        if (s_backgroundTask == UIBackgroundTaskInvalid) {
+            return;
+        }
+
+        const UIBackgroundTaskIdentifier task = s_backgroundTask;
+        s_backgroundTask = UIBackgroundTaskInvalid;
+        [UIApplication.sharedApplication endBackgroundTask:task];
+        qInfo() << "iPadOS recovery autosave background task finished";
+    };
+
+    if (NSThread.isMainThread) {
+        finishBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), finishBlock);
+    }
+}
+
+void installKisIOSLifecycleHandler(KisIOSLifecycleHandler lifecycleHandler)
+{
+    if (s_willResignActiveObserver) {
         return;
     }
 
-    s_backgroundHandler = backgroundHandler;
+    s_lifecycleHandler = lifecycleHandler;
     NSNotificationCenter *notificationCenter = NSNotificationCenter.defaultCenter;
 
-    // Autosave while the process still has foreground execution time, then
-    // keep the save alive briefly if iPadOS completes the transition first.
-    s_backgroundObserver = [notificationCenter
+    s_willResignActiveObserver = [notificationCenter
         addObserverForName:UIApplicationWillResignActiveNotification
                     object:nil
                      queue:NSOperationQueue.mainQueue
                 usingBlock:^(NSNotification *) {
-                    saveRecoveryStateBeforeBackgrounding();
+                    qInfo() << "iPadOS is making Krita inactive";
+                    notifyLifecycleEvent(KisIOSLifecycleEvent::WillResignActive);
                 }];
 
-    s_foregroundObserver = [notificationCenter
+    s_didEnterBackgroundObserver = [notificationCenter
+        addObserverForName:UIApplicationDidEnterBackgroundNotification
+                    object:nil
+                     queue:NSOperationQueue.mainQueue
+                usingBlock:^(NSNotification *) {
+                    qInfo() << "iPadOS moved Krita to the background";
+                    beginBackgroundTask();
+                    notifyLifecycleEvent(KisIOSLifecycleEvent::DidEnterBackground);
+                }];
+
+    s_willEnterForegroundObserver = [notificationCenter
+        addObserverForName:UIApplicationWillEnterForegroundNotification
+                    object:nil
+                     queue:NSOperationQueue.mainQueue
+                usingBlock:^(NSNotification *) {
+                    qInfo() << "iPadOS is returning Krita to the foreground";
+                    notifyLifecycleEvent(KisIOSLifecycleEvent::WillEnterForeground);
+                }];
+
+    s_didBecomeActiveObserver = [notificationCenter
         addObserverForName:UIApplicationDidBecomeActiveNotification
                     object:nil
                      queue:NSOperationQueue.mainQueue
                 usingBlock:^(NSNotification *) {
-                    // Qt restores the surface and event delivery for the
-                    // existing window. Keeping this observer makes that
-                    // lifecycle boundary explicit in the device log.
                     qInfo() << "iPadOS returned Krita to the foreground";
+                    notifyLifecycleEvent(KisIOSLifecycleEvent::DidBecomeActive);
                 }];
 }

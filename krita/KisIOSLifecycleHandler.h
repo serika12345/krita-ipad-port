@@ -6,8 +6,17 @@
 #ifndef KIS_IOS_LIFECYCLE_HANDLER_H
 #define KIS_IOS_LIFECYCLE_HANDLER_H
 
-using KisIOSBackgroundHandler = void (*)();
+enum class KisIOSLifecycleEvent {
+    WillResignActive,
+    DidEnterBackground,
+    WillEnterForeground,
+    DidBecomeActive,
+    BackgroundTaskExpired,
+};
 
-void installKisIOSLifecycleHandler(KisIOSBackgroundHandler backgroundHandler);
+using KisIOSLifecycleHandler = void (*)(KisIOSLifecycleEvent event);
+
+void installKisIOSLifecycleHandler(KisIOSLifecycleHandler lifecycleHandler);
+void finishKisIOSBackgroundTask();
 
 #endif

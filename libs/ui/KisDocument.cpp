@@ -359,6 +359,12 @@ public:
     bool isAutosaving = false;
     bool disregardAutosaveFailure = false;
     int autoSaveFailureCount = 0;
+    bool recoveryAutoSavePending = false;
+    bool recoveryAutoSaveStartInProgress = false;
+    bool recoveryAutoSaveCompletionDeferred = false;
+    bool deferredRecoveryAutoSaveSuccess = false;
+    QString deferredRecoveryAutoSavePath;
+    QString joinedRecoveryAutoSavePath;
 
     KUndo2Stack *undoStack = 0;
 
@@ -658,6 +664,15 @@ KisDocument::~KisDocument()
 
     // wait until all the pending operations are in progress
     waitForSavingToComplete();
+
+    // A recovery request may have been waiting to join a normal/manual save.
+    // Once that save has drained there is no useful follow-up snapshot to
+    // start for a document being destroyed, but callers must not be left
+    // waiting for a completion that can no longer arrive.
+    if (d->recoveryAutoSavePending) {
+        finishRecoveryAutoSaveRequest(QString(), false);
+    }
+
     d->imageIdleWatcher.setTrackedImage(0);
 
     /**
@@ -1529,6 +1544,20 @@ void KisDocument::slotChildCompletedSavingInBackground(KisImportExportErrorCode 
     // don't invoke a stale or unrelated slot.
     disconnect(d->completeSavingConnection);
     d->completeSavingConnection = {};
+
+    if (d->recoveryAutoSavePending) {
+        if (status.isOk() && job.flags & KritaUtils::SaveInAutosaveMode) {
+            d->joinedRecoveryAutoSavePath = job.filePath;
+        } else {
+            d->joinedRecoveryAutoSavePath.clear();
+        }
+
+        // Do not start another save from inside the completion signal. The
+        // previous job has released its mutex, but its receiver may still be
+        // unwinding and the one-shot completion connection has only just been
+        // cleared.
+        QTimer::singleShot(0, this, &KisDocument::slotContinuePendingRecoveryAutoSave);
+    }
 }
 
 void KisDocument::slotAutoSaveImpl(std::unique_ptr<KisDocument> &&optionalClonedDocument)
@@ -1691,6 +1720,11 @@ void KisDocument::slotCompleteAutoSaving(const KritaUtils::ExportFileJob &job, K
     const QString fileName = QFileInfo(job.filePath).fileName();
 
     if (!status.isOk()) {
+        // slotAutoSaveImpl() clears this flag when the background job starts
+        // so edits made during that job can be detected. A failed job did not
+        // create a usable checkpoint, therefore the document must remain
+        // eligible for another autosave even when no newer edit arrived.
+        d->modifiedAfterAutosave = d->modified;
         setEmergencyAutoSaveInterval();
         Q_EMIT statusBarMessage(i18nc("%1 --- failing file name, %2 --- error message",
                                     "Error during autosaving %1: %2",
@@ -1709,6 +1743,84 @@ void KisDocument::slotCompleteAutoSaving(const KritaUtils::ExportFileJob &job, K
 
         Q_EMIT statusBarMessage(i18n("Finished autosaving %1", fileName), successMessageTimeout);
     }
+}
+
+void KisDocument::slotCompleteRecoveryAutoSaving(const KritaUtils::ExportFileJob &job,
+                                                 KisImportExportErrorCode status,
+                                                 const QString &errorMessage,
+                                                 const QString &warningMessage)
+{
+    slotCompleteAutoSaving(job, status, errorMessage, warningMessage);
+
+    const QFileInfo recoveryFile(job.filePath);
+    const bool saved = status.isOk() && recoveryFile.isFile() && recoveryFile.size() > 0;
+
+    if (!saved) {
+        d->modifiedAfterAutosave = d->modified;
+        if (status.isOk()) {
+            setEmergencyAutoSaveInterval();
+        }
+        finishRecoveryAutoSaveRequest(job.filePath, false);
+        return;
+    }
+
+    if (d->modifiedAfterAutosave) {
+        // The just-finished snapshot is valid, but a newer modification was
+        // observed while it was being written. Keep the request pending; the
+        // common completion path queues a fresh recovery autosave after the
+        // current signal stack has unwound.
+        return;
+    }
+
+    finishRecoveryAutoSaveRequest(job.filePath, true);
+}
+
+void KisDocument::slotContinuePendingRecoveryAutoSave()
+{
+    if (!d->recoveryAutoSavePending || d->documentIsClosing) {
+        return;
+    }
+
+    if (isSaving()) {
+        // Most background jobs queue another pass from their completion
+        // signal. Poll as well so a save implementation that only holds the
+        // saving mutex, without emitting that signal, cannot strand the
+        // recovery request indefinitely.
+        QTimer::singleShot(50, this, &KisDocument::slotContinuePendingRecoveryAutoSave);
+        return;
+    }
+
+    if (!d->modified) {
+        finishRecoveryAutoSaveRequest(QString(), true);
+        return;
+    }
+
+    if (!d->modifiedAfterAutosave) {
+        QString recoveryPath = d->joinedRecoveryAutoSavePath;
+        if (recoveryPath.isEmpty()) {
+            recoveryPath = generateAutoSaveFileName(localFilePath());
+        }
+
+        const QFileInfo recoveryFile(recoveryPath);
+        if (recoveryFile.isFile() && recoveryFile.size() > 0) {
+            finishRecoveryAutoSaveRequest(recoveryPath, true);
+            return;
+        }
+
+        // The prior job claimed the current revision, but there is no usable
+        // file to join. Force a fresh recovery snapshot.
+        d->modifiedAfterAutosave = d->modified;
+    }
+
+    d->joinedRecoveryAutoSavePath.clear();
+    const RecoveryAutoSaveStartResult result = startRecoveryAutoSave();
+    if (result == RecoveryAutoSaveStartResult::Started ||
+        result == RecoveryAutoSaveStartResult::AlreadySaving) {
+        return;
+    }
+
+    d->modifiedAfterAutosave = d->modified;
+    finishRecoveryAutoSaveRequest(generateAutoSaveFileName(localFilePath()), false);
 }
 
 KisImportExportErrorCode KisDocument::startExportInBackground(const QString &actionName,
@@ -2105,6 +2217,124 @@ bool KisDocument::openFile()
     undoStack()->clear();
 
     return true;
+}
+
+KisDocument::RecoveryAutoSaveStartResult KisDocument::startRecoveryAutoSave()
+{
+    const QString autoSaveFileName = generateAutoSaveFileName(localFilePath());
+
+    Q_EMIT statusBarMessage(i18n("Autosaving... %1", autoSaveFileName), successMessageTimeout);
+    KisUsageLogger::log(QString("Autosaving recovery checkpoint: %1").arg(autoSaveFileName));
+
+    d->recoveryAutoSaveStartInProgress = true;
+    d->recoveryAutoSaveCompletionDeferred = false;
+    d->deferredRecoveryAutoSavePath.clear();
+
+    // Clear before clone preparation so a modification delivered by its
+    // event processing is distinguishable from the revision being saved.
+    // Every unsuccessful start restores the flag below.
+    d->modifiedAfterAutosave = false;
+
+    const KritaUtils::BackgroudSavingStartResult result =
+        initiateSavingInBackground(i18n("Autosaving..."),
+                                   this,
+                                   SLOT(slotCompleteRecoveryAutoSaving(KritaUtils::ExportFileJob, KisImportExportErrorCode, QString, QString)),
+                                   KritaUtils::ExportFileJob(autoSaveFileName,
+                                                             nativeFormatMimeType(),
+                                                             KritaUtils::SaveIsExporting | KritaUtils::SaveInAutosaveMode),
+                                   nullptr);
+
+    d->recoveryAutoSaveStartInProgress = false;
+
+    switch (result) {
+    case KritaUtils::BackgroudSavingStartResult::Success:
+        d->joinedRecoveryAutoSavePath.clear();
+        if (d->recoveryAutoSaveCompletionDeferred) {
+            const QString completedPath = d->deferredRecoveryAutoSavePath;
+            const bool completedSuccessfully = d->deferredRecoveryAutoSaveSuccess;
+            d->recoveryAutoSaveCompletionDeferred = false;
+            d->deferredRecoveryAutoSavePath.clear();
+            QTimer::singleShot(0, this, [this, completedPath, completedSuccessfully] {
+                finishRecoveryAutoSaveRequest(completedPath, completedSuccessfully);
+            });
+        }
+        return RecoveryAutoSaveStartResult::Started;
+    case KritaUtils::BackgroudSavingStartResult::AnotherSavingInProgress:
+        d->modifiedAfterAutosave = d->modified;
+        d->recoveryAutoSaveCompletionDeferred = false;
+        d->deferredRecoveryAutoSavePath.clear();
+        return RecoveryAutoSaveStartResult::AlreadySaving;
+    case KritaUtils::BackgroudSavingStartResult::ImageLockFailure:
+    case KritaUtils::BackgroudSavingStartResult::Failure:
+    case KritaUtils::BackgroudSavingStartResult::Cancelled:
+        d->modifiedAfterAutosave = d->modified;
+        d->recoveryAutoSaveCompletionDeferred = false;
+        d->deferredRecoveryAutoSavePath.clear();
+        setEmergencyAutoSaveInterval();
+        return RecoveryAutoSaveStartResult::Failed;
+    }
+
+    return RecoveryAutoSaveStartResult::Failed;
+}
+
+void KisDocument::finishRecoveryAutoSaveRequest(const QString &filePath, bool success)
+{
+    if (!d->recoveryAutoSavePending) {
+        return;
+    }
+
+    // Export initialization can report an error synchronously through the
+    // normal completion signal. Defer our public completion until
+    // requestRecoveryAutoSave() has returned a matching start result.
+    if (d->recoveryAutoSaveStartInProgress) {
+        d->recoveryAutoSaveCompletionDeferred = true;
+        d->deferredRecoveryAutoSavePath = filePath;
+        d->deferredRecoveryAutoSaveSuccess = success;
+        return;
+    }
+
+    d->recoveryAutoSavePending = false;
+    d->recoveryAutoSaveCompletionDeferred = false;
+    d->deferredRecoveryAutoSavePath.clear();
+    d->joinedRecoveryAutoSavePath.clear();
+    Q_EMIT sigRecoveryAutoSaveFinished(filePath, success);
+}
+
+KisDocument::RecoveryAutoSaveStartResult KisDocument::requestRecoveryAutoSave()
+{
+    if (!d->modified || d->documentIsClosing) {
+        return RecoveryAutoSaveStartResult::NoChanges;
+    }
+
+    if (d->recoveryAutoSavePending) {
+        return RecoveryAutoSaveStartResult::AlreadySaving;
+    }
+
+    if (isSaving()) {
+        d->recoveryAutoSavePending = true;
+        d->joinedRecoveryAutoSavePath.clear();
+        QTimer::singleShot(50, this, &KisDocument::slotContinuePendingRecoveryAutoSave);
+        return RecoveryAutoSaveStartResult::AlreadySaving;
+    }
+
+    if (!d->modifiedAfterAutosave) {
+        return RecoveryAutoSaveStartResult::NoChanges;
+    }
+
+    d->recoveryAutoSavePending = true;
+    d->joinedRecoveryAutoSavePath.clear();
+
+    const RecoveryAutoSaveStartResult result = startRecoveryAutoSave();
+    if (result == RecoveryAutoSaveStartResult::Failed) {
+        d->recoveryAutoSavePending = false;
+    } else if (result == RecoveryAutoSaveStartResult::AlreadySaving) {
+        // initiateSavingInBackground() can observe a save that started while
+        // it was cloning. Queue a safety pass in case that job completed
+        // during the reentrant clone preparation.
+        QTimer::singleShot(50, this, &KisDocument::slotContinuePendingRecoveryAutoSave);
+    }
+
+    return result;
 }
 
 void KisDocument::autoSaveOnPause()

@@ -84,6 +84,14 @@ public:
     };
     Q_DECLARE_FLAGS(OpenFlags, OpenFlag)
 
+    enum class RecoveryAutoSaveStartResult {
+        NoChanges,
+        Started,
+        AlreadySaving,
+        Failed
+    };
+    Q_ENUM(RecoveryAutoSaveStartResult)
+
     /**
      *  Destructor.
      *
@@ -491,6 +499,13 @@ Q_SIGNALS:
 
     void sigCompleteBackgroundSaving(const KritaUtils::ExportFileJob &job, KisImportExportErrorCode status, const QString &errorMessage, const QString &warningMessage);
 
+    /**
+     * Emitted once for a recovery autosave request that returned Started or
+     * AlreadySaving. Requests made while another request is pending are
+     * coalesced into the pending request.
+     */
+    void sigRecoveryAutoSaveFinished(const QString &filePath, bool success);
+
     void sigReferenceImagesChanged();
 
     void sigMirrorAxisConfigChanged();
@@ -519,6 +534,8 @@ private Q_SLOTS:
     void finishExportInBackground();
     void slotChildCompletedSavingInBackground(KisImportExportErrorCode status, const QString &errorMessage, const QString &warningMessage);
     void slotCompleteAutoSaving(const KritaUtils::ExportFileJob &job, KisImportExportErrorCode status, const QString &errorMessage, const QString &warningMessage);
+    void slotCompleteRecoveryAutoSaving(const KritaUtils::ExportFileJob &job, KisImportExportErrorCode status, const QString &errorMessage, const QString &warningMessage);
+    void slotContinuePendingRecoveryAutoSave();
 
     void slotCompleteSavingDocument(const KritaUtils::ExportFileJob &job, KisImportExportErrorCode status, const QString &errorMessage, const QString &warningMessage);
 
@@ -708,6 +725,17 @@ public:
      */
     void autoSaveOnPause();
 
+    /**
+     * Request a non-blocking recovery autosave.
+     *
+     * Started and AlreadySaving are followed by exactly one
+     * sigRecoveryAutoSaveFinished() emission. NoChanges and Failed are
+     * synchronous terminal results and do not emit the signal. A request made
+     * while a save is already running waits for that save to finish, then
+     * either reuses its successful autosave or starts a fresh recovery save.
+     */
+    RecoveryAutoSaveStartResult requestRecoveryAutoSave();
+
 Q_SIGNALS:
 
     void completed();
@@ -755,6 +783,9 @@ private:
     bool openPathInternal(const QString &path);
 
     void slotAutoSaveImpl(std::unique_ptr<KisDocument> &&optionalClonedDocument);
+
+    RecoveryAutoSaveStartResult startRecoveryAutoSave();
+    void finishRecoveryAutoSaveRequest(const QString &filePath, bool success);
 
     /// Checks whether we are saving a resource we've been editing, and if so,
     /// uses the resource server to update the resource.

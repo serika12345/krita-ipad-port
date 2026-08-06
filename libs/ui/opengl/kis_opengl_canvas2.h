@@ -18,6 +18,7 @@
 class KisCanvas2;
 class QOpenGLShaderProgram;
 class QPainterPath;
+class QResizeEvent;
 class KisOptimizedBrushOutline;
 
 /**
@@ -46,10 +47,12 @@ public:
 
 public: // QOpenGLWidget
 
+    bool event(QEvent *e) override;
     void resizeGL(int width, int height) override;
     void initializeGL() override;
     void paintGL() override;
     void paintEvent(QPaintEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
 
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
     void inputMethodEvent(QInputMethodEvent *event) override;
@@ -107,6 +110,14 @@ protected: // KisCanvasWidgetBase
     bool callFocusNextPrevChild(bool next) override;
 
 private:
+#ifdef Q_OS_IOS
+    bool iosApplicationIsActive() const;
+    bool iosOpenGLWorkIsAllowed() const;
+    void scheduleIOSForegroundRefresh(int delayMs = 0);
+    void replayIOSDeferredOpenGLWork();
+    void applyIOSDeferredRendererChanges();
+#endif
+
     struct Private;
     Private * const d;
 

@@ -33,6 +33,7 @@
 #include <QAction>
 #include <QEvent>
 #include <QFrame>
+#include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
@@ -207,6 +208,22 @@ public:
 
         mainWindow = viewManager->mainWindowAsQWidget();
         mainWindow->installEventFilter(this);
+
+#ifdef Q_OS_IOS
+        if (qGuiApp) {
+            connect(qGuiApp,
+                    &QGuiApplication::applicationStateChanged,
+                    this,
+                    [this](Qt::ApplicationState state) {
+                        invalidatePendingLayout();
+                        if (state == Qt::ApplicationActive) {
+                            scheduleLayout();
+                        } else {
+                            hideAllOverlays();
+                        }
+                    });
+        }
+#endif
 
         popupAdapter = new KisIOSTouchPopupAdapter(
             [this] {
@@ -941,18 +958,36 @@ private:
 
     void scheduleLayout()
     {
+        if (!applicationAllowsLayout()) {
+            return;
+        }
+
         if (layoutPending) {
             return;
         }
+
         layoutPending = true;
-        QTimer::singleShot(0, this, [this] {
+        const quint64 generation = layoutGeneration;
+        QTimer::singleShot(0, this, [this, generation] {
+            if (generation != layoutGeneration) {
+                return;
+            }
+
             layoutPending = false;
+            if (!applicationAllowsLayout()) {
+                return;
+            }
+
             refreshCanvasAndLayout();
         });
     }
 
     void refreshCanvasAndLayout()
     {
+        if (!applicationAllowsLayout()) {
+            return;
+        }
+
         QWidget *newCanvas = viewManager ? viewManager->canvas() : nullptr;
         if (newCanvas != canvas) {
             if (canvas) {
@@ -1087,6 +1122,21 @@ private:
         }
     }
 
+    bool applicationAllowsLayout() const
+    {
+#ifdef Q_OS_IOS
+        return QGuiApplication::applicationState() == Qt::ApplicationActive;
+#else
+        return true;
+#endif
+    }
+
+    void invalidatePendingLayout()
+    {
+        ++layoutGeneration;
+        layoutPending = false;
+    }
+
 private:
     QPointer<KisViewManager> viewManager;
     QPointer<QWidget> mainWindow;
@@ -1127,6 +1177,7 @@ private:
     bool initialized {false};
     bool layoutPending {false};
     bool wasCanvasOnly {false};
+    quint64 layoutGeneration {0};
 };
 
 KisIOSTouchUI::KisIOSTouchUI(QObject *parent, const QVariantList &args)

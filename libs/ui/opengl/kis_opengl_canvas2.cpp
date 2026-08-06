@@ -7,6 +7,12 @@
 
 #define GL_GLEXT_PROTOTYPES
 
+#include <QEvent>
+#include <QGuiApplication>
+#include <QOpenGLContext>
+#include <QResizeEvent>
+#include <QSurface>
+#include <QTimer>
 #include <QWindow>
 
 #include "opengl/kis_opengl_canvas2.h"
@@ -15,6 +21,7 @@
 #include "opengl/kis_opengl_canvas_debugger.h"
 
 #include "canvas/kis_canvas2.h"
+#include <kis_image.h>
 #include <kis_canvas_resource_provider.h>
 #include "kis_config.h"
 #include "kis_config_notifier.h"
@@ -25,6 +32,7 @@
 #include "KisOpenGLModeProber.h"
 #include "KisOpenGLContextSwitchLock.h"
 #include <KisPlatformPluginInterfaceFactory.h>
+#include <KisDisplayConfig.h>
 
 #include "config-qt-patches-present.h"
 
@@ -76,6 +84,24 @@ public:
     KisOpenGLCanvasRenderer *renderer;
     QScopedPointer<KisOpenGLSync> glSyncObject;
     KisRepaintDebugger repaintDbg;
+#ifdef Q_OS_IOS
+    bool applicationActive {true};
+    bool foregroundRefreshPending {false};
+    bool foregroundRefreshScheduled {false};
+    bool resizeDeferred {false};
+    bool rendererInitializationDeferred {false};
+    bool rendererInitialized {false};
+    bool imageRefetchRequired {false};
+    bool rendererConfigChangeDeferred {false};
+    bool displayFilterChangeDeferred {false};
+    bool imageColorSpaceChangeDeferred {false};
+    bool contextUnavailableWarningPrinted {false};
+    int contextRetryDelayMs {16};
+    QSize deferredResizeOldSize;
+    QSize deferredImageSize;
+    QSharedPointer<KisDisplayFilter> deferredDisplayFilter;
+    boost::optional<KisDisplayConfig> deferredDisplayConfig;
+#endif
 };
 
 KisOpenGLCanvas2::KisOpenGLCanvas2(KisCanvas2 *canvas,
@@ -161,6 +187,36 @@ KisOpenGLCanvas2::KisOpenGLCanvas2(KisCanvas2 *canvas,
     connect(canvas->viewManager()->canvasResourceProvider(), SIGNAL(sigEffectiveCompositeOpChanged()), SLOT(slotUpdateCursorColor()));
     connect(canvas->viewManager()->canvasResourceProvider(), SIGNAL(sigPaintOpPresetChanged(KisPaintOpPresetSP)), SLOT(slotUpdateCursorColor()));
 
+#ifdef Q_OS_IOS
+    d->applicationActive = !qGuiApp ||
+        QGuiApplication::applicationState() == Qt::ApplicationActive;
+
+    if (qGuiApp) {
+        connect(qGuiApp,
+                &QGuiApplication::applicationStateChanged,
+                this,
+                [this](Qt::ApplicationState state) {
+                    d->applicationActive = state == Qt::ApplicationActive;
+
+                    if (!d->applicationActive) {
+                        d->foregroundRefreshPending = true;
+                        d->imageRefetchRequired = true;
+                        d->contextRetryDelayMs = 16;
+                        d->contextUnavailableWarningPrinted = false;
+                        return;
+                    }
+
+                    d->foregroundRefreshPending = true;
+
+                    // Qt may emit ApplicationActive before the iOS platform
+                    // backing surface is usable again. Defer all FBO work by
+                    // at least one event-loop turn and verify makeCurrent()
+                    // before replaying it.
+                    scheduleIOSForegroundRefresh();
+                });
+    }
+#endif
+
     slotConfigChanged();
     slotPixelGridModeChanged();
     cfg.writeEntry("canvasState", "OPENGL_SUCCESS");
@@ -188,12 +244,29 @@ KisOpenGLCanvas2::~KisOpenGLCanvas2()
 
 void KisOpenGLCanvas2::setDisplayFilter(QSharedPointer<KisDisplayFilter> displayFilter)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->deferredDisplayFilter = displayFilter;
+        d->displayFilterChangeDeferred = true;
+        d->imageRefetchRequired = true;
+        return;
+    }
+#endif
+
     KisOpenGLContextSwitchLockSkipOnQt5 contextLock(this);
     d->renderer->setDisplayFilter(displayFilter);
 }
 
 void KisOpenGLCanvas2::notifyImageColorSpaceChanged(const KoColorSpace *cs)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->imageColorSpaceChangeDeferred = true;
+        d->imageRefetchRequired = true;
+        return;
+    }
+#endif
+
     KisOpenGLContextSwitchLockSkipOnQt5 contextLock(this);
     d->renderer->notifyImageColorSpaceChanged(cs);
 }
@@ -220,20 +293,79 @@ WrapAroundAxis KisOpenGLCanvas2::wrapAroundViewingModeAxis() const
     return d->renderer->wrapAroundViewingModeAxis();
 }
 
+bool KisOpenGLCanvas2::event(QEvent *e)
+{
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        switch (e->type()) {
+        case QEvent::Show:
+        case QEvent::DevicePixelRatioChange:
+            // QOpenGLWidget::event() may initialize or recreate FBOs for
+            // these events before the virtual show/resize handlers run.
+            // Preserve QWidget's non-GL state transition and fold the GL
+            // portion into the verified foreground resize replay.
+            d->resizeDeferred = true;
+            d->foregroundRefreshPending = true;
+            d->imageRefetchRequired = true;
+            return QWidget::event(e);
+        default:
+            break;
+        }
+    }
+#endif
+
+    return QOpenGLWidget::event(e);
+}
+
 void KisOpenGLCanvas2::initializeGL()
 {
+#ifdef Q_OS_IOS
+    if (!iosApplicationIsActive()) {
+        d->rendererInitializationDeferred = true;
+        d->foregroundRefreshPending = true;
+        return;
+    }
+
+    // updateConfig() normally runs before the first initializeGL(). Preserve
+    // that ordering when the canvas was constructed while iOS was inactive.
+    applyIOSDeferredRendererChanges();
+#endif
+
     d->renderer->initializeGL();
     KisOpenGLSync::init(context());
+
+#ifdef Q_OS_IOS
+    d->rendererInitialized = true;
+    d->rendererInitializationDeferred = false;
+    // initializeGL() uploads the complete current projection, including any
+    // CPU-side changes whose individual uploads were skipped while inactive.
+    d->imageRefetchRequired = false;
+#endif
 }
 
 void KisOpenGLCanvas2::resizeGL(int width, int height)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->resizeDeferred = true;
+        d->foregroundRefreshPending = true;
+        return;
+    }
+#endif
+
     d->renderer->resizeGL(width, height);
     d->canvasImageDirtyRect = QRect(0, 0, width, height);
 }
 
 void KisOpenGLCanvas2::paintGL()
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->foregroundRefreshPending = true;
+        return;
+    }
+#endif
+
 #if KRITA_QT_HAS_UPDATE_COMPRESSION_PATCH
     if (d->shouldSkipRenderingPass) {
         return;
@@ -284,6 +416,14 @@ void KisOpenGLCanvas2::paintGL()
 
 void KisOpenGLCanvas2::paintEvent(QPaintEvent *e)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->foregroundRefreshPending = true;
+        e->accept();
+        return;
+    }
+#endif
+
     KIS_SAFE_ASSERT_RECOVER_RETURN(!d->updateRect);
 
     if (qFuzzyCompare(devicePixelRatioF(), qRound(devicePixelRatioF()))) {
@@ -327,8 +467,196 @@ void KisOpenGLCanvas2::paintEvent(QPaintEvent *e)
     d->updateRect = boost::none;
 }
 
+void KisOpenGLCanvas2::resizeEvent(QResizeEvent *e)
+{
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        if (!d->resizeDeferred) {
+            d->deferredResizeOldSize = e->oldSize();
+        }
+        d->resizeDeferred = true;
+        d->foregroundRefreshPending = true;
+        e->accept();
+        return;
+    }
+#endif
+
+    QOpenGLWidget::resizeEvent(e);
+}
+
+#ifdef Q_OS_IOS
+bool KisOpenGLCanvas2::iosApplicationIsActive() const
+{
+    return d->applicationActive &&
+        (!qGuiApp || QGuiApplication::applicationState() == Qt::ApplicationActive);
+}
+
+bool KisOpenGLCanvas2::iosOpenGLWorkIsAllowed() const
+{
+    return iosApplicationIsActive() && !d->foregroundRefreshPending;
+}
+
+void KisOpenGLCanvas2::scheduleIOSForegroundRefresh(int delayMs)
+{
+    if (!iosApplicationIsActive() || d->foregroundRefreshScheduled) {
+        return;
+    }
+
+    d->foregroundRefreshScheduled = true;
+    QTimer::singleShot(delayMs, this, [this] {
+        d->foregroundRefreshScheduled = false;
+        replayIOSDeferredOpenGLWork();
+    });
+}
+
+void KisOpenGLCanvas2::applyIOSDeferredRendererChanges()
+{
+    if (d->rendererConfigChangeDeferred) {
+        d->rendererConfigChangeDeferred = false;
+        d->renderer->updateConfig();
+    }
+
+    if (d->deferredDisplayConfig) {
+        const KisDisplayConfig config = *d->deferredDisplayConfig;
+        d->deferredDisplayConfig = boost::none;
+        d->renderer->setDisplayConfig(config);
+    }
+
+    if (d->displayFilterChangeDeferred) {
+        const QSharedPointer<KisDisplayFilter> displayFilter = d->deferredDisplayFilter;
+        d->deferredDisplayFilter.clear();
+        d->displayFilterChangeDeferred = false;
+        d->renderer->setDisplayFilter(displayFilter);
+    }
+
+    if (d->imageColorSpaceChangeDeferred) {
+        d->imageColorSpaceChangeDeferred = false;
+        const KisImageSP image = canvas()->image();
+        if (image) {
+            d->renderer->notifyImageColorSpaceChanged(image->colorSpace());
+        }
+    }
+
+    if (d->deferredImageSize.isValid()) {
+        const QSize imageSize = d->deferredImageSize;
+        d->deferredImageSize = QSize();
+        d->renderer->finishResizingImage(imageSize.width(), imageSize.height());
+    }
+}
+
+void KisOpenGLCanvas2::replayIOSDeferredOpenGLWork()
+{
+    if (!iosApplicationIsActive()) {
+        return;
+    }
+
+    // Keep all normal paint and projection paths closed until the context
+    // preflight and any deferred resize have finished.
+    d->foregroundRefreshPending = true;
+
+    QOpenGLContext * const widgetContext = context();
+    QOpenGLContext * const previousContext = QOpenGLContext::currentContext();
+    QSurface * const previousSurface = previousContext ? previousContext->surface() : nullptr;
+
+    if (widgetContext) {
+        if (!widgetContext->isValid()) {
+            if (!d->contextUnavailableWarningPrinted) {
+                qWarning() << "iPadOS canvas foreground restore is waiting for a valid OpenGL context";
+                d->contextUnavailableWarningPrinted = true;
+            }
+
+            const int retryDelayMs = d->contextRetryDelayMs;
+            d->contextRetryDelayMs = qMin(d->contextRetryDelayMs * 2, 1000);
+            scheduleIOSForegroundRefresh(retryDelayMs);
+            return;
+        }
+
+        makeCurrent();
+        if (QOpenGLContext::currentContext() != widgetContext) {
+            if (previousContext && previousSurface &&
+                QOpenGLContext::currentContext() != previousContext) {
+                previousContext->makeCurrent(previousSurface);
+            }
+
+            if (!d->contextUnavailableWarningPrinted) {
+                qWarning() << "iPadOS canvas foreground restore is waiting for its OpenGL surface";
+                d->contextUnavailableWarningPrinted = true;
+            }
+
+            const int retryDelayMs = d->contextRetryDelayMs;
+            d->contextRetryDelayMs = qMin(d->contextRetryDelayMs * 2, 1000);
+            scheduleIOSForegroundRefresh(retryDelayMs);
+            return;
+        }
+    } else if (d->rendererInitialized) {
+        if (!d->contextUnavailableWarningPrinted) {
+            qWarning() << "iPadOS canvas foreground restore is waiting for its OpenGL context";
+            d->contextUnavailableWarningPrinted = true;
+        }
+
+        const int retryDelayMs = d->contextRetryDelayMs;
+        d->contextRetryDelayMs = qMin(d->contextRetryDelayMs * 2, 1000);
+        scheduleIOSForegroundRefresh(retryDelayMs);
+        return;
+    }
+
+    d->contextRetryDelayMs = 16;
+    d->contextUnavailableWarningPrinted = false;
+    d->foregroundRefreshPending = false;
+
+    if (widgetContext) {
+        // QOpenGLWidget may have called initializeGL() while the application
+        // was transitioning out of Active. Its internal initialization has
+        // completed, so finish Krita's renderer initialization explicitly now
+        // that the context is current and legal to use.
+        if (d->rendererInitializationDeferred && !d->rendererInitialized) {
+            applyIOSDeferredRendererChanges();
+            d->renderer->initializeGL();
+            KisOpenGLSync::init(widgetContext);
+            d->rendererInitialized = true;
+            d->rendererInitializationDeferred = false;
+        } else {
+            applyIOSDeferredRendererChanges();
+        }
+    }
+
+    if (d->resizeDeferred) {
+        const QSize oldSize = d->deferredResizeOldSize;
+        d->deferredResizeOldSize = QSize();
+        d->resizeDeferred = false;
+
+        QResizeEvent deferredEvent(size(), oldSize);
+        QOpenGLWidget::resizeEvent(&deferredEvent);
+    }
+
+    if (widgetContext && previousContext != widgetContext) {
+        if (previousContext && previousSurface) {
+            previousContext->makeCurrent(previousSurface);
+        } else if (QOpenGLContext::currentContext() == widgetContext) {
+            doneCurrent();
+        }
+    }
+
+    d->canvasImageDirtyRect = rect();
+
+    if (d->imageRefetchRequired) {
+        d->imageRefetchRequired = false;
+        canvas()->refetchDataFromImage();
+    }
+
+    canvas()->updateCanvas();
+    update();
+}
+#endif
+
 void KisOpenGLCanvas2::paintToolOutline(const KisOptimizedBrushOutline &path, int thickness)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        return;
+    }
+#endif
+
     /**
      * paintToolOutline() is called from drawDecorations(), which has clipping
      * set only for QPainter-based painting; here we paint in native mode, so we
@@ -344,6 +672,12 @@ void KisOpenGLCanvas2::paintToolOutline(const KisOptimizedBrushOutline &path, in
 
 bool KisOpenGLCanvas2::isBusy() const
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        return false;
+    }
+#endif
+
     const bool isBusyStatus = d->glSyncObject && !d->glSyncObject->isSignaled();
     KisOpenglCanvasDebugger::instance()->notifySyncStatus(isBusyStatus);
     return isBusyStatus;
@@ -356,6 +690,14 @@ void KisOpenGLCanvas2::setLodResetInProgress(bool value)
 
 void KisOpenGLCanvas2::slotConfigChanged()
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->rendererConfigChangeDeferred = true;
+        notifyConfigChanged();
+        return;
+    }
+#endif
+
     d->renderer->updateConfig();
 
     notifyConfigChanged();
@@ -412,6 +754,14 @@ void KisOpenGLCanvas2::showEvent(QShowEvent *e)
 
 void KisOpenGLCanvas2::setDisplayConfig(const KisDisplayConfig &config)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->deferredDisplayConfig = config;
+        d->imageRefetchRequired = true;
+        return;
+    }
+#endif
+
     KisOpenGLContextSwitchLockSkipOnQt5 contextLock(this);
     d->renderer->setDisplayConfig(config);
 }
@@ -424,6 +774,14 @@ void KisOpenGLCanvas2::channelSelectionChanged(const QBitArray &channelFlags)
 
 void KisOpenGLCanvas2::finishResizingImage(qint32 w, qint32 h)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        d->deferredImageSize = QSize(w, h);
+        d->imageRefetchRequired = true;
+        return;
+    }
+#endif
+
     KisOpenGLContextSwitchLockSkipOnQt5 contextLock(this);
     d->renderer->finishResizingImage(w, h);
 }
@@ -436,11 +794,28 @@ KisUpdateInfoSP KisOpenGLCanvas2::startUpdateCanvasProjection(const QRect & rc)
 
 QRect KisOpenGLCanvas2::updateCanvasProjection(KisUpdateInfoSP info)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        // The projection itself remains authoritative. Drop only this GPU
+        // upload and rebuild all texture data once foreground GL is legal.
+        d->imageRefetchRequired = true;
+        return rect();
+    }
+#endif
+
     return d->renderer->updateCanvasProjection(info);
 }
 
 QVector<QRect> KisOpenGLCanvas2::updateCanvasProjection(const QVector<KisUpdateInfoSP> &infoObjects)
 {
+#ifdef Q_OS_IOS
+    if (!iosOpenGLWorkIsAllowed()) {
+        // Do not construct the context-switch lock while inactive; it calls
+        // QOpenGLWidget::makeCurrent() before dispatching individual updates.
+        return KisCanvasWidgetBase::updateCanvasProjection(infoObjects);
+    }
+#endif
+
     KisOpenGLContextSwitchLockSkipOnQt5 contextLock(this);
     return KisCanvasWidgetBase::updateCanvasProjection(infoObjects);
 }
