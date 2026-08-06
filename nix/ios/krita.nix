@@ -123,8 +123,8 @@ assert lib.assertMsg (
 ) "Krita iOS must consume the complete 46-package direct target dependency set";
 assert lib.assertMsg (pluginProfile.schema == 1) "unsupported Krita iOS plugin profile schema";
 assert lib.assertMsg (
-  builtins.length pluginProfile.targets == 161
-  && builtins.length (lib.unique pluginProfile.targets) == 161
+  builtins.length pluginProfile.targets == 162
+  && builtins.length (lib.unique pluginProfile.targets) == 162
 ) "Krita iOS initial plugin target inventory changed";
 mkIOSCMakePackage {
   pname = "krita-ios-app";
@@ -186,6 +186,7 @@ mkIOSCMakePackage {
     "-DKRITA_IOS_PLUGIN_MYPAINT:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_OPTIONAL_IMPEX:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_SEEXPR_GENERATOR:BOOL=ON"
+    "-DKRITA_IOS_PLUGIN_TOUCH_UI:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_JPEG:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_KRA:BOOL=ON"
     "-DKRITA_IOS_PLUGIN_LAYER_DOCKER:BOOL=ON"
@@ -211,6 +212,7 @@ mkIOSCMakePackage {
     "krita.app/LaunchScreen.storyboard"
     "krita.app/krita"
     "krita.app/share/color/icc/krita"
+    "krita.app/share/krita/actions/iostouchui.action"
     "krita.app/share/krita/actions/krita.action"
     "krita.app/share/krita/actions/kritamenu.action"
     "krita.app/share/krita/bundles/Krita_4_Default_Resources.bundle"
@@ -292,6 +294,10 @@ mkIOSCMakePackage {
             exit 1
           fi
         done
+        if ! grep -Fq "qt_static_plugin_kritaiostouchui_factory" <<<"$binary_symbols"; then
+          echo "error: Krita omits the static iPadOS touch UI plugin" >&2
+          exit 1
+        fi
 
         ${python3}/bin/python3 - "$app/Info.plist" <<'PY'
     import plistlib
@@ -329,7 +335,9 @@ mkIOSCMakePackage {
         test "$bundle_count" -gt 0
         test "$profile_count" -gt 0
         test "$action_count" -gt 0
+        test -s "$app/share/krita/actions/iostouchui.action"
         grep -q '<Action name="copy_merged">' "$app/share/krita/actions/kritamenu.action"
+        grep -q '<Action name="view_show_ios_touch_ui">' "$app/share/krita/actions/iostouchui.action"
 
         preset_bundle_count=0
         while IFS= read -r bundle; do

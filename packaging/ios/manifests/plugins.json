@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "packaging/ios/scripts/inventory-plugins.py",
-  "count": 172,
+  "count": 173,
   "plugins": [
     {
       "target": "kritaassistanttool",
@@ -235,6 +235,12 @@
       "target": "kritaimagesplit",
       "category": "extensions",
       "cmake_file": "plugins/extensions/imagesplit/CMakeLists.txt",
+      "initial_profile": "review"
+    },
+    {
+      "target": "kritaiostouchui",
+      "category": "extensions",
+      "cmake_file": "plugins/extensions/iostouchui/CMakeLists.txt",
       "initial_profile": "review"
     },
     {

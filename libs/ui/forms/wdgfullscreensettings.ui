@@ -72,6 +72,25 @@
     </widget>
    </item>
    <item row="7" column="0" colspan="2">
+    <widget class="QGroupBox" name="grpIOSTouchUI">
+     <property name="title">
+      <string>iPad drawing controls</string>
+     </property>
+     <layout class="QFormLayout" name="iosTouchUILayout">
+      <item row="0" column="0" colspan="2">
+       <widget class="QLabel" name="lblIOSTouchUIOnCanvasOnly">
+        <property name="text">
+         <string>When entering canvas-only mode:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QComboBox" name="cmbIOSTouchUIOnCanvasOnly"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

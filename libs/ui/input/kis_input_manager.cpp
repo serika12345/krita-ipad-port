@@ -107,26 +107,45 @@ void KisInputManager::removeTrackedCanvas(KisCanvas2 *canvas)
 
 void KisInputManager::registerPopupWidget(KisPopupWidgetInterface *popupWidget)
 {
+    if (!popupWidget || d->popupWidget == popupWidget) {
+        return;
+    }
+
+    if (d->popupWidget) {
+        deregisterPopupWidget();
+    }
+
     d->popupWidget = popupWidget;
 
     // FUNKY!
     auto popupObject = dynamic_cast<QObject*>(d->popupWidget);
     KIS_ASSERT(popupObject);
-    connect(popupObject, SIGNAL(finished()), this, SLOT(deregisterPopupWidget()));
+    connect(popupObject,
+            SIGNAL(finished()),
+            this,
+            SLOT(deregisterPopupWidget()),
+            Qt::UniqueConnection);
 }
 
 void KisInputManager::deregisterPopupWidget()
 {
-    if (d->popupWidget->onScreen()) {
-        d->popupWidget->dismiss();
+    KisPopupWidgetInterface *popupWidget = d->popupWidget;
+    if (!popupWidget) {
+        return;
     }
 
-    // FUNKY!
-    auto popupObject = dynamic_cast<QObject*>(d->popupWidget);
-    KIS_ASSERT(popupObject);
-    disconnect(popupObject, nullptr, this, nullptr); // Disconnect all.
-
     d->popupWidget = nullptr;
+
+    // FUNKY!
+    auto popupObject = dynamic_cast<QObject*>(popupWidget);
+    KIS_ASSERT(popupObject);
+    if (popupObject) {
+        disconnect(popupObject, nullptr, this, nullptr); // Disconnect all.
+    }
+
+    if (popupWidget->onScreen()) {
+        popupWidget->dismiss();
+    }
 }
 
 void KisInputManager::slotConfigChanged()

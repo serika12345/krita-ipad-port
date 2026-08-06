@@ -163,7 +163,8 @@
     "kritalayersplit",
     "kritawaveletdecompose",
     "kritasamplescreencolor",
-    "kritadbexplorer"
+    "kritadbexplorer",
+    "kritaiostouchui"
   ],
   "excluded": [
     {

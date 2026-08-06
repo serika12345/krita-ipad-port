@@ -2585,6 +2585,15 @@ void DisplaySettingsTab::slotPreferredSurfaceFormatChanged(int index)
 }
 
 //---------------------------------------------------------------------------------------------------
+#ifdef Q_OS_IOS
+namespace {
+const QString iosTouchUICanvasOnlyStartupModeKey = QStringLiteral("iostouchui/canvasOnlyStartupMode");
+const QString iosTouchUIRememberLastMode = QStringLiteral("remember-last");
+const QString iosTouchUIShowControlsMode = QStringLiteral("show-controls");
+const QString iosTouchUIHideControlsMode = QStringLiteral("hide-controls");
+}
+#endif
+
 FullscreenSettingsTab::FullscreenSettingsTab(QWidget* parent) : WdgFullscreenSettingsBase(parent)
 {
     KisConfig cfg(true);
@@ -2596,6 +2605,21 @@ FullscreenSettingsTab::FullscreenSettingsTab(QWidget* parent) : WdgFullscreenSet
     chkTitlebar->setChecked(cfg.hideTitlebarFullscreen());
     chkToolbar->setChecked(cfg.hideToolbarFullscreen());
 
+#ifdef Q_OS_IOS
+    cmbIOSTouchUIOnCanvasOnly->addItem(i18n("Restore previous state"), iosTouchUIRememberLastMode);
+    cmbIOSTouchUIOnCanvasOnly->addItem(i18n("Always show iPad drawing controls"), iosTouchUIShowControlsMode);
+    cmbIOSTouchUIOnCanvasOnly->addItem(i18n("Always show clean canvas"), iosTouchUIHideControlsMode);
+
+    const QString startupMode = cfg.readEntry(iosTouchUICanvasOnlyStartupModeKey,
+                                              iosTouchUIShowControlsMode);
+    int startupModeIndex = cmbIOSTouchUIOnCanvasOnly->findData(startupMode);
+    if (startupModeIndex < 0) {
+        startupModeIndex = cmbIOSTouchUIOnCanvasOnly->findData(iosTouchUIShowControlsMode);
+    }
+    cmbIOSTouchUIOnCanvasOnly->setCurrentIndex(startupModeIndex);
+#else
+    grpIOSTouchUI->hide();
+#endif
 }
 
 void FullscreenSettingsTab::setDefault()
@@ -2607,6 +2631,11 @@ void FullscreenSettingsTab::setDefault()
     chkStatusbar->setChecked(cfg.hideStatusbarFullscreen(true));
     chkTitlebar->setChecked(cfg.hideTitlebarFullscreen(true));
     chkToolbar->setChecked(cfg.hideToolbarFullscreen(true));
+
+#ifdef Q_OS_IOS
+    cmbIOSTouchUIOnCanvasOnly->setCurrentIndex(
+        cmbIOSTouchUIOnCanvasOnly->findData(iosTouchUIShowControlsMode));
+#endif
 }
 
 
@@ -3352,6 +3381,10 @@ bool KisDlgPreferences::editPreferences(std::optional<PageDesc>page)
         cfg.setHideStatusbarFullscreen(m_fullscreenSettings->chkStatusbar->checkState());
         cfg.setHideTitlebarFullscreen(m_fullscreenSettings->chkTitlebar->checkState());
         cfg.setHideToolbarFullscreen(m_fullscreenSettings->chkToolbar->checkState());
+#ifdef Q_OS_IOS
+        cfg.writeEntry(iosTouchUICanvasOnlyStartupModeKey,
+                       m_fullscreenSettings->cmbIOSTouchUIOnCanvasOnly->currentData().toString());
+#endif
 
         cfg.setCursorMainColor(m_general->cursorColorButton->color().toQColor());
         cfg.setEraserCursorMainColor(m_general->eraserCursorColorButton->color().toQColor());

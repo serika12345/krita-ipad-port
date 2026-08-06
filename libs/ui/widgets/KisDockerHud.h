@@ -10,7 +10,9 @@
 #include <QScopedPointer>
 #include <QWidget>
 
-class KisDockerHud : public QWidget
+#include <kritaui_export.h>
+
+class KRITAUI_EXPORT KisDockerHud : public QWidget
 {
     Q_OBJECT
 public:
@@ -35,6 +37,7 @@ private Q_SLOTS:
     void writeCurrentDocker();
     QString readCurrentDocker();
     void tryConnectToDockers();
+    void releaseDocker();
     void showBorrowerLabel(QString borrowerName);
     void hideBorrowerLabel();
 

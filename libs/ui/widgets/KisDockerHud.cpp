@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QDockWidget>
+#include <QPointer>
 
 #include <kseparator.h>
 #include "KisMainWindow.h"
@@ -28,7 +29,7 @@ struct KisDockerHud::Private
 {
     QComboBox *dockerComboBox;
     QVBoxLayout *dockerLayout;
-    QDockWidget* oldDockerParent {};
+    QPointer<QDockWidget> oldDockerParent;
     bool isBorrowing {false};
     QLabel* dockerIOULabel {};
     QToolButton* dockerMenu {};
@@ -81,6 +82,7 @@ KisDockerHud::KisDockerHud(QString borrowerName, QString configId)
 
 KisDockerHud::~KisDockerHud()
 {
+    releaseDocker();
     delete m_d->dockerIOULabel;
 }
 
@@ -98,7 +100,13 @@ void KisDockerHud::borrowOrReturnDocker()
 
 void KisDockerHud::borrowDocker() {
     KisMainWindow *mainWindow = KisPart::instance()->currentMainwindow();
+    if (!mainWindow) {
+        return;
+    }
 
+    if (m_d->dockerLayout->indexOf(m_d->dockerIOULabel) >= 0) {
+        hideBorrowerLabel();
+    }
 
     const QString dockerId = m_d->dockerComboBox->currentData().toString();
     QDockWidget *docker = mainWindow->findChild<QDockWidget*>(dockerId);
@@ -111,13 +119,19 @@ void KisDockerHud::borrowDocker() {
     // If the docker is being borrowed by another widget, request its return
     if (!owners.empty() && owners.last() != this->objectName()) {
         KisDockerHud *prevOwner = mainWindow->findChild<KisDockerHud*>(owners.last());
-        prevOwner->returnDocker(true);
+        if (prevOwner) {
+            prevOwner->returnDocker(true);
+        } else {
+            owners.removeLast();
+        }
     }
 
     // Notify any waiting borrowers that we own it now
     Q_FOREACH(QString waitingWidgetId, owners) {
         KisDockerHud *waitingWidget = mainWindow->findChild<KisDockerHud*>(waitingWidgetId);
-        waitingWidget->showBorrowerLabel(m_d->borrowerName);
+        if (waitingWidget && waitingWidget != this) {
+            waitingWidget->showBorrowerLabel(m_d->borrowerName);
+        }
     }
 
     if (!owners.contains(this->objectName())) {
@@ -148,13 +162,18 @@ void KisDockerHud::borrowDocker() {
     m_d->isBorrowing = true;
 }
 void KisDockerHud::returnDocker(bool beingTaken) {
+    if (!m_d->isBorrowing || !m_d->oldDockerParent) {
+        m_d->isBorrowing = false;
+        return;
+    }
+
     QString dockerId = m_d->oldDockerParent->objectName();
     QList<QString>* owners = &borrowedWidgetOwners[dockerId];
 
     if (!owners->isEmpty()) {
         const int idx = owners->indexOf(this->objectName());
-        const bool wasOwner = idx == owners->count()-1;
-        if (!beingTaken) {
+        const bool wasOwner = idx < 0 || idx == owners->count()-1;
+        if (!beingTaken && idx >= 0) {
             owners->removeAt(idx); // we don't want it anymore
         }
 
@@ -186,8 +205,12 @@ void KisDockerHud::returnDocker(bool beingTaken) {
     // If another borrower is in line, tell it to take it.
     if (!beingTaken && !owners->empty()) {
         KisMainWindow *mainWindow = KisPart::instance()->currentMainwindow();
-        KisDockerHud *newOwner = mainWindow->findChild<KisDockerHud*>(owners->last());
-        newOwner->borrowDocker();
+        KisDockerHud *newOwner = mainWindow
+            ? mainWindow->findChild<KisDockerHud*>(owners->last())
+            : nullptr;
+        if (newOwner) {
+            newOwner->borrowDocker();
+        }
     }
 }
 
@@ -279,9 +302,29 @@ void KisDockerHud::showEvent(QShowEvent *event)
 
 void KisDockerHud::hideEvent(QHideEvent *event)
 {
-    borrowOrReturnDocker();
+    releaseDocker();
 
     QWidget::hideEvent(event);
+}
+
+void KisDockerHud::releaseDocker()
+{
+    if (m_d->isBorrowing) {
+        returnDocker();
+    }
+
+    if (m_d->dockerLayout->indexOf(m_d->dockerIOULabel) >= 0) {
+        hideBorrowerLabel();
+    }
+
+    for (auto it = borrowedWidgetOwners.begin(); it != borrowedWidgetOwners.end();) {
+        it.value().removeAll(objectName());
+        if (it.value().isEmpty()) {
+            it = borrowedWidgetOwners.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void KisDockerHud::setIsShown(bool isShown)
@@ -315,7 +358,10 @@ void KisDockerHud::showBorrowerLabel(QString borrowerName)
 void KisDockerHud::hideBorrowerLabel()
 {
     m_d->dockerIOULabel->hide();
-    m_d->dockerLayout->takeAt(0)->widget();
+    const int index = m_d->dockerLayout->indexOf(m_d->dockerIOULabel);
+    if (index >= 0) {
+        delete m_d->dockerLayout->takeAt(index);
+    }
     m_d->dockerIOULabel->setText(i18nc("%1 is the name of the widget",
                                         "Docker is open in %1. Close %1 to show here.", m_d->borrowerName));
 }

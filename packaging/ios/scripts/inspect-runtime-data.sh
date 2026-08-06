@@ -11,6 +11,7 @@ runtime_prefix="$2"
 expected_share="$runtime_prefix/share"
 bundles_dir="$app_path/share/krita/bundles"
 actions_dir="$app_path/share/krita/actions"
+touch_ui_action="$actions_dir/iostouchui.action"
 
 if [[ ! -d "$app_path" ]]; then
     echo "error: application bundle not found: $app_path" >&2
@@ -64,9 +65,17 @@ for core_action in krita.action kritamenu.action; do
         exit 1
     fi
 done
+if [[ ! -s "$touch_ui_action" ]]; then
+    echo "error: iPadOS touch UI action registry was not packaged" >&2
+    exit 1
+fi
 
 if ! grep -q '<Action name="copy_merged">' "$actions_dir/kritamenu.action"; then
     echo "error: packaged Krita menu registry is incomplete" >&2
+    exit 1
+fi
+if ! grep -q '<Action name="view_show_ios_touch_ui">' "$touch_ui_action"; then
+    echo "error: packaged iPadOS touch UI action registry is incomplete" >&2
     exit 1
 fi
 

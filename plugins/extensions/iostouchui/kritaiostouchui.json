@@ -1,0 +1,9 @@
+{
+    "Id": "Krita iPadOS Touch UI",
+    "Type": "Service",
+    "X-KDE-Library": "kritaiostouchui",
+    "X-KDE-ServiceTypes": [
+        "Krita/ViewPlugin"
+    ],
+    "X-Krita-Version": "28"
+}

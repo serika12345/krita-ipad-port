@@ -18,7 +18,7 @@ PATTERN = re.compile(
 def main() -> int:
     repo = pathlib.Path(__file__).resolve().parents[3]
     output = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else repo / "packaging/ios/manifests/plugins.json"
-    records: list[dict[str, str]] = []
+    records_by_target: dict[str, dict[str, str]] = {}
 
     for cmake_file in sorted(repo.rglob("CMakeLists.txt")):
         if any(part.startswith("build") for part in cmake_file.relative_to(repo).parts):
@@ -28,15 +28,21 @@ def main() -> int:
         for match in PATTERN.finditer(text):
             parts = cmake_file.relative_to(repo).parts
             category = parts[1] if len(parts) > 2 and parts[0] == "plugins" else parts[0]
-            records.append(
-                {
-                    "target": match.group(1),
-                    "category": category,
-                    "cmake_file": relative,
-                    "initial_profile": "review",
-                }
-            )
+            record = {
+                "target": match.group(1),
+                "category": category,
+                "cmake_file": relative,
+                "initial_profile": "review",
+            }
+            existing = records_by_target.get(record["target"])
+            if existing and existing["cmake_file"] != record["cmake_file"]:
+                raise RuntimeError(
+                    f"MODULE target {record['target']} is declared in both "
+                    f"{existing['cmake_file']} and {record['cmake_file']}"
+                )
+            records_by_target.setdefault(record["target"], record)
 
+    records = list(records_by_target.values())
     records.sort(key=lambda item: (item["category"], item["target"]))
     document = {
         "schema": 1,

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ActionCollection version="2" name="Krita">
+  <Actions category="View">
+    <text>View</text>
+    <Action name="view_show_ios_touch_ui">
+      <icon>visible</icon>
+      <text>Show iPad Drawing Controls</text>
+      <whatsThis>Show the iPad drawing controls in Canvas-only mode</whatsThis>
+      <toolTip>Show the iPad drawing controls in Canvas-only mode</toolTip>
+      <iconText>Show iPad Drawing Controls</iconText>
+      <activationFlags>1</activationFlags>
+      <activationConditions>0</activationConditions>
+      <shortcut></shortcut>
+      <isCheckable>true</isCheckable>
+      <statusTip></statusTip>
+    </Action>
+  </Actions>
+</ActionCollection>
