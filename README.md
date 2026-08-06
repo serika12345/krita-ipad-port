@@ -111,15 +111,3 @@ https://www.krita.org
 ### License
 
 Krita as a whole is licensed under the GNU Public License, Version 3. Individual files may have a different, but compatible license.
-
-### AI Moratorium
-
-Since the Krita developer community cannot currently find consensus on whether the use of AI tools to assist development is acceptable or not, we have decided to put a moratorium on the use of these tools until October 2026. 
-
-The reason for pushing this off to October are:
-
-1) if we'd allow the use of AI in development right now, the backlash from our users and supporters will be furious.
-2) KDE as a whole does not have a policy in place, and if our policy would conflict with KDE's we'd potentially have to revert contributions made with AI
-3) The development of AI itself might change for the better or the worse in the next period. Microsoft is already backtracking from their CoPilot brand. Acceptance of AI can change for better or worse. The environmental impact of AI could lessen.
-
-Until we make a decision, the use of AI when working on Krita is not allowed.
