@@ -131,7 +131,14 @@ derivation builds the 50-target initial static-plugin profile, installs the
 runtime resource tree into the bundle, and rejects the wrong architecture,
 Apple platform, deployment target, SDK, bundle metadata, signing state, or a
 temporary build/Xcode path leak. The IPA derivation normalizes timestamps and
-entry order, omits signing and Finder metadata, and tests the completed ZIP.
+entry order as well as portable bundle permissions. Both the reproducible IPA
+and the incremental deployment path stage writable copies with directories at
+`0755`, data files at `0644`, and the main executable at `0755`. Completed
+archives reject symlinks, special files, extra metadata, non-Unix types or
+modes, unsafe names, stage/archive inventory differences, and the DOS
+read-only bit before they can reach an importer. These rules share a lightweight
+positive and negative regression check. The Nix Store application remains
+immutable and unsigned.
 
 Nix expressions, generated outputs, port documentation, and `TODO.md` are
 excluded from the filtered Krita compilation source. Changing those files can

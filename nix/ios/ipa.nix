@@ -1,7 +1,6 @@
 {
   coreutils,
   findutils,
-  gnugrep,
   krita-ios-app,
   lib,
   python3,
@@ -19,7 +18,6 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [
     coreutils
     findutils
-    gnugrep
     python3
     unzip
     zip
@@ -32,10 +30,16 @@ stdenvNoCC.mkDerivation {
     mkdir -p "$stage/Payload" "$out"
     cp -R ${krita-ios-app}/krita.app "$stage/Payload/krita.app"
 
-    if find "$stage" -type l -print -quit | grep -q .; then
-      echo "error: IPA stage contains a symlink" >&2
-      exit 1
-    fi
+    # Nix store paths are intentionally immutable (0555 directories, 0444
+    # data files).  Those modes must not leak into the IPA: importers such as
+    # LiveContainer restore ZIP permissions before patching and signing the
+    # app, and cannot recursively clean up a read-only bundle afterwards.
+    # The same helper is used by the host-side incremental deployment path so
+    # both producers enforce one bundle and archive contract.
+    ${python3}/bin/python3 ${./ipa-permissions.py} \
+      normalize-app "$stage/Payload/krita.app"
+
+    chmod 0755 "$stage/Payload"
     find "$stage" -exec touch -h -t 198001010000 {} +
 
     entry_list="$NIX_BUILD_TOP/ipa-entries"
@@ -45,7 +49,8 @@ stdenvNoCC.mkDerivation {
         find Payload -type d -exec printf '%s/\n' {} \;
         find Payload -type f -print
       } | LC_ALL=C sort > "$entry_list"
-      zip -X -9 "$out/Krita-iPad-unsigned.ipa" -@ < "$entry_list"
+      ZIPOPT= ZIP= zip -nw -MM -X -9 -q \
+        "$out/Krita-iPad-unsigned.ipa" -@ < "$entry_list"
     )
 
     runHook postInstall
@@ -58,10 +63,8 @@ stdenvNoCC.mkDerivation {
         ipa="$out/Krita-iPad-unsigned.ipa"
         unzip -tq "$ipa"
 
-        if unzip -Z1 "$ipa" | grep -Eq '(^|/)(__MACOSX|_CodeSignature)(/|$)|embedded\.mobileprovision$'; then
-          echo "error: unsigned IPA contains signing or Finder metadata" >&2
-          exit 1
-        fi
+        ${python3}/bin/python3 ${./ipa-permissions.py} check-ipa "$ipa" \
+          --staged-app "$NIX_BUILD_TOP/ipa-stage/Payload/krita.app"
 
         ${python3}/bin/python3 - "$ipa" <<'PY'
     import hashlib
@@ -72,8 +75,6 @@ stdenvNoCC.mkDerivation {
     with zipfile.ZipFile(ipa) as archive:
         entries = archive.infolist()
         names = [entry.filename for entry in entries]
-        if not names or any(not name.startswith("Payload/") for name in names):
-            raise SystemExit("IPA entries must all be below Payload/")
         required = {
             "Payload/krita.app/Info.plist",
             "Payload/krita.app/krita",

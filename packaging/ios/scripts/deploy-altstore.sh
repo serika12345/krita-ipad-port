@@ -17,6 +17,7 @@ fi
 
 scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_root="$(git -C "$scripts_dir" rev-parse --show-toplevel)"
+ipa_permissions="$repo_root/nix/ios/ipa-permissions.py"
 device_id="${1:-${KRITA_IOS_DEVICE:-}}"
 
 # The default entry point is the guarded persistent build. The helper calls
@@ -105,12 +106,23 @@ cleanup() {
         kill "$server_pid" 2>/dev/null || true
         wait "$server_pid" 2>/dev/null || true
     fi
-    rm -rf "$stage_dir"
+    # Validation deliberately rejects symlinks and special files before it
+    # changes any modes. Make only real directories below this exact mktemp
+    # root writable so a failed preflight cannot strand a read-only stage.
+    python3 "$ipa_permissions" make-tree-removable "$stage_dir" \
+        >/dev/null 2>&1 || true
+    rm -rf "$stage_dir" || true
 }
 trap cleanup EXIT
 
 mkdir -p "$stage_dir/Payload"
-ditto "$app_path" "$stage_dir/Payload/krita.app"
+COPYFILE_DISABLE=1 /bin/cp -RX \
+    "$app_path" "$stage_dir/Payload/krita.app"
+
+# The source may be an immutable Nix output.  Make the private staging copy
+# writable before merging runtime data; the source application is untouched.
+python3 "$ipa_permissions" \
+    normalize-app "$stage_dir/Payload/krita.app"
 
 cmake_command="$(awk -F= '$1 == "CMAKE_COMMAND:INTERNAL" { print $2; exit }' "$build_dir/CMakeCache.txt")"
 if [[ -z "$cmake_command" || ! -x "$cmake_command" ]]; then
@@ -145,19 +157,40 @@ if [[ ! -d "$runtime_prefix/share" ]]; then
     echo "error: the iPadOS runtime data install produced no share directory" >&2
     exit 1
 fi
-ditto "$runtime_prefix/share" "$stage_dir/Payload/krita.app/share"
+mkdir -p "$stage_dir/Payload/krita.app/share"
+COPYFILE_DISABLE=1 /bin/cp -RX \
+    "$runtime_prefix/share/." "$stage_dir/Payload/krita.app/share"
 "$scripts_dir/inspect-runtime-data.sh" \
     "$stage_dir/Payload/krita.app" "$runtime_prefix"
 
 bundle_version="${KRITA_IOS_BUNDLE_VERSION:-$(date -u +%Y%m%d%H%M%S)}"
 plutil -replace CFBundleVersion -string "$bundle_version" "$stage_dir/Payload/krita.app/Info.plist"
 
+# Normalize again after every staged mutation so CMake install modes and
+# plutil's replacement behavior cannot leak into the completed IPA.
+python3 "$ipa_permissions" \
+    normalize-app "$stage_dir/Payload/krita.app"
+chmod 0755 "$stage_dir/Payload"
+
 output_dir="$repo_root/build-ios/deploy"
 mkdir -p "$output_dir"
 ipa_name="Krita-iPad-${bundle_version}.ipa"
 ipa_path="$output_dir/$ipa_name"
-COPYFILE_DISABLE=1 ditto -c -k --norsrc --keepParent "$stage_dir/Payload" "$ipa_path"
-unzip -tq "$ipa_path"
+staged_ipa="$stage_dir/$ipa_name"
+entry_list="$stage_dir/ipa-entries"
+(
+    cd "$stage_dir"
+    {
+        find Payload -type d -exec printf '%s/\n' {} \;
+        find Payload -type f -print
+    } | LC_ALL=C sort > "$entry_list"
+    COPYFILE_DISABLE=1 ZIPOPT= ZIP= zip -nw -MM -X -9 -q \
+        "$staged_ipa" -@ < "$entry_list"
+)
+unzip -tq "$staged_ipa"
+python3 "$ipa_permissions" check-ipa "$staged_ipa" \
+    --staged-app "$stage_dir/Payload/krita.app"
+mv -f "$staged_ipa" "$ipa_path"
 
 network_interface="$(route -n get default | awk '$1 == "interface:" { print $2; exit }')"
 host_ip="$(ipconfig getifaddr "$network_interface" 2>/dev/null || true)"

@@ -776,6 +776,8 @@ let
     inherit krita-ios-app;
   };
 
+  ipa-permissions-check = pkgs.callPackage ./tests/ipa-permissions.nix { };
+
   mkIOSAggregate =
     name: paths:
     pkgs.symlinkJoin {
@@ -887,6 +889,7 @@ assert lib.assertMsg (
     immer-consumer-check
     immer-ios
     imath-ios
+    ipa-permissions-check
     lager-consumer-check
     lager-ios
     lcms2-ios

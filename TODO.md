@@ -352,6 +352,9 @@ KDE FrameworksまたはQt Widgets/OpenGLがiOS上で成立しない場合、Krit
     - [x] 分離したQtSvg prefixから`QSvgPlugin`と`QSvgIconPlugin`をKritaへ明示リンクし、旧実機ビルドと同じ59個の静的プラグイン集合をNix install checkで保証する。
     - [x] 修正版Nix IPAを実機へ手動インストールし、Toolboxの全Tool、ツールバーのSVGアイコン、Dockerメニューが旧実機ビルド相当であることを確認する（ビルド`20260804040455`で実機確認済み）。
     - [x] timestampとentry順を正規化した`krita-ios-ipa`を追加し、ZIP整合性、必須ファイル、署名/Finder metadata非混入を検査して87 MiBのIPA生成を確認する。
+    - [x] Nix Storeの`0555`/`0444`がIPAへ漏れてLiveContainerの一時`Payload`を削除不能にする問題を修正する。Nix版と増分deploy版は同じcheckerを使い、stageをdirectory `0755`、data file `0644`、main executable `0755`へ正規化する。symlink/special file、Finder/signing/ZIP extra metadata、unsafe path、Unix type/mode、DOS read-only属性、stage/archive inventory差を拒否する軽量回帰checkも追加した。旧IPAが同じFoundation errorを再現すること、両packaging coreの修正版をpermission保持展開した後は`Payload`を削除できることをhost上で確認済み。
+    - [x] 権限修正版Nix IPA（SHA-256 `3eca1fb633daaeff836314b8cd72f57252befc4673cd8f74f7ba69a9672ac0f7`）をAltStore経由で実機へ直接インストールし、署名後bundle `org.krita.ipad.port.PUDY4GHY3Y` version `6.1.0`の起動と`krita.log`取得を確認する（2026-08-06）。これはLiveContainer import検証とは別。
+    - [ ] LiveContainer内に旧失敗importのread-onlyな一時`Payload`が残っている場合は、そのstale stateの安全な解消手順を実機で確認する。修正版IPAの新規importとLiveContainer側のiOS 26 JIT-Less設定後の起動は、`Payload`削除エラーなしで実機成功済み（2026-08-06）。旧stale stateの安全な解消と同一bundle IDの再importは未確認。
     - [x] Nix recipe、生成物、移植文書、TODOをKrita compilation sourceから除外し、IPA/文書変更がKrita本体の再ビルドへ波及しないcache境界を固定する。
   - [x] Darwin daemonの`allowed-impure-host-deps`へXcodeだけを追加し、derivationの`__impureHostDeps`宣言、`sandbox = true`、cache-miss再ビルドの順に有効化する。
   - [ ] 署名付きprivate binary cacheを設定し、別の隔離storeまたはMacから復元確認する。

@@ -64,7 +64,8 @@ The script performs these operations in order:
 3. Compare every static archive's Qt resource initializers with the final executable.
 4. Generate Krita's declared install-time data tree and copy it into the staged app.
 5. Compare every staged runtime file with the app and require bundles, brush presets, ICC profiles, and actions.
-6. Generate and test a timestamp-versioned IPA under `build-ios/deploy/`.
+6. Normalize the private app stage, generate a timestamp-versioned IPA under
+   `build-ios/deploy/`, and test its structure and ZIP permission metadata.
 7. Open an AltStore install URL, wait for its download, and wait for the new bundle version on-device.
 8. Launch Krita and copy its startup log back to `build-ios/deploy/`.
 9. Root the Nix store inputs recorded by the active build graph without reevaluating the dirty flake, then run low-space maintenance if needed.
@@ -82,6 +83,26 @@ signed app. Current validation covers 496 files, including four resource
 bundles, 32 ICC profiles, and seven action definitions. The action set includes
 the core `krita.action` and `kritamenu.action` registries; packaging fails if
 either file or a representative core menu action is missing.
+
+Only the private packaging stage is made writable; the CMake product and any
+Nix Store input remain untouched. Every staged directory is fixed to `0755`,
+every data file to `0644`, and the main executable to `0755`. Copying omits
+ACLs, BSD flags, extended attributes, and quarantine/resource metadata.
+The completed IPA is then rejected if it contains a symlink or special file,
+an unsafe or duplicate path, ZIP extra metadata, a non-canonical Unix mode, or
+the DOS read-only bit, or if its inventory differs from the complete staged
+application bundle. ZIP option environment variables are cleared and every
+literal input path must match, preventing silent entry omission. This is
+required for importers such as LiveContainer, which restore archive permissions
+before patching, signing, and cleaning up an application bundle.
+
+An IPA cannot retroactively repair a read-only temporary `Payload` left inside
+LiveContainer by an earlier failed import: LiveContainer may try to remove that
+stale path before reading the replacement archive. If the same permission
+error appears once with a fixed IPA, first use a verified LiveContainer cleanup
+or container-reset procedure, preserving any needed app data. The exact UI
+procedure is still pending real-device verification; do not repeatedly import
+until that stale state has been ruled out.
 
 AltStore updates preserve the application data container. Development builds
 can add packaged bundles without changing Krita's semantic version, so the iOS

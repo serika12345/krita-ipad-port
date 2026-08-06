@@ -29,7 +29,7 @@ require_command() {
 
 required_commands=(xcodebuild xcrun)
 if (( ! toolchain_only_strict )); then
-    required_commands+=(nix cmake ninja python3 pkg-config file)
+    required_commands+=(nix cmake ninja python3 pkg-config file zip unzip)
 fi
 for command in "${required_commands[@]}"; do
     require_command "$command"

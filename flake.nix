@@ -139,6 +139,7 @@
           imath-ios
           ios-base-dependencies
           ios-dependencies
+          ipa-permissions-check
           kcodecs-ios
           kcolorscheme-ios
           kcompletion-ios
@@ -221,6 +222,7 @@
           imath-ios
           ios-base-dependencies
           ios-dependencies
+          ipa-permissions-check
           kcodecs-ios
           kcolorscheme-ios
           kcompletion-ios
